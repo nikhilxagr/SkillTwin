@@ -1,10 +1,10 @@
 import { StrictMode, useEffect, useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
-import { analysisResultSchema, developerTwinSchema, evolutionSchema, gapAnalysisSchema, githubStatusSchema, githubSyncSchema, interviewEvaluationSchema, interviewSessionSchema, roadmapSchema, resumeUploadSchema, type AnalysisResult, type DeveloperTwin, type Evolution, type GapAnalysis, type GithubStatus, type GithubSync, type InterviewEvaluation, type InterviewSession, type Roadmap, type ResumeUpload } from "@skilltwin/contracts";
+import { analysisResultSchema, analysisSummarySchema, developerTwinSchema, evolutionSchema, gapAnalysisSchema, githubStatusSchema, githubSyncSchema, interviewEvaluationSchema, interviewSessionSchema, roadmapSchema, resumeUploadSchema, type AnalysisResult, type AnalysisSummary, type DeveloperTwin, type Evolution, type GapAnalysis, type GithubStatus, type GithubSync, type InterviewEvaluation, type InterviewSession, type Roadmap, type ResumeUpload } from "@skilltwin/contracts";
 import "./styles.css";
 
 const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
-type View = "overview" | "graph" | "gaps" | "evidence" | "roadmap" | "interview" | "evolution" | "sources";
+type View = "overview" | "graph" | "gaps" | "evidence" | "roadmap" | "interview" | "evolution" | "sources" | "history";
 
 function useDemoTwin() {
   const [data, setData] = useState<DeveloperTwin | null>(null);
@@ -103,7 +103,7 @@ function Dashboard({ twin, view, onView, onExit }: { twin: DeveloperTwin; view: 
         <button className="brand brand-button" onClick={onExit}>Skill<span>Twin</span></button>
         <p className="sidebar-label">Developer Twin</p>
         <nav>
-          {([["overview", "Overview"], ["graph", "Skill graph"], ["gaps", "Role gaps"], ["evidence", "Evidence map"], ["roadmap", "Next actions"], ["interview", "Interview coach"], ["evolution", "Evolution"], ["sources", "Sources"]] as const).map(([key, label]) => (
+          {([["overview", "Overview"], ["graph", "Skill graph"], ["gaps", "Role gaps"], ["evidence", "Evidence map"], ["roadmap", "Next actions"], ["interview", "Interview coach"], ["evolution", "Evolution"], ["sources", "Sources"], ["history", "Analysis history"]] as const).map(([key, label]) => (
             <button className={view === key ? "nav-item active" : "nav-item"} onClick={() => onView(key)} key={key}>{label}</button>
           ))}
         </nav>
@@ -122,6 +122,7 @@ function Dashboard({ twin, view, onView, onExit }: { twin: DeveloperTwin; view: 
         {view === "interview" && <InterviewCoach />}
         {view === "evolution" && <EvolutionView />}
         {view === "sources" && <SourcesView />}
+        {view === "history" && <AnalysisHistory />}
       </section>
     </main>
   );
@@ -151,6 +152,7 @@ function SourcesView() {
     } catch {
       setState("error");
     }
+
   }
   async function syncGithub() {
     const response = await fetch(`${apiUrl}/api/v1/github/sync`, { method: "POST" });
@@ -171,6 +173,31 @@ function EvolutionView() {
   const evolution = useEvolution();
   if (!evolution) return <div className="state-inline">Loading evolution history…</div>;
   return <div><div className="page-intro"><p className="eyebrow">Developer evolution</p><h2>Track evidence as your twin changes</h2><p className="muted">{evolution.disclaimer}</p></div><div className="snapshot-row">{evolution.snapshots.map((snapshot) => <div className="panel snapshot" key={snapshot.id}><small>{snapshot.analyzedAt}</small><b>{snapshot.evidenceConfidence}%</b><span>{snapshot.label}</span><em>{snapshot.skillsTracked} skills tracked</em></div>)}</div><div className="evolution-grid"><section><p className="eyebrow">Skill evidence changes</p><div className="change-list">{evolution.changes.map((change) => <article className="panel change-item" key={change.skill}><div className="change-header"><h3>{change.skill}</h3><strong>{change.previousEstimate} → {change.currentEstimate}</strong></div><p>{change.evidenceChange}</p><small>{change.interpretation}</small></article>)}</div></section><aside className="panel evolution-side"><p className="eyebrow">New evidence detected</p><ul>{evolution.newEvidence.map((item) => <li key={item}>{item}</li>)}</ul><p className="eyebrow">Remaining gaps</p><ul>{evolution.remainingGaps.map((item) => <li key={item}>{item}</li>)}</ul></aside></div></div>;
+}
+
+function AnalysisHistory() {
+  const [summaries, setSummaries] = useState<AnalysisSummary[]>([]);
+  const [selected, setSelected] = useState<AnalysisResult | null>(null);
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  useEffect(() => {
+    fetch(`${apiUrl}/api/v1/analyses`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unable to load analysis history");
+        return response.json();
+      })
+      .then((value) => {
+        setSummaries(value.map((item: unknown) => analysisSummarySchema.parse(item)));
+        setState("ready");
+      })
+      .catch(() => setState("error"));
+  }, []);
+  async function openSnapshot(id: string) {
+    const response = await fetch(`${apiUrl}/api/v1/analyses/${id}`);
+    if (response.ok) setSelected(analysisResultSchema.parse(await response.json()));
+  }
+  if (state === "loading") return <div className="state-inline">Loading analysis history…</div>;
+  if (state === "error") return <div className="state-inline">Analysis history is unavailable. Run an analysis from Sources first.</div>;
+  return <div><div className="page-intro"><p className="eyebrow">Persisted snapshots</p><h2>Analysis history</h2><p className="muted">Each run is a point-in-time estimate based on the evidence available at that moment.</p></div><div className="history-layout"><section className="history-list">{summaries.length === 0 && <div className="panel empty-panel">No analysis snapshots yet. Generate one from the Sources view.</div>}{summaries.map((summary) => <button className={selected?.id === summary.id ? "panel history-item selected" : "panel history-item"} onClick={() => openSnapshot(summary.id)} key={summary.id}><span>{new Date(summary.createdAt).toLocaleString()}</span><strong>{summary.provider}</strong><small>{summary.evidenceCount} evidence signals · {summary.status}</small></button>)}</section>{selected && <aside className="panel snapshot-detail"><p className="eyebrow">Snapshot detail</p><h3>{new Date(selected.createdAt).toLocaleString()}</h3><div className="detail-stat"><span>Provider</span><b>{selected.provider}</b></div><div className="detail-stat"><span>Evidence signals</span><b>{selected.evidenceCount}</b></div><p className="eyebrow">Assessments</p>{selected.assessments.map((assessment) => <div className="assessment-row" key={assessment.skill}><span>{assessment.skill}</span><b>{assessment.confidenceEstimate}</b><small>{assessment.explanation}</small></div>)}<small className="detail-note">{selected.limitations[0]}</small></aside>}</div></div>;
 }
 
 function InterviewCoach() {
