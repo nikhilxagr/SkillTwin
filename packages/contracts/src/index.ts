@@ -19,3 +19,30 @@ export const skillAssessmentSchema = z.object({
 });
 
 export type SkillAssessment = z.infer<typeof skillAssessmentSchema>;
+
+export const developerTwinSchema = z.object({
+  profile: z.object({
+    name: z.string(),
+    headline: z.string(),
+    initials: z.string(),
+    yearsOfEvidence: z.number().nonnegative(),
+  }),
+  summary: z.object({
+    evidenceConfidence: z.number().min(0).max(100),
+    connectedSources: z.number().int().nonnegative(),
+    projectsAnalyzed: z.number().int().nonnegative(),
+    lastAnalyzed: z.string(),
+  }),
+  skills: z.array(
+    skillAssessmentSchema.extend({
+      evidenceSummary: z.string(),
+    }),
+  ),
+  nextAction: z.object({
+    title: z.string(),
+    description: z.string(),
+    skill: z.string(),
+  }),
+});
+
+export type DeveloperTwin = z.infer<typeof developerTwinSchema>;

@@ -5,6 +5,7 @@ import helmet from "helmet";
 import pino from "pino";
 import { healthResponseSchema } from "@skilltwin/contracts";
 import { config } from "./config.js";
+import { demoTwin } from "./demo-twin.js";
 
 export const app = express();
 const logger = pino();
@@ -26,6 +27,10 @@ app.get("/health", (_request, response) => {
       timestamp: new Date().toISOString(),
     }),
   );
+});
+
+app.get("/api/v1/demo/twin", (_request, response) => {
+  response.json(demoTwin);
 });
 
 app.use((_request, response) => {
