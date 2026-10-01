@@ -1,10 +1,10 @@
-import { StrictMode, useEffect, useState } from "react";
+import { StrictMode, useEffect, useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
-import { developerTwinSchema, evolutionSchema, gapAnalysisSchema, interviewEvaluationSchema, interviewSessionSchema, roadmapSchema, type DeveloperTwin, type Evolution, type GapAnalysis, type InterviewEvaluation, type InterviewSession, type Roadmap } from "@skilltwin/contracts";
+import { developerTwinSchema, evolutionSchema, gapAnalysisSchema, interviewEvaluationSchema, interviewSessionSchema, roadmapSchema, resumeUploadSchema, type DeveloperTwin, type Evolution, type GapAnalysis, type InterviewEvaluation, type InterviewSession, type Roadmap, type ResumeUpload } from "@skilltwin/contracts";
 import "./styles.css";
 
 const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
-type View = "overview" | "graph" | "gaps" | "evidence" | "roadmap" | "interview" | "evolution";
+type View = "overview" | "graph" | "gaps" | "evidence" | "roadmap" | "interview" | "evolution" | "sources";
 
 function useDemoTwin() {
   const [data, setData] = useState<DeveloperTwin | null>(null);
@@ -103,7 +103,7 @@ function Dashboard({ twin, view, onView, onExit }: { twin: DeveloperTwin; view: 
         <button className="brand brand-button" onClick={onExit}>Skill<span>Twin</span></button>
         <p className="sidebar-label">Developer Twin</p>
         <nav>
-          {([["overview", "Overview"], ["graph", "Skill graph"], ["gaps", "Role gaps"], ["evidence", "Evidence map"], ["roadmap", "Next actions"], ["interview", "Interview coach"], ["evolution", "Evolution"]] as const).map(([key, label]) => (
+          {([["overview", "Overview"], ["graph", "Skill graph"], ["gaps", "Role gaps"], ["evidence", "Evidence map"], ["roadmap", "Next actions"], ["interview", "Interview coach"], ["evolution", "Evolution"], ["sources", "Sources"]] as const).map(([key, label]) => (
             <button className={view === key ? "nav-item active" : "nav-item"} onClick={() => onView(key)} key={key}>{label}</button>
           ))}
         </nav>
@@ -121,9 +121,29 @@ function Dashboard({ twin, view, onView, onExit }: { twin: DeveloperTwin; view: 
         {view === "roadmap" && <Roadmap twin={twin} />}
         {view === "interview" && <InterviewCoach />}
         {view === "evolution" && <EvolutionView />}
+        {view === "sources" && <SourcesView />}
       </section>
     </main>
   );
+}
+
+function SourcesView() {
+  const [result, setResult] = useState<ResumeUpload | null>(null);
+  const [state, setState] = useState<"idle" | "uploading" | "error">("idle");
+  async function uploadResume(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setState("uploading");
+    try {
+      const response = await fetch(`${apiUrl}/api/v1/resume`, { method: "POST", body: form });
+      if (!response.ok) throw new Error("Upload failed");
+      setResult(resumeUploadSchema.parse(await response.json()));
+      setState("idle");
+    } catch {
+      setState("error");
+    }
+  }
+  return <div><div className="page-intro"><p className="eyebrow">Evidence sources</p><h2>Connect the evidence behind your twin</h2><p className="muted">Resume statements are treated as claimed evidence until corroborated by projects or repository activity.</p></div><div className="source-grid"><form className="panel upload-card" onSubmit={uploadResume}><p className="eyebrow">Resume · PDF only</p><h3>Upload a resume</h3><p className="muted">Files stay in memory in this demo phase. Production storage and retention policies will be added with authentication.</p><input name="resume" type="file" accept="application/pdf" required /><button className="primary-button small" disabled={state === "uploading"}>{state === "uploading" ? "Parsing…" : "Parse resume"} <span>→</span></button>{state === "error" && <p className="error-text">Upload failed. Check that the file is a readable PDF under 5 MB.</p>}</form>{result && <section className="panel parsed-card"><div className="source-result-header"><div><p className="eyebrow">Parsed resume</p><h3>{result.fileName}</h3></div><span className="source-status">{result.status}</span></div><p className="muted">{result.extractedTextLength} characters · {result.evidence.length} claim signals detected</p><div className="evidence-tags">{result.evidence.slice(0, 12).map((item) => <span key={item.id}>{item.statement}</span>)}</div><small>{result.limitations[0]}</small></section>}</div></div>;
 }
 
 function EvolutionView() {

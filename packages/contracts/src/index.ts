@@ -139,3 +139,20 @@ export const evolutionSchema = z.object({
   disclaimer: z.string(),
 });
 export type Evolution = z.infer<typeof evolutionSchema>;
+
+export const resumeEvidenceSchema = z.object({
+  id: z.string(),
+  sourceType: z.literal("resume"),
+  statement: z.string(),
+  category: z.enum(["skill", "experience", "education", "project", "link"]),
+  confidence: z.enum(["low", "moderate", "high"]),
+});
+export const resumeUploadSchema = z.object({
+  id: z.string(),
+  fileName: z.string(),
+  status: z.enum(["parsed", "partial", "failed"]),
+  extractedTextLength: z.number().int().nonnegative(),
+  evidence: z.array(resumeEvidenceSchema),
+  limitations: z.array(z.string()),
+});
+export type ResumeUpload = z.infer<typeof resumeUploadSchema>;

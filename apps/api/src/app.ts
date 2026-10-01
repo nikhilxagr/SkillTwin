@@ -9,9 +9,16 @@ import { demoTwin } from "./demo-twin.js";
 import { getGapAnalysis, getRoadmap, roles } from "./roles.js";
 import { demoInterview, evaluateDemoAnswer } from "./interview.js";
 import { demoEvolution } from "./evolution.js";
+import multer from "multer";
+import { parseResume } from "./resume.js";
 
 export const app = express();
 const logger = pino();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: (_request, file, callback) => callback(null, file.mimetype === "application/pdf"),
+});
 
 app.use(helmet());
 app.use(cors({ origin: config.WEB_ORIGIN }));
@@ -63,6 +70,17 @@ app.post("/api/v1/interviews/demo/evaluate", (request, response) => {
   response.json(evaluateDemoAnswer(answer));
 });
 app.get("/api/v1/evolution", (_request, response) => response.json(demoEvolution));
+app.post("/api/v1/resume", upload.single("resume"), async (request, response, next) => {
+  if (!request.file) {
+    response.status(400).json({ error: "A PDF resume file is required" });
+    return;
+  }
+  try {
+    response.status(201).json(await parseResume(request.file.originalname, request.file.buffer));
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.use((_request, response) => {
   response.status(404).json({ error: "Not found" });

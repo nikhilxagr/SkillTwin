@@ -61,6 +61,16 @@ describe("GET /api/v1/gap-analysis", () => {
           expect(response.body.snapshots).toHaveLength(3);
           expect(response.body.disclaimer).toContain("not proof");
         });
+
+        describe("POST /api/v1/resume", () => {
+          it("rejects uploads that are not PDF files", async () => {
+            const response = await request(app)
+              .post("/api/v1/resume")
+              .attach("resume", Buffer.from("not a pdf"), { filename: "resume.txt", contentType: "text/plain" });
+            expect(response.status).toBe(400);
+            expect(response.body.error).toContain("PDF");
+          });
+        });
       });
 
       it("evaluates an answer without claiming verified proficiency", async () => {
