@@ -19,6 +19,8 @@ export const demoTwin: DeveloperTwin = {
       confidenceEstimate: 78,
       evidenceSources: ["github", "project"],
       evidenceSummary: "4 repositories · Hooks · Components",
+      domain: "Frontend",
+      subSkills: ["Hooks", "Components"],
       explanation: "Repeated implementation evidence across four repositories.",
     },
     {
@@ -26,6 +28,8 @@ export const demoTwin: DeveloperTwin = {
       confidenceEstimate: 64,
       evidenceSources: ["resume", "github"],
       evidenceSummary: "3 repositories · Typed APIs",
+      domain: "Frontend",
+      subSkills: ["Typed APIs", "Interfaces"],
       explanation: "Claimed on the resume and observed in typed API code.",
     },
     {
@@ -33,6 +37,8 @@ export const demoTwin: DeveloperTwin = {
       confidenceEstimate: 58,
       evidenceSources: ["github", "project"],
       evidenceSummary: "2 repositories · REST services",
+      domain: "Backend",
+      subSkills: ["REST services", "Authentication"],
       explanation: "Backend activity is present, with limited testing evidence.",
     },
   ],

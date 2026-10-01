@@ -4,7 +4,7 @@ import { developerTwinSchema, type DeveloperTwin } from "@skilltwin/contracts";
 import "./styles.css";
 
 const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
-type View = "overview" | "evidence" | "roadmap";
+type View = "overview" | "graph" | "evidence" | "roadmap";
 
 function useDemoTwin() {
   const [data, setData] = useState<DeveloperTwin | null>(null);
@@ -59,7 +59,7 @@ function Dashboard({ twin, view, onView, onExit }: { twin: DeveloperTwin; view: 
         <button className="brand brand-button" onClick={onExit}>Skill<span>Twin</span></button>
         <p className="sidebar-label">Developer Twin</p>
         <nav>
-          {([["overview", "Overview"], ["evidence", "Evidence map"], ["roadmap", "Next actions"]] as const).map(([key, label]) => (
+          {([["overview", "Overview"], ["graph", "Skill graph"], ["evidence", "Evidence map"], ["roadmap", "Next actions"]] as const).map(([key, label]) => (
             <button className={view === key ? "nav-item active" : "nav-item"} onClick={() => onView(key)} key={key}>{label}</button>
           ))}
         </nav>
@@ -71,6 +71,7 @@ function Dashboard({ twin, view, onView, onExit }: { twin: DeveloperTwin; view: 
           <button className="outline-button" onClick={onExit}>Exit preview</button>
         </header>
         {view === "overview" && <Overview twin={twin} onView={onView} />}
+        {view === "graph" && <SkillGraph twin={twin} />}
         {view === "evidence" && <Evidence twin={twin} />}
         {view === "roadmap" && <Roadmap twin={twin} />}
       </section>
@@ -93,6 +94,13 @@ function Overview({ twin, onView }: { twin: DeveloperTwin; onView: (view: View) 
 
 function Evidence({ twin }: { twin: DeveloperTwin }) {
   return <div><div className="page-intro"><p className="eyebrow">Explainability</p><h2>Why SkillTwin thinks you have these skills</h2><p className="muted">Every estimate is grounded in available source evidence. It is not an objective proficiency measurement.</p></div><div className="evidence-list">{twin.skills.map((skill) => <article className="panel evidence-item" key={skill.skill}><div><h3>{skill.skill} <span>{skill.confidenceEstimate}%</span></h3><p>{skill.explanation}</p></div><div className="evidence-tags">{skill.evidenceSources.map((source) => <span key={source}>{source}</span>)}</div><small>{skill.evidenceSummary}</small></article>)}</div></div>;
+}
+
+function SkillGraph({ twin }: { twin: DeveloperTwin }) {
+  const [selected, setSelected] = useState(twin.skills[0]);
+  const domains = [...new Set(twin.skills.map((skill) => skill.domain))];
+
+  return <div><div className="page-intro"><p className="eyebrow">Interactive evidence map</p><h2>See how your skills connect to evidence</h2><p className="muted">Select a skill node to inspect its sources, estimate, and supporting signals.</p></div><div className="graph-layout"><section className="panel graph-panel" aria-label="Skill graph"><div className="graph-root">{twin.profile.initials}<small>Developer</small></div><div className="graph-line" />{domains.map((domain) => <div className="domain-group" key={domain}><div className="domain-node">{domain}</div><div className="skill-nodes">{twin.skills.filter((skill) => skill.domain === domain).map((skill) => <button className={selected.skill === skill.skill ? "skill-node selected" : "skill-node"} onClick={() => setSelected(skill)} key={skill.skill}><b>{skill.skill}</b><small>{skill.confidenceEstimate}% evidence</small><span>{skill.subSkills.join(" · ")}</span></button>)}</div></div>)}</section><aside className="panel selected-evidence"><p className="eyebrow">Selected skill</p><h2>{selected.skill}</h2><div className="selected-score">{selected.confidenceEstimate}<small>/100 estimate</small></div><p>{selected.explanation}</p><div className="evidence-tags">{selected.evidenceSources.map((source) => <span key={source}>{source}</span>)}</div><hr /><p className="eyebrow">Observed signals</p><p className="muted">{selected.evidenceSummary}</p><p className="eyebrow">Potential focus</p><p className="muted">Add stronger implementation and testing evidence to increase confidence over time.</p></aside></div></div>;
 }
 
 function Roadmap({ twin }: { twin: DeveloperTwin }) {

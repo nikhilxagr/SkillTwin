@@ -36,6 +36,8 @@ export const developerTwinSchema = z.object({
   skills: z.array(
     skillAssessmentSchema.extend({
       evidenceSummary: z.string(),
+      domain: z.string(),
+      subSkills: z.array(z.string()),
     }),
   ),
   nextAction: z.object({
