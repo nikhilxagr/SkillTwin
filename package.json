@@ -5,10 +5,10 @@
   "description": "SkillTwin - AI Developer Career Twin",
   "packageManager": "pnpm@9.15.4",
   "scripts": {
-    "build": "pnpm --filter @skilltwin/contracts build && pnpm --filter @skilltwin/api build && pnpm --filter @skilltwin/web build",
-    "dev": "pnpm --parallel --filter @skilltwin/api --filter @skilltwin/web dev",
-    "lint": "pnpm --filter @skilltwin/contracts build && pnpm --recursive lint",
-    "typecheck": "pnpm --filter @skilltwin/contracts build && pnpm --recursive typecheck",
-    "test": "pnpm --recursive test"
+    "build": "npx --yes pnpm@9.15.4 --filter @skilltwin/contracts build && npx --yes pnpm@9.15.4 --filter @skilltwin/api build && npx --yes pnpm@9.15.4 --filter @skilltwin/web build",
+    "dev": "npx --yes pnpm@9.15.4 --parallel --filter @skilltwin/api --filter @skilltwin/web dev",
+    "lint": "npx --yes pnpm@9.15.4 --filter @skilltwin/contracts build && npx --yes pnpm@9.15.4 --recursive lint",
+    "typecheck": "npx --yes pnpm@9.15.4 --filter @skilltwin/contracts build && npx --yes pnpm@9.15.4 --recursive typecheck",
+    "test": "npx --yes pnpm@9.15.4 --recursive test"
   }
 }
