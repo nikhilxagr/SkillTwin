@@ -1,0 +1,14 @@
+{
+  "name": "skilltwin",
+  "private": true,
+  "version": "0.1.0",
+  "description": "SkillTwin - AI Developer Career Twin",
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "build": "pnpm --filter @skilltwin/contracts build && pnpm --filter @skilltwin/api build && pnpm --filter @skilltwin/web build",
+    "dev": "pnpm --parallel --filter @skilltwin/api --filter @skilltwin/web dev",
+    "lint": "pnpm --recursive lint",
+    "typecheck": "pnpm --recursive typecheck",
+    "test": "pnpm --recursive test"
+  }
+}
