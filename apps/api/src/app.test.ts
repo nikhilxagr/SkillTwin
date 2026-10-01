@@ -17,10 +17,33 @@ describe("GET /health", () => {
         .send({ resumeStatements: ["React", "TypeScript"] });
       expect(response.status).toBe(201);
       expect(response.body.provider).toBe("deterministic-demo");
+      expect(response.body.createdAt).toBeTruthy();
       expect(response.body.assessments).toEqual(expect.arrayContaining([
         expect.objectContaining({ skill: "React", evidenceSources: expect.arrayContaining(["github"]) }),
       ]));
       expect(response.body.limitations[0]).toContain("external AI credentials");
+    });
+
+    it("persists and retrieves an analysis snapshot by ID", async () => {
+      const created = await request(app)
+        .post("/api/v1/analyses")
+        .send({ resumeStatements: [] });
+      const retrieved = await request(app).get(`/api/v1/analyses/${created.body.id}`);
+      expect(retrieved.status).toBe(200);
+      expect(retrieved.body.id).toBe(created.body.id);
+    });
+  });
+
+  describe("GET /api/v1/analyses", () => {
+    it("lists analysis snapshots without exposing assessment internals", async () => {
+      const response = await request(app).get("/api/v1/analyses");
+      expect(response.status).toBe(200);
+      expect(response.body[0]).toEqual(expect.objectContaining({
+        id: expect.any(String),
+        createdAt: expect.any(String),
+        evidenceCount: expect.any(Number),
+      }));
+      expect(response.body[0].assessments).toBeUndefined();
     });
   });
 

@@ -13,6 +13,7 @@ import multer from "multer";
 import { parseResume } from "./resume.js";
 import { demoGithubSync, githubStatus } from "./github.js";
 import { intelligenceProvider } from "./ai.js";
+import { analysisRepository } from "./analysis-repository.js";
 
 export const app = express();
 const logger = pino();
@@ -89,7 +90,18 @@ app.post("/api/v1/analyses", (request, response) => {
   const resumeStatements = Array.isArray(request.body?.resumeStatements)
     ? request.body.resumeStatements.filter((statement: unknown): statement is string => typeof statement === "string")
     : [];
-  response.status(201).json(intelligenceProvider.analyze({ resumeStatements }));
+  const analysis = intelligenceProvider.analyze({ resumeStatements });
+  analysisRepository.save(analysis);
+  response.status(201).json(analysis);
+});
+app.get("/api/v1/analyses", (_request, response) => response.json(analysisRepository.list()));
+app.get("/api/v1/analyses/:id", (request, response) => {
+  const analysis = analysisRepository.get(request.params.id);
+  if (!analysis) {
+    response.status(404).json({ error: "Analysis not found" });
+    return;
+  }
+  response.json(analysis);
 });
 
 app.use((_request, response) => {

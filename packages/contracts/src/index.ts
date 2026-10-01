@@ -189,6 +189,7 @@ export type GithubSync = z.infer<typeof githubSyncSchema>;
 
 export const analysisResultSchema = z.object({
   id: z.string(),
+  createdAt: z.string().datetime(),
   provider: z.enum(["deterministic-demo", "external-ai"]),
   status: z.enum(["completed", "partial"]),
   assessments: z.array(skillAssessmentSchema),
@@ -196,3 +197,12 @@ export const analysisResultSchema = z.object({
   limitations: z.array(z.string()),
 });
 export type AnalysisResult = z.infer<typeof analysisResultSchema>;
+
+export const analysisSummarySchema = z.object({
+  id: z.string(),
+  createdAt: z.string().datetime(),
+  provider: z.enum(["deterministic-demo", "external-ai"]),
+  status: z.enum(["completed", "partial"]),
+  evidenceCount: z.number().int().nonnegative(),
+});
+export type AnalysisSummary = z.infer<typeof analysisSummarySchema>;

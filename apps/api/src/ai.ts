@@ -47,6 +47,7 @@ export class DeterministicDemoProvider implements IntelligenceProvider {
     ];
     return {
       id: `analysis-${crypto.randomUUID()}`,
+      createdAt: new Date().toISOString(),
       provider: "deterministic-demo",
       status: "partial",
       assessments,
