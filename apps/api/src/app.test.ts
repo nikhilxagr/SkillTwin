@@ -33,4 +33,17 @@ describe("GET /api/v1/gap-analysis", () => {
       expect.objectContaining({ skill: "Docker", status: "missing_evidence" }),
     ]));
   });
+
+  describe("GET /api/v1/roadmap", () => {
+    it("prioritizes practical evidence-producing tasks", async () => {
+      const response = await request(app).get("/api/v1/roadmap?roleId=full-stack-developer");
+      expect(response.status).toBe(200);
+      expect(response.body.items).toEqual(expect.arrayContaining([
+        expect.objectContaining({ skill: "Node.js", priority: "high" }),
+      ]));
+      expect(response.body.items).toEqual(expect.arrayContaining([
+        expect.objectContaining({ skill: "Docker", expectedEvidence: expect.arrayContaining(["Dockerfile"]) }),
+      ]));
+    });
+  });
 });

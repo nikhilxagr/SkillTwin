@@ -75,3 +75,18 @@ export const gapAnalysisSchema = z.object({
 });
 export type RoleProfile = z.infer<typeof roleProfileSchema>;
 export type GapAnalysis = z.infer<typeof gapAnalysisSchema>;
+
+export const roadmapItemSchema = z.object({
+  week: z.number().int().positive(),
+  skill: z.string(),
+  objective: z.string(),
+  tasks: z.array(z.string()),
+  expectedEvidence: z.array(z.string()),
+  priority: z.enum(["high", "medium", "low"]),
+});
+export const roadmapSchema = z.object({
+  role: roleProfileSchema,
+  items: z.array(roadmapItemSchema),
+  disclaimer: z.string(),
+});
+export type Roadmap = z.infer<typeof roadmapSchema>;

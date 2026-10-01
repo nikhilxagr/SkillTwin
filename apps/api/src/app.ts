@@ -6,7 +6,7 @@ import pino from "pino";
 import { healthResponseSchema } from "@skilltwin/contracts";
 import { config } from "./config.js";
 import { demoTwin } from "./demo-twin.js";
-import { getGapAnalysis, roles } from "./roles.js";
+import { getGapAnalysis, getRoadmap, roles } from "./roles.js";
 
 export const app = express();
 const logger = pino();
@@ -42,6 +42,14 @@ app.get("/api/v1/gap-analysis", (request, response) => {
     return;
   }
   response.json(analysis);
+});
+app.get("/api/v1/roadmap", (request, response) => {
+  const roadmap = getRoadmap(String(request.query.roleId ?? "full-stack-developer"));
+  if (!roadmap) {
+    response.status(404).json({ error: "Role not found" });
+    return;
+  }
+  response.json(roadmap);
 });
 
 app.use((_request, response) => {

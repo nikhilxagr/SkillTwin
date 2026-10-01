@@ -1,6 +1,6 @@
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { developerTwinSchema, gapAnalysisSchema, type DeveloperTwin, type GapAnalysis } from "@skilltwin/contracts";
+import { developerTwinSchema, gapAnalysisSchema, roadmapSchema, type DeveloperTwin, type GapAnalysis, type Roadmap } from "@skilltwin/contracts";
 import "./styles.css";
 
 const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
@@ -35,6 +35,17 @@ function useGapAnalysis() {
   useEffect(() => {
     fetch(`${apiUrl}/api/v1/gap-analysis?roleId=full-stack-developer`)
       .then(async (response) => gapAnalysisSchema.parse(await response.json()))
+      .then(setData)
+      .catch(() => setData(null));
+  }, []);
+  return data;
+}
+
+function useRoadmap() {
+  const [data, setData] = useState<Roadmap | null>(null);
+  useEffect(() => {
+    fetch(`${apiUrl}/api/v1/roadmap?roleId=full-stack-developer`)
+      .then(async (response) => roadmapSchema.parse(await response.json()))
       .then(setData)
       .catch(() => setData(null));
   }, []);
@@ -122,7 +133,9 @@ function SkillGraph({ twin }: { twin: DeveloperTwin }) {
 }
 
 function Roadmap({ twin }: { twin: DeveloperTwin }) {
-  return <div><div className="page-intro"><p className="eyebrow">Practical roadmap</p><h2>Build evidence, not just knowledge</h2><p className="muted">The next action is prioritized from your current evidence and target-role gaps.</p></div><section className="panel roadmap-card"><div className="roadmap-number">01</div><div><p className="eyebrow">Recommended project task · {twin.nextAction.skill}</p><h2>{twin.nextAction.title}</h2><p>{twin.nextAction.description}</p><div className="expected"><b>Expected new evidence</b><span>Test files</span><span>API documentation</span><span>Decision record</span></div></div></section></div>;
+  const roadmap = useRoadmap();
+  if (!roadmap) return <div className="state-inline">Loading personalized roadmap…</div>;
+  return <div><div className="page-intro"><p className="eyebrow">Practical roadmap · {roadmap.role.name}</p><h2>Build evidence, not just knowledge</h2><p className="muted">{roadmap.disclaimer}</p></div><div className="roadmap-list">{roadmap.items.map((item) => <article className="panel roadmap-card" key={item.week}><div className="roadmap-number">0{item.week}</div><div className="roadmap-body"><div className="roadmap-meta"><p className="eyebrow">Week {item.week} · {item.skill}</p><span className={`priority ${item.priority}`}>{item.priority} priority</span></div><h2>{item.objective}</h2><ul>{item.tasks.map((task) => <li key={task}>{task}</li>)}</ul><div className="expected"><b>Expected evidence</b>{item.expectedEvidence.map((evidence) => <span key={evidence}>{evidence}</span>)}</div></div></article>)}</div></div>;
 }
 
 function SkillRow({ skill }: { skill: DeveloperTwin["skills"][number] }) {
