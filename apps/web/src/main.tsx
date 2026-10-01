@@ -1,10 +1,10 @@
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { developerTwinSchema, gapAnalysisSchema, roadmapSchema, type DeveloperTwin, type GapAnalysis, type Roadmap } from "@skilltwin/contracts";
+import { developerTwinSchema, gapAnalysisSchema, interviewEvaluationSchema, interviewSessionSchema, roadmapSchema, type DeveloperTwin, type GapAnalysis, type InterviewEvaluation, type InterviewSession, type Roadmap } from "@skilltwin/contracts";
 import "./styles.css";
 
 const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
-type View = "overview" | "graph" | "gaps" | "evidence" | "roadmap";
+type View = "overview" | "graph" | "gaps" | "evidence" | "roadmap" | "interview";
 
 function useDemoTwin() {
   const [data, setData] = useState<DeveloperTwin | null>(null);
@@ -52,6 +52,17 @@ function useRoadmap() {
   return data;
 }
 
+function useInterview() {
+  const [data, setData] = useState<InterviewSession | null>(null);
+  useEffect(() => {
+    fetch(`${apiUrl}/api/v1/interviews/demo`)
+      .then(async (response) => interviewSessionSchema.parse(await response.json()))
+      .then(setData)
+      .catch(() => setData(null));
+  }, []);
+  return data;
+}
+
 function Landing({ onStart }: { onStart: () => void }) {
   return (
     <main className="landing">
@@ -81,7 +92,7 @@ function Dashboard({ twin, view, onView, onExit }: { twin: DeveloperTwin; view: 
         <button className="brand brand-button" onClick={onExit}>Skill<span>Twin</span></button>
         <p className="sidebar-label">Developer Twin</p>
         <nav>
-          {([["overview", "Overview"], ["graph", "Skill graph"], ["gaps", "Role gaps"], ["evidence", "Evidence map"], ["roadmap", "Next actions"]] as const).map(([key, label]) => (
+          {([["overview", "Overview"], ["graph", "Skill graph"], ["gaps", "Role gaps"], ["evidence", "Evidence map"], ["roadmap", "Next actions"], ["interview", "Interview coach"]] as const).map(([key, label]) => (
             <button className={view === key ? "nav-item active" : "nav-item"} onClick={() => onView(key)} key={key}>{label}</button>
           ))}
         </nav>
@@ -97,9 +108,36 @@ function Dashboard({ twin, view, onView, onExit }: { twin: DeveloperTwin; view: 
         {view === "gaps" && <RoleGaps />}
         {view === "evidence" && <Evidence twin={twin} />}
         {view === "roadmap" && <Roadmap twin={twin} />}
+        {view === "interview" && <InterviewCoach />}
       </section>
     </main>
   );
+}
+
+function InterviewCoach() {
+  const interview = useInterview();
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [answer, setAnswer] = useState("");
+  const [evaluation, setEvaluation] = useState<InterviewEvaluation | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  if (!interview) return <div className="state-inline">Loading interview coach…</div>;
+  const question = interview.questions[questionIndex];
+  async function submitAnswer() {
+    setSubmitting(true);
+    setEvaluation(null);
+    try {
+      const response = await fetch(`${apiUrl}/api/v1/interviews/demo/evaluate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answer }),
+      });
+      if (!response.ok) throw new Error("Unable to evaluate answer");
+      setEvaluation(interviewEvaluationSchema.parse(await response.json()));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+  return <div><div className="page-intro"><p className="eyebrow">Profile-specific practice · {interview.role.name}</p><h2>Explain the work behind your evidence</h2><p className="muted">{interview.disclaimer}</p></div><div className="interview-layout"><section className="panel interview-question"><div className="question-meta"><span>Question {questionIndex + 1} of {interview.questions.length}</span><span>{question.focusSkill}</span></div><h2>{question.question}</h2><p>{question.projectContext}</p><small>Why this question: {question.whyThisQuestion}</small><textarea value={answer} onChange={(event) => setAnswer(event.target.value)} placeholder="Describe your decision, tradeoffs, and how you validated it…" rows={7} /><button className="primary-button small" disabled={!answer.trim() || submitting} onClick={submitAnswer}>{submitting ? "Evaluating…" : "Evaluate answer"} <span>→</span></button>{evaluation && <div className="evaluation"><div className="score-grid">{Object.entries({ understanding: evaluation.technicalUnderstanding, accuracy: evaluation.accuracy, depth: evaluation.depth, communication: evaluation.communication }).map(([label, score]) => <span key={label}><b>{score}</b><small>{label}</small></span>)}</div><p>{evaluation.feedback}</p><strong>Follow-up</strong><p>{evaluation.followUp}</p><small>{evaluation.evidenceNote}</small><button className="text-button" onClick={() => { setQuestionIndex((index) => (index + 1) % interview.questions.length); setAnswer(""); setEvaluation(null); }}>Next question →</button></div>}</section></div></div>;
 }
 
 function RoleGaps() {

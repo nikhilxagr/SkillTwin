@@ -45,5 +45,22 @@ describe("GET /api/v1/gap-analysis", () => {
         expect.objectContaining({ skill: "Docker", expectedEvidence: expect.arrayContaining(["Dockerfile"]) }),
       ]));
     });
+
+    describe("Interview simulator", () => {
+      it("creates profile-specific questions", async () => {
+        const response = await request(app).get("/api/v1/interviews/demo");
+        expect(response.status).toBe(200);
+        expect(response.body.questions[0]).toMatchObject({ focusSkill: "React" });
+        expect(response.body.questions[0].projectContext).toBeTruthy();
+      });
+
+      it("evaluates an answer without claiming verified proficiency", async () => {
+        const response = await request(app)
+          .post("/api/v1/interviews/demo/evaluate")
+          .send({ answer: "I chose this approach because the tradeoff improved performance. I would validate it with tests and security checks in the API boundary." });
+        expect(response.status).toBe(200);
+        expect(response.body.evidenceNote).toContain("not stored as verified skill evidence");
+      });
+    });
   });
 });

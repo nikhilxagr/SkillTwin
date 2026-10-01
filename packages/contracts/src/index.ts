@@ -90,3 +90,29 @@ export const roadmapSchema = z.object({
   disclaimer: z.string(),
 });
 export type Roadmap = z.infer<typeof roadmapSchema>;
+
+export const interviewQuestionSchema = z.object({
+  id: z.string(),
+  question: z.string(),
+  focusSkill: z.string(),
+  projectContext: z.string(),
+  whyThisQuestion: z.string(),
+});
+export const interviewEvaluationSchema = z.object({
+  technicalUnderstanding: z.number().min(0).max(5),
+  accuracy: z.number().min(0).max(5),
+  depth: z.number().min(0).max(5),
+  communication: z.number().min(0).max(5),
+  feedback: z.string(),
+  followUp: z.string(),
+  evidenceNote: z.string(),
+});
+export const interviewSessionSchema = z.object({
+  id: z.string(),
+  role: roleProfileSchema,
+  questions: z.array(interviewQuestionSchema),
+  disclaimer: z.string(),
+});
+export type InterviewQuestion = z.infer<typeof interviewQuestionSchema>;
+export type InterviewEvaluation = z.infer<typeof interviewEvaluationSchema>;
+export type InterviewSession = z.infer<typeof interviewSessionSchema>;

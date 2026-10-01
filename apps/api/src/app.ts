@@ -7,6 +7,7 @@ import { healthResponseSchema } from "@skilltwin/contracts";
 import { config } from "./config.js";
 import { demoTwin } from "./demo-twin.js";
 import { getGapAnalysis, getRoadmap, roles } from "./roles.js";
+import { demoInterview, evaluateDemoAnswer } from "./interview.js";
 
 export const app = express();
 const logger = pino();
@@ -50,6 +51,15 @@ app.get("/api/v1/roadmap", (request, response) => {
     return;
   }
   response.json(roadmap);
+});
+app.get("/api/v1/interviews/demo", (_request, response) => response.json(demoInterview));
+app.post("/api/v1/interviews/demo/evaluate", (request, response) => {
+  const answer = typeof request.body?.answer === "string" ? request.body.answer : "";
+  if (!answer.trim()) {
+    response.status(400).json({ error: "Answer is required" });
+    return;
+  }
+  response.json(evaluateDemoAnswer(answer));
 });
 
 app.use((_request, response) => {
