@@ -12,6 +12,7 @@ import { demoEvolution } from "./evolution.js";
 import multer from "multer";
 import { parseResume } from "./resume.js";
 import { demoGithubSync, githubStatus } from "./github.js";
+import { intelligenceProvider } from "./ai.js";
 
 export const app = express();
 const logger = pino();
@@ -84,6 +85,12 @@ app.post("/api/v1/resume", upload.single("resume"), async (request, response, ne
 });
 app.get("/api/v1/github/status", (_request, response) => response.json(githubStatus));
 app.post("/api/v1/github/sync", (_request, response) => response.json(demoGithubSync));
+app.post("/api/v1/analyses", (request, response) => {
+  const resumeStatements = Array.isArray(request.body?.resumeStatements)
+    ? request.body.resumeStatements.filter((statement: unknown): statement is string => typeof statement === "string")
+    : [];
+  response.status(201).json(intelligenceProvider.analyze({ resumeStatements }));
+});
 
 app.use((_request, response) => {
   response.status(404).json({ error: "Not found" });

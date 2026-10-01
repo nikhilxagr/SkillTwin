@@ -7,8 +7,8 @@
   "scripts": {
     "build": "pnpm --filter @skilltwin/contracts build && pnpm --filter @skilltwin/api build && pnpm --filter @skilltwin/web build",
     "dev": "pnpm --parallel --filter @skilltwin/api --filter @skilltwin/web dev",
-    "lint": "pnpm --recursive lint",
-    "typecheck": "pnpm --recursive typecheck",
+    "lint": "pnpm --filter @skilltwin/contracts build && pnpm --recursive lint",
+    "typecheck": "pnpm --filter @skilltwin/contracts build && pnpm --recursive typecheck",
     "test": "pnpm --recursive test"
   }
 }

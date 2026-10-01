@@ -10,6 +10,20 @@ describe("GET /health", () => {
     expect(response.body.service).toBe("skilltwin-api");
   });
 
+  describe("POST /api/v1/analyses", () => {
+    it("returns explainable assessments through the provider boundary", async () => {
+      const response = await request(app)
+        .post("/api/v1/analyses")
+        .send({ resumeStatements: ["React", "TypeScript"] });
+      expect(response.status).toBe(201);
+      expect(response.body.provider).toBe("deterministic-demo");
+      expect(response.body.assessments).toEqual(expect.arrayContaining([
+        expect.objectContaining({ skill: "React", evidenceSources: expect.arrayContaining(["github"]) }),
+      ]));
+      expect(response.body.limitations[0]).toContain("external AI credentials");
+    });
+  });
+
 });
 
 describe("GET /api/v1/demo/twin", () => {

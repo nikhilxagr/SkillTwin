@@ -186,3 +186,13 @@ export const githubSyncSchema = z.object({
 });
 export type GithubStatus = z.infer<typeof githubStatusSchema>;
 export type GithubSync = z.infer<typeof githubSyncSchema>;
+
+export const analysisResultSchema = z.object({
+  id: z.string(),
+  provider: z.enum(["deterministic-demo", "external-ai"]),
+  status: z.enum(["completed", "partial"]),
+  assessments: z.array(skillAssessmentSchema),
+  evidenceCount: z.number().int().nonnegative(),
+  limitations: z.array(z.string()),
+});
+export type AnalysisResult = z.infer<typeof analysisResultSchema>;
