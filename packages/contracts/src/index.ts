@@ -116,3 +116,26 @@ export const interviewSessionSchema = z.object({
 export type InterviewQuestion = z.infer<typeof interviewQuestionSchema>;
 export type InterviewEvaluation = z.infer<typeof interviewEvaluationSchema>;
 export type InterviewSession = z.infer<typeof interviewSessionSchema>;
+
+export const evolutionChangeSchema = z.object({
+  skill: z.string(),
+  previousEstimate: z.number().min(0).max(100),
+  currentEstimate: z.number().min(0).max(100),
+  evidenceChange: z.string(),
+  interpretation: z.string(),
+});
+export const evolutionSnapshotSchema = z.object({
+  id: z.string(),
+  analyzedAt: z.string(),
+  label: z.string(),
+  evidenceConfidence: z.number().min(0).max(100),
+  skillsTracked: z.number().int().nonnegative(),
+});
+export const evolutionSchema = z.object({
+  snapshots: z.array(evolutionSnapshotSchema),
+  changes: z.array(evolutionChangeSchema),
+  newEvidence: z.array(z.string()),
+  remainingGaps: z.array(z.string()),
+  disclaimer: z.string(),
+});
+export type Evolution = z.infer<typeof evolutionSchema>;

@@ -1,10 +1,10 @@
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { developerTwinSchema, gapAnalysisSchema, interviewEvaluationSchema, interviewSessionSchema, roadmapSchema, type DeveloperTwin, type GapAnalysis, type InterviewEvaluation, type InterviewSession, type Roadmap } from "@skilltwin/contracts";
+import { developerTwinSchema, evolutionSchema, gapAnalysisSchema, interviewEvaluationSchema, interviewSessionSchema, roadmapSchema, type DeveloperTwin, type Evolution, type GapAnalysis, type InterviewEvaluation, type InterviewSession, type Roadmap } from "@skilltwin/contracts";
 import "./styles.css";
 
 const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
-type View = "overview" | "graph" | "gaps" | "evidence" | "roadmap" | "interview";
+type View = "overview" | "graph" | "gaps" | "evidence" | "roadmap" | "interview" | "evolution";
 
 function useDemoTwin() {
   const [data, setData] = useState<DeveloperTwin | null>(null);
@@ -63,6 +63,17 @@ function useInterview() {
   return data;
 }
 
+function useEvolution() {
+  const [data, setData] = useState<Evolution | null>(null);
+  useEffect(() => {
+    fetch(`${apiUrl}/api/v1/evolution`)
+      .then(async (response) => evolutionSchema.parse(await response.json()))
+      .then(setData)
+      .catch(() => setData(null));
+  }, []);
+  return data;
+}
+
 function Landing({ onStart }: { onStart: () => void }) {
   return (
     <main className="landing">
@@ -92,7 +103,7 @@ function Dashboard({ twin, view, onView, onExit }: { twin: DeveloperTwin; view: 
         <button className="brand brand-button" onClick={onExit}>Skill<span>Twin</span></button>
         <p className="sidebar-label">Developer Twin</p>
         <nav>
-          {([["overview", "Overview"], ["graph", "Skill graph"], ["gaps", "Role gaps"], ["evidence", "Evidence map"], ["roadmap", "Next actions"], ["interview", "Interview coach"]] as const).map(([key, label]) => (
+          {([["overview", "Overview"], ["graph", "Skill graph"], ["gaps", "Role gaps"], ["evidence", "Evidence map"], ["roadmap", "Next actions"], ["interview", "Interview coach"], ["evolution", "Evolution"]] as const).map(([key, label]) => (
             <button className={view === key ? "nav-item active" : "nav-item"} onClick={() => onView(key)} key={key}>{label}</button>
           ))}
         </nav>
@@ -109,9 +120,16 @@ function Dashboard({ twin, view, onView, onExit }: { twin: DeveloperTwin; view: 
         {view === "evidence" && <Evidence twin={twin} />}
         {view === "roadmap" && <Roadmap twin={twin} />}
         {view === "interview" && <InterviewCoach />}
+        {view === "evolution" && <EvolutionView />}
       </section>
     </main>
   );
+}
+
+function EvolutionView() {
+  const evolution = useEvolution();
+  if (!evolution) return <div className="state-inline">Loading evolution history…</div>;
+  return <div><div className="page-intro"><p className="eyebrow">Developer evolution</p><h2>Track evidence as your twin changes</h2><p className="muted">{evolution.disclaimer}</p></div><div className="snapshot-row">{evolution.snapshots.map((snapshot) => <div className="panel snapshot" key={snapshot.id}><small>{snapshot.analyzedAt}</small><b>{snapshot.evidenceConfidence}%</b><span>{snapshot.label}</span><em>{snapshot.skillsTracked} skills tracked</em></div>)}</div><div className="evolution-grid"><section><p className="eyebrow">Skill evidence changes</p><div className="change-list">{evolution.changes.map((change) => <article className="panel change-item" key={change.skill}><div className="change-header"><h3>{change.skill}</h3><strong>{change.previousEstimate} → {change.currentEstimate}</strong></div><p>{change.evidenceChange}</p><small>{change.interpretation}</small></article>)}</div></section><aside className="panel evolution-side"><p className="eyebrow">New evidence detected</p><ul>{evolution.newEvidence.map((item) => <li key={item}>{item}</li>)}</ul><p className="eyebrow">Remaining gaps</p><ul>{evolution.remainingGaps.map((item) => <li key={item}>{item}</li>)}</ul></aside></div></div>;
 }
 
 function InterviewCoach() {

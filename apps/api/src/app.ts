@@ -8,6 +8,7 @@ import { config } from "./config.js";
 import { demoTwin } from "./demo-twin.js";
 import { getGapAnalysis, getRoadmap, roles } from "./roles.js";
 import { demoInterview, evaluateDemoAnswer } from "./interview.js";
+import { demoEvolution } from "./evolution.js";
 
 export const app = express();
 const logger = pino();
@@ -61,6 +62,7 @@ app.post("/api/v1/interviews/demo/evaluate", (request, response) => {
   }
   response.json(evaluateDemoAnswer(answer));
 });
+app.get("/api/v1/evolution", (_request, response) => response.json(demoEvolution));
 
 app.use((_request, response) => {
   response.status(404).json({ error: "Not found" });

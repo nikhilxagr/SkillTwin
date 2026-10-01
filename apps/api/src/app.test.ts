@@ -54,6 +54,15 @@ describe("GET /api/v1/gap-analysis", () => {
         expect(response.body.questions[0].projectContext).toBeTruthy();
       });
 
+      describe("GET /api/v1/evolution", () => {
+        it("returns historical evidence changes with limitations", async () => {
+          const response = await request(app).get("/api/v1/evolution");
+          expect(response.status).toBe(200);
+          expect(response.body.snapshots).toHaveLength(3);
+          expect(response.body.disclaimer).toContain("not proof");
+        });
+      });
+
       it("evaluates an answer without claiming verified proficiency", async () => {
         const response = await request(app)
           .post("/api/v1/interviews/demo/evaluate")
