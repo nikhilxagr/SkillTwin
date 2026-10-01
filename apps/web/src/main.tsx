@@ -1,6 +1,6 @@
 import { StrictMode, useEffect, useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
-import { developerTwinSchema, evolutionSchema, gapAnalysisSchema, interviewEvaluationSchema, interviewSessionSchema, roadmapSchema, resumeUploadSchema, type DeveloperTwin, type Evolution, type GapAnalysis, type InterviewEvaluation, type InterviewSession, type Roadmap, type ResumeUpload } from "@skilltwin/contracts";
+import { developerTwinSchema, evolutionSchema, gapAnalysisSchema, githubStatusSchema, githubSyncSchema, interviewEvaluationSchema, interviewSessionSchema, roadmapSchema, resumeUploadSchema, type DeveloperTwin, type Evolution, type GapAnalysis, type GithubStatus, type GithubSync, type InterviewEvaluation, type InterviewSession, type Roadmap, type ResumeUpload } from "@skilltwin/contracts";
 import "./styles.css";
 
 const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
@@ -129,7 +129,15 @@ function Dashboard({ twin, view, onView, onExit }: { twin: DeveloperTwin; view: 
 
 function SourcesView() {
   const [result, setResult] = useState<ResumeUpload | null>(null);
+  const [github, setGithub] = useState<GithubStatus | null>(null);
+  const [sync, setSync] = useState<GithubSync | null>(null);
   const [state, setState] = useState<"idle" | "uploading" | "error">("idle");
+  useEffect(() => {
+    fetch(`${apiUrl}/api/v1/github/status`)
+      .then(async (response) => githubStatusSchema.parse(await response.json()))
+      .then(setGithub)
+      .catch(() => setGithub(null));
+  }, []);
   async function uploadResume(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -143,7 +151,11 @@ function SourcesView() {
       setState("error");
     }
   }
-  return <div><div className="page-intro"><p className="eyebrow">Evidence sources</p><h2>Connect the evidence behind your twin</h2><p className="muted">Resume statements are treated as claimed evidence until corroborated by projects or repository activity.</p></div><div className="source-grid"><form className="panel upload-card" onSubmit={uploadResume}><p className="eyebrow">Resume · PDF only</p><h3>Upload a resume</h3><p className="muted">Files stay in memory in this demo phase. Production storage and retention policies will be added with authentication.</p><input name="resume" type="file" accept="application/pdf" required /><button className="primary-button small" disabled={state === "uploading"}>{state === "uploading" ? "Parsing…" : "Parse resume"} <span>→</span></button>{state === "error" && <p className="error-text">Upload failed. Check that the file is a readable PDF under 5 MB.</p>}</form>{result && <section className="panel parsed-card"><div className="source-result-header"><div><p className="eyebrow">Parsed resume</p><h3>{result.fileName}</h3></div><span className="source-status">{result.status}</span></div><p className="muted">{result.extractedTextLength} characters · {result.evidence.length} claim signals detected</p><div className="evidence-tags">{result.evidence.slice(0, 12).map((item) => <span key={item.id}>{item.statement}</span>)}</div><small>{result.limitations[0]}</small></section>}</div></div>;
+  async function syncGithub() {
+    const response = await fetch(`${apiUrl}/api/v1/github/sync`, { method: "POST" });
+    if (response.ok) setSync(githubSyncSchema.parse(await response.json()));
+  }
+  return <div><div className="page-intro"><p className="eyebrow">Evidence sources</p><h2>Connect the evidence behind your twin</h2><p className="muted">Resume statements are treated as claimed evidence until corroborated by projects or repository activity.</p></div><div className="source-grid"><form className="panel upload-card" onSubmit={uploadResume}><p className="eyebrow">Resume · PDF only</p><h3>Upload a resume</h3><p className="muted">Files stay in memory in this demo phase. Production storage and retention policies will be added with authentication.</p><input name="resume" type="file" accept="application/pdf" required /><button className="primary-button small" disabled={state === "uploading"}>{state === "uploading" ? "Parsing…" : "Parse resume"} <span>→</span></button>{state === "error" && <p className="error-text">Upload failed. Check that the file is a readable PDF under 5 MB.</p>}</form>{result && <section className="panel parsed-card"><div className="source-result-header"><div><p className="eyebrow">Parsed resume</p><h3>{result.fileName}</h3></div><span className="source-status">{result.status}</span></div><p className="muted">{result.extractedTextLength} characters · {result.evidence.length} claim signals detected</p><div className="evidence-tags">{result.evidence.slice(0, 12).map((item) => <span key={item.id}>{item.statement}</span>)}</div><small>{result.limitations[0]}</small></section>}<section className="panel github-card"><div className="source-result-header"><div><p className="eyebrow">GitHub · authorized evidence</p><h3>{github?.connected ? github.username : "Not connected"}</h3></div><span className="source-status demo">{github?.mode ?? "demo"} mode</span></div><p className="muted">{github?.message ?? "Checking GitHub adapter status…"}</p><button className="outline-button" onClick={syncGithub}>Analyze demo repositories</button>{sync && <div className="repo-list"><b>{sync.repositoriesAnalyzed} repositories analyzed</b>{sync.evidence.map((repo) => <div className="repo-row" key={repo.id}><strong>{repo.fullName}</strong><span>{repo.languages.join(" · ")}</span><small>{repo.evidenceSummary}</small></div>)}</div>}</section></div></div>;
 }
 
 function EvolutionView() {

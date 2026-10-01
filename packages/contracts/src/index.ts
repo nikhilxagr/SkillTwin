@@ -156,3 +156,33 @@ export const resumeUploadSchema = z.object({
   limitations: z.array(z.string()),
 });
 export type ResumeUpload = z.infer<typeof resumeUploadSchema>;
+
+export const githubRepositoryEvidenceSchema = z.object({
+  id: z.string(),
+  fullName: z.string(),
+  description: z.string().nullable(),
+  languages: z.array(z.string()),
+  topics: z.array(z.string()),
+  signals: z.object({
+    readme: z.enum(["missing", "basic", "documented"]),
+    testing: z.enum(["not_detected", "partial", "present"]),
+    documentation: z.enum(["not_detected", "partial", "present"]),
+    activity: z.enum(["low", "steady", "active"]),
+  }),
+  evidenceSummary: z.string(),
+});
+export const githubStatusSchema = z.object({
+  mode: z.enum(["demo", "oauth"]),
+  connected: z.boolean(),
+  username: z.string().nullable(),
+  scopes: z.array(z.string()),
+  message: z.string(),
+});
+export const githubSyncSchema = z.object({
+  status: z.enum(["completed", "partial", "failed"]),
+  repositoriesAnalyzed: z.number().int().nonnegative(),
+  evidence: z.array(githubRepositoryEvidenceSchema),
+  limitations: z.array(z.string()),
+});
+export type GithubStatus = z.infer<typeof githubStatusSchema>;
+export type GithubSync = z.infer<typeof githubSyncSchema>;
