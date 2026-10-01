@@ -1,10 +1,10 @@
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { developerTwinSchema, type DeveloperTwin } from "@skilltwin/contracts";
+import { developerTwinSchema, gapAnalysisSchema, type DeveloperTwin, type GapAnalysis } from "@skilltwin/contracts";
 import "./styles.css";
 
 const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
-type View = "overview" | "graph" | "evidence" | "roadmap";
+type View = "overview" | "graph" | "gaps" | "evidence" | "roadmap";
 
 function useDemoTwin() {
   const [data, setData] = useState<DeveloperTwin | null>(null);
@@ -28,6 +28,17 @@ function useDemoTwin() {
   }, []);
 
   return { data, state };
+}
+
+function useGapAnalysis() {
+  const [data, setData] = useState<GapAnalysis | null>(null);
+  useEffect(() => {
+    fetch(`${apiUrl}/api/v1/gap-analysis?roleId=full-stack-developer`)
+      .then(async (response) => gapAnalysisSchema.parse(await response.json()))
+      .then(setData)
+      .catch(() => setData(null));
+  }, []);
+  return data;
 }
 
 function Landing({ onStart }: { onStart: () => void }) {
@@ -59,7 +70,7 @@ function Dashboard({ twin, view, onView, onExit }: { twin: DeveloperTwin; view: 
         <button className="brand brand-button" onClick={onExit}>Skill<span>Twin</span></button>
         <p className="sidebar-label">Developer Twin</p>
         <nav>
-          {([["overview", "Overview"], ["graph", "Skill graph"], ["evidence", "Evidence map"], ["roadmap", "Next actions"]] as const).map(([key, label]) => (
+          {([["overview", "Overview"], ["graph", "Skill graph"], ["gaps", "Role gaps"], ["evidence", "Evidence map"], ["roadmap", "Next actions"]] as const).map(([key, label]) => (
             <button className={view === key ? "nav-item active" : "nav-item"} onClick={() => onView(key)} key={key}>{label}</button>
           ))}
         </nav>
@@ -72,11 +83,18 @@ function Dashboard({ twin, view, onView, onExit }: { twin: DeveloperTwin; view: 
         </header>
         {view === "overview" && <Overview twin={twin} onView={onView} />}
         {view === "graph" && <SkillGraph twin={twin} />}
+        {view === "gaps" && <RoleGaps />}
         {view === "evidence" && <Evidence twin={twin} />}
         {view === "roadmap" && <Roadmap twin={twin} />}
       </section>
     </main>
   );
+}
+
+function RoleGaps() {
+  const analysis = useGapAnalysis();
+  if (!analysis) return <div className="state-inline">Loading target role analysis…</div>;
+  return <div><div className="page-intro"><p className="eyebrow">Target role · configurable profile</p><h2>{analysis.role.name}</h2><p className="muted">{analysis.role.description} {analysis.disclaimer}</p></div><div className="gap-list">{analysis.results.map((result) => <article className="panel gap-item" key={result.skill}><div className="gap-main"><div><h3>{result.skill}</h3><span className={`importance ${result.importance}`}>{result.importance}</span></div><p>{result.rationale}</p></div><div className="gap-levels"><span>Current <b>{result.currentEstimate}</b></span><span>Target <b>{result.targetEstimate}</b></span><strong className={`gap-status ${result.status}`}>{result.status.replace("_", " ")}</strong></div></article>)}</div></div>;
 }
 
 function Overview({ twin, onView }: { twin: DeveloperTwin; onView: (view: View) => void }) {

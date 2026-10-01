@@ -48,3 +48,30 @@ export const developerTwinSchema = z.object({
 });
 
 export type DeveloperTwin = z.infer<typeof developerTwinSchema>;
+
+export const roleSkillSchema = z.object({
+  skill: z.string(),
+  targetEstimate: z.number().min(0).max(100),
+  importance: z.enum(["required", "important", "useful"]),
+});
+export const roleProfileSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  skills: z.array(roleSkillSchema),
+});
+export const gapResultSchema = z.object({
+  skill: z.string(),
+  currentEstimate: z.number().min(0).max(100),
+  targetEstimate: z.number().min(0).max(100),
+  status: z.enum(["strong", "developing", "gap", "missing_evidence"]),
+  rationale: z.string(),
+  importance: z.enum(["required", "important", "useful"]),
+});
+export const gapAnalysisSchema = z.object({
+  role: roleProfileSchema,
+  results: z.array(gapResultSchema),
+  disclaimer: z.string(),
+});
+export type RoleProfile = z.infer<typeof roleProfileSchema>;
+export type GapAnalysis = z.infer<typeof gapAnalysisSchema>;
