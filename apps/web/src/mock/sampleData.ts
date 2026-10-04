@@ -1,6 +1,8 @@
 import {
   computeCareerReadiness,
   generateInterviewQuestions,
+  generateProjectRecommendations,
+  generateProjectBlueprint,
   type ResumeExtraction,
   type SkillMatrix,
   type JobExtraction,
@@ -11,6 +13,8 @@ import {
   type CareerReadinessReport,
   type InterviewSessionState,
   type InterviewHistoryItem,
+  type ProjectRecommendationReport,
+  type ProjectBlueprint,
 } from "@skilltwin/contracts";
 
 export const sampleResume: ResumeExtraction = {
@@ -1634,6 +1638,16 @@ export const sampleInterviewHistory: InterviewHistoryItem[] = [
     completedAt: "2026-09-28T11:35:00.000Z",
   },
 ];
+
+export const sampleProjectRecommendations: ProjectRecommendationReport = generateProjectRecommendations({
+  matrix: sampleSkillMatrix,
+  job: sampleJobDescription,
+  gapReport: sampleGapAnalysis,
+});
+
+export const sampleProjectBlueprint: ProjectBlueprint = generateProjectBlueprint(
+  sampleProjectRecommendations.projects[0]
+);
 
 
 

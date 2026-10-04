@@ -135,7 +135,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       interview_simulator: "interview_simulator",
       jd_upload: "jd_upload",
       resume_upload: "resume_upload",
+      project_recommendations: "project_recommendations",
+      projects: "project_recommendations",
     };
+    if (
+      action.targetScreen === "projects" ||
+      action.targetScreen === "project_recommendations" ||
+      action.title.toLowerCase().includes("project")
+    ) {
+      onNavigate("project_recommendations");
+      return;
+    }
     const target = screenMap[action.targetScreen] || "gap_analysis";
     onNavigate(target);
   };

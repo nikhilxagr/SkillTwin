@@ -516,6 +516,66 @@ describe("SkillTwin Web Application Shell & UI Views", () => {
     const closeBtn = screen.getByRole("button", { name: /Close/i });
     fireEvent.click(closeBtn);
   });
+
+  it("PHASE 10: navigates to Recommended Projects, verifies gap-targeting project, and generates Project Blueprint", async () => {
+    render(<App />);
+
+    // Load sample profile
+    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
+    });
+
+    // Navigate to Recommended Projects
+    const navProjectsBtn = screen.getByTestId("nav-project-recommendations");
+    expect(navProjectsBtn).toBeDefined();
+    fireEvent.click(navProjectsBtn);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("project-recommendations-view")).toBeDefined();
+      expect(screen.getByTestId("projects-title")).toBeDefined();
+      expect(screen.getByText(/Project Recommendation Engine/i)).toBeDefined();
+      expect(screen.getByText(/Identified Target Gaps to Close:/i)).toBeDefined();
+    });
+
+    // Check project card and targeted gaps
+    const workflowCard = screen.getByTestId("project-card-proj-workflow-platform");
+    expect(workflowCard).toBeDefined();
+    expect(screen.getByText(/Production-Ready Task & Distributed Workflow Platform/i)).toBeDefined();
+    expect(screen.getAllByText(/Production-Grade/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Why this project is relevant:/i).length).toBeGreaterThan(0);
+
+    // Check skills demonstrated
+    expect(screen.getAllByText(/Docker/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Redis/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Testing/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/AWS/i).length).toBeGreaterThan(0);
+
+    // Click "Generate Project Blueprint"
+    const blueprintBtn = screen.getByTestId("btn-blueprint-proj-workflow-platform");
+    expect(blueprintBtn).toBeDefined();
+    fireEvent.click(blueprintBtn);
+
+    // Verify Blueprint Modal
+    await waitFor(() => {
+      expect(screen.getByTestId("project-blueprint-modal")).toBeDefined();
+      expect(screen.getByText(/Technical Project Blueprint/i)).toBeDefined();
+      expect(screen.getByText(/System Topology & Service Flow/i)).toBeDefined();
+      expect(screen.getByText(/REST API Route Specifications/i)).toBeDefined();
+      expect(screen.getByText(/PostgreSQL Relational Schema Specifications/i)).toBeDefined();
+      expect(screen.getByText(/Production Code Templates & Infrastructure Manifests/i)).toBeDefined();
+      expect(screen.getAllByText(/Dockerfile/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/docker-compose\.yml/i).length).toBeGreaterThan(0);
+      expect(screen.getByText(/Evidence Verification Checklist/i)).toBeDefined();
+      expect(screen.getByText(/Recommended Resume Bullet Points/i)).toBeDefined();
+    });
+
+    // Close blueprint modal
+    const closeBtn = screen.getByRole("button", { name: /Close Blueprint/i });
+    expect(closeBtn).toBeDefined();
+    fireEvent.click(closeBtn);
+  });
 });
 
 

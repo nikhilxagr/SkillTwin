@@ -21,6 +21,7 @@ import { gapRouter } from "./modules/gap/gap.controller.js";
 import { optimizerRouter } from "./modules/optimizer/optimizer.controller.js";
 import { readinessRouter } from "./modules/readiness/readiness.controller.js";
 import { simulatorRouter } from "./modules/simulator/simulator.controller.js";
+import { projectsRouter } from "./modules/projects/projects.controller.js";
 
 export const app = express();
 const logger = pino();
@@ -69,6 +70,9 @@ app.use("/api/v1/readiness", readinessRouter);
 
 // Phase 9: Interview Simulator
 app.use("/api/v1/simulator", simulatorRouter);
+
+// Phase 10: Project Recommendation Engine
+app.use("/api/v1/projects", projectsRouter);
 
 app.get("/health", (_request, response) => {
   response.json(

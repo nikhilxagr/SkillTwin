@@ -11,6 +11,7 @@ import { GapAnalysisView } from "./components/gap/GapAnalysisView.js";
 import { ResumeOptimizerView } from "./components/optimizer/ResumeOptimizerView.js";
 import { JobSpecificResumeView } from "./components/tailoring/JobSpecificResumeView.js";
 import { InterviewSimulatorView } from "./components/simulator/InterviewSimulatorView.js";
+import { ProjectRecommendationsView } from "./components/projects/ProjectRecommendationsView.js";
 import {
   sampleResume,
   sampleSkillMatrix,
@@ -22,6 +23,8 @@ import {
   sampleCareerReadinessReport,
   sampleInterviewSession,
   sampleInterviewHistory,
+  sampleProjectRecommendations,
+  sampleProjectBlueprint,
 } from "./mock/sampleData.js";
 import {
   uploadResumeFile,
@@ -36,6 +39,8 @@ import {
   submitInterviewAnswer,
   getInterviewSession,
   getInterviewHistory,
+  getProjectRecommendations,
+  generateProjectBlueprint as apiGenerateProjectBlueprint,
   ApiError,
 } from "./api/client.js";
 import type { ActiveScreen } from "./types/navigation.js";
@@ -44,6 +49,8 @@ import {
   generateInterviewQuestions,
   evaluateInterviewAnswer,
   generateFinalInterviewReport,
+  generateProjectRecommendations as localGenerateProjectRecommendations,
+  generateProjectBlueprint as localGenerateProjectBlueprint,
   type ResumeExtraction,
   type SkillMatrix,
   type JobExtraction,
@@ -55,6 +62,8 @@ import {
   type InterviewSessionState,
   type InterviewHistoryItem,
   type SimulatorExchange,
+  type ProjectRecommendationReport,
+  type ProjectBlueprint,
 } from "@skilltwin/contracts";
 
 const parseHash = (hash: string): ActiveScreen => {
@@ -92,6 +101,11 @@ const parseHash = (hash: string): ActiveScreen => {
     case "interview_simulator":
     case "simulator":
       return "interview_simulator";
+    case "projects":
+    case "project-recommendations":
+    case "project_recommendations":
+    case "recommended-projects":
+      return "project_recommendations";
     case "landing":
     case "home":
     case "":
@@ -129,6 +143,8 @@ const screenToHash = (screen: ActiveScreen): string => {
       return "#/tailored-resume";
     case "interview_simulator":
       return "#/interview-simulator";
+    case "project_recommendations":
+      return "#/projects";
     default:
       return "#/";
   }
@@ -146,6 +162,8 @@ export const App: React.FC = () => {
   const [readinessReport, setReadinessReport] = useState<CareerReadinessReport | null>(null);
   const [interviewSession, setInterviewSession] = useState<InterviewSessionState | null>(sampleInterviewSession);
   const [interviewHistory, setInterviewHistory] = useState<InterviewHistoryItem[]>(sampleInterviewHistory);
+  const [projectRecommendations, setProjectRecommendations] = useState<ProjectRecommendationReport | null>(sampleProjectRecommendations);
+  const [activeBlueprint, setActiveBlueprint] = useState<ProjectBlueprint | null>(sampleProjectBlueprint);
   const [loading, setLoading] = useState(false);
   const [isSampleLoaded, setIsSampleLoaded] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -199,6 +217,9 @@ export const App: React.FC = () => {
     if (resolved === "interview_simulator" && !interviewSession) {
       setInterviewSession(sampleInterviewSession);
     }
+    if (resolved === "project_recommendations" && !projectRecommendations) {
+      setProjectRecommendations(sampleProjectRecommendations);
+    }
 
     setCurrentScreen(resolved);
 
@@ -232,6 +253,8 @@ export const App: React.FC = () => {
     setReadinessReport(sampleCareerReadinessReport);
     setInterviewSession(sampleInterviewSession);
     setInterviewHistory(sampleInterviewHistory);
+    setProjectRecommendations(sampleProjectRecommendations);
+    setActiveBlueprint(sampleProjectBlueprint);
     setIsSampleLoaded(true);
     setLoading(false);
     setApiError(null);
@@ -256,6 +279,8 @@ export const App: React.FC = () => {
     setReadinessReport(null);
     setInterviewSession(null);
     setInterviewHistory(sampleInterviewHistory);
+    setProjectRecommendations(null);
+    setActiveBlueprint(null);
     setIsSampleLoaded(false);
     setApiError(null);
     setCurrentScreen("landing");
@@ -730,6 +755,46 @@ export const App: React.FC = () => {
     setCurrentScreen("interview_simulator");
   };
 
+  const handleGenerateBlueprint = async (projectId: string): Promise<ProjectBlueprint | null> => {
+    try {
+      const result = await apiGenerateProjectBlueprint(projectId);
+      setActiveBlueprint(result);
+      return result;
+    } catch (err) {
+      console.warn("API blueprint generation failed, falling back to local blueprint generator:", err);
+      const proj = projectRecommendations?.projects.find((p) => p.id === projectId);
+      if (proj) {
+        const localBp = localGenerateProjectBlueprint(proj);
+        setActiveBlueprint(localBp);
+        return localBp;
+      }
+      return null;
+    }
+  };
+
+  const handleRefreshProjectRecommendations = async () => {
+    setLoading(true);
+    setApiError(null);
+    try {
+      const result = await getProjectRecommendations({
+        job: job || sampleJobDescription,
+        matrix: matrix || sampleSkillMatrix,
+        gapReport: gapReport || sampleGapAnalysis,
+      });
+      setProjectRecommendations(result);
+      setLoading(false);
+    } catch (err: any) {
+      console.warn("API project recommendations failed, falling back to local engine:", err);
+      const fallback = localGenerateProjectRecommendations({
+        job: job || sampleJobDescription,
+        matrix: matrix || sampleSkillMatrix,
+        gapReport: gapReport || sampleGapAnalysis,
+      });
+      setProjectRecommendations(fallback);
+      setLoading(false);
+    }
+  };
+
   // If on landing screen, show standalone LandingPage
   if (currentScreen === "landing") {
     return (
@@ -860,6 +925,21 @@ export const App: React.FC = () => {
           onSubmitAnswer={handleSubmitInterviewAnswer}
           onSelectHistoricalSession={handleSelectHistoricalSession}
           onNavigate={handleNavigate}
+          isLoading={loading}
+        />
+      )}
+
+      {currentScreen === "project_recommendations" && (
+        <ProjectRecommendationsView
+          report={projectRecommendations}
+          blueprint={activeBlueprint}
+          job={job}
+          matrix={matrix}
+          gapReport={gapReport}
+          onGenerateBlueprint={handleGenerateBlueprint}
+          onRefreshRecommendations={handleRefreshProjectRecommendations}
+          onNavigate={handleNavigate}
+          onLoadSample={handleLoadSample}
           isLoading={loading}
         />
       )}

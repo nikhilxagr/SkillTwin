@@ -480,4 +480,78 @@ export async function getLatestInterviewSession(): Promise<any> {
   return body.data;
 }
 
+/**
+ * PHASE 10: Generate tailored project recommendations targeting candidate gaps
+ */
+export async function getProjectRecommendations(params: {
+  job?: any;
+  matrix?: any;
+  gapReport?: any;
+}): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/projects/recommendations`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(params),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "Failed to generate project recommendations.", body.code, response.status);
+  }
+
+  return body.data;
+}
+
+/**
+ * PHASE 10: Retrieve latest project recommendations
+ */
+export async function getLatestProjectRecommendations(): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/projects/latest`);
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "No project recommendations found.", undefined, response.status);
+  }
+
+  return body.data;
+}
+
+/**
+ * PHASE 10: Generate an in-depth Project Blueprint
+ */
+export async function generateProjectBlueprint(projectId: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/projects/blueprint`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ projectId }),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "Failed to generate project blueprint.", body.code, response.status);
+  }
+
+  return body.data;
+}
+
+/**
+ * PHASE 10: Fetch an existing Project Blueprint
+ */
+export async function getProjectBlueprint(projectId: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/projects/blueprint/${encodeURIComponent(projectId)}`);
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "Project blueprint not found.", undefined, response.status);
+  }
+
+  return body.data;
+}
+
 

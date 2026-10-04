@@ -10,3 +10,5 @@ export * from "./readiness-engine.js";
 export * from "./analysis.js";
 export * from "./interview.js";
 export * from "./interview-engine.js";
+export * from "./project-recommendations.js";
+export * from "./project-recommendations-engine.js";

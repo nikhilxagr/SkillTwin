@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Layers,
   MessageSquare,
+  Code2,
   X,
 } from "lucide-react";
 import type { ActiveScreen } from "../../types/navigation.js";
@@ -34,7 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onMobileClose,
 }) => {
   const isScreenActive = (
-    target: "dashboard" | "resume" | "skills" | "job_analysis" | "gap_analysis" | "recommendations" | "tailored_resume" | "interview_simulator"
+    target: "dashboard" | "resume" | "skills" | "job_analysis" | "gap_analysis" | "recommendations" | "tailored_resume" | "interview_simulator" | "project_recommendations"
   ) => {
     switch (target) {
       case "dashboard":
@@ -53,6 +54,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         return currentScreen === "tailored_resume";
       case "interview_simulator":
         return currentScreen === "interview_simulator";
+      case "project_recommendations":
+        return currentScreen === "project_recommendations";
       default:
         return false;
     }
@@ -225,6 +228,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <MessageSquare size={16} />
             <span>Interview Simulator</span>
+          </button>
+
+          {/* 9. Recommended Projects (Phase 10) */}
+          <button
+            data-testid="nav-project-recommendations"
+            className={`nav-button ${isScreenActive("project_recommendations") ? "active" : ""}`}
+            onClick={() => handleNavClick("project_recommendations")}
+          >
+            <Code2 size={16} />
+            <span>Recommended Projects</span>
           </button>
         </div>
       </div>
