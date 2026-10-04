@@ -19,6 +19,7 @@ import { resumeRouter } from "./modules/resume/resume.controller.js";
 import { jobRouter } from "./modules/job/job.controller.js";
 import { gapRouter } from "./modules/gap/gap.controller.js";
 import { optimizerRouter } from "./modules/optimizer/optimizer.controller.js";
+import { readinessRouter } from "./modules/readiness/readiness.controller.js";
 
 export const app = express();
 const logger = pino();
@@ -61,6 +62,9 @@ app.use("/api/v1/gap", gapRouter);
 
 // Phase 6: Resume Optimization Engine
 app.use("/api/v1/optimizer", optimizerRouter);
+
+// Phase 8: Career Readiness
+app.use("/api/v1/readiness", readinessRouter);
 
 app.get("/health", (_request, response) => {
   response.json(

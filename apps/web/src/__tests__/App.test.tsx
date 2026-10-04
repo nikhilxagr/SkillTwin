@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { App } from "../App.js";
+import { sampleCareerReadinessReport } from "../mock/sampleData.js";
 
 describe("SkillTwin Web Application Shell & UI Views", () => {
   beforeEach(() => {
@@ -379,6 +380,65 @@ describe("SkillTwin Web Application Shell & UI Views", () => {
       expect(screen.getByText(/Job-Specific Tailored Resume Draft/i)).toBeDefined();
       expect(screen.getByRole("button", { name: /Download \.md/i })).toBeDefined();
       expect(screen.getByRole("button", { name: /Copy Markdown/i })).toBeDefined();
+    });
+  });
+
+  it("PHASE 8: renders Advanced Career Readiness Dashboard with Next Best Actions", async () => {
+    render(<App />);
+
+    // Load sample profile to land on Dashboard
+    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("career-readiness-dashboard")).toBeDefined();
+    });
+
+    // 1. Overall readiness score and rating
+    expect(screen.getByText(/Overall Career Readiness/i)).toBeDefined();
+    expect(screen.getByTestId("readiness-score-value")).toBeDefined();
+    expect(screen.getByTestId("readiness-score-value").textContent).toBe("40");
+    expect(screen.getAllByText(/Needs Targeted Prep/i).length).toBeGreaterThan(0);
+    expect(screen.getByTestId("readiness-executive-summary")).toBeDefined();
+
+    // 2. Score breakdown formula
+    expect(screen.getByText(/Alignment Component \(40%\):/i)).toBeDefined();
+    expect(screen.getByText(/Coverage Component \(35%\):/i)).toBeDefined();
+    expect(screen.getByText(/Evidence Component \(25%\):/i)).toBeDefined();
+    expect(screen.getByText(/Critical Gap Penalty:/i)).toBeDefined();
+
+    // 3. Skill coverage breakdown
+    expect(screen.getByText(/Skill Coverage Breakdown/i)).toBeDefined();
+    expect(screen.getByText(/Required Role Skills/i)).toBeDefined();
+    expect(screen.getAllByText(/Preferred Qualifications/i).length).toBeGreaterThan(0);
+
+    // 4. Evidence strength distribution across 4 tiers
+    expect(screen.getByText(/Evidence Strength Distribution/i)).toBeDefined();
+    expect(screen.getAllByText(/Work experience/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Projects/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Education \/ certification/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Listed only/i).length).toBeGreaterThan(0);
+
+    // 5. Strongest and Weakest areas
+    expect(screen.getByText(/Demonstrated Technical Strengths/i)).toBeDefined();
+    expect(screen.getByText(/Weakest Areas \/ Evidence Deficits/i)).toBeDefined();
+
+    // 6. Top Target Role Gaps
+    expect(screen.getByText(/Top Target Role Gaps/i)).toBeDefined();
+
+    // 7. "Your Next Best Actions" section and canonical action cards
+    expect(screen.getByTestId("next-best-actions-heading")).toBeDefined();
+    expect(screen.getByText(/Your Next Best Actions/i)).toBeDefined();
+    expect(screen.getByText(/Improve testing evidence/i)).toBeDefined();
+    expect(screen.getByText(/Build a Docker-based project/i)).toBeDefined();
+    expect(screen.getByText(/Strengthen Node\.js fundamentals/i)).toBeDefined();
+
+    // 8. Test action CTA interaction
+    const actionBtn = screen.getByRole("button", { name: /View testing gaps/i });
+    expect(actionBtn).toBeDefined();
+    fireEvent.click(actionBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Deterministic Gap Analysis/i)).toBeDefined();
     });
   });
 });

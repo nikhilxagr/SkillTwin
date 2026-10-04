@@ -4,6 +4,7 @@ import type {
   JobExtraction,
   JobAnalysis,
   GapAnalysisReport,
+  CareerReadinessReport,
 } from "@skilltwin/contracts";
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:4000";
@@ -324,4 +325,45 @@ export async function getLatestTailoredResume(): Promise<any> {
 
   return body.data;
 }
+
+/**
+ * PHASE 8: Evaluate Career Readiness
+ */
+export async function evaluateReadiness(
+  matrix: SkillMatrix,
+  resume?: ResumeExtraction | null,
+  job?: JobExtraction | null,
+  gapReport?: GapAnalysisReport | null
+): Promise<CareerReadinessReport> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/readiness/evaluate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ matrix, resume, job, gapReport }),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "Failed to evaluate career readiness.", body.code, response.status);
+  }
+
+  return body.data as CareerReadinessReport;
+}
+
+/**
+ * PHASE 8: Retrieve latest Career Readiness evaluation
+ */
+export async function getLatestReadiness(): Promise<CareerReadinessReport> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/readiness/latest`);
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "No career readiness report found.", undefined, response.status);
+  }
+
+  return body.data as CareerReadinessReport;
+}
+
 

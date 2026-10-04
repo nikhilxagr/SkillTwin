@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import request from "supertest";
 import { app } from "../../../app.js";
 import { geminiService } from "../../../services/ai/gemini.js";
@@ -6,6 +6,23 @@ import { resumeAnalyzer } from "../../../services/ai/resumeAnalyzer.js";
 import { geminiResumeAnalysisSchema } from "../../../services/ai/schemas/resume-schema.js";
 import { resumeRepository } from "../resume.repository.js";
 import { resumeService } from "../resume.service.js";
+
+vi.mock("pdf-parse", () => {
+  return {
+    default: async (buffer: Buffer) => {
+      return {
+        numpages: 1,
+        numrender: 1,
+        info: {},
+        metadata: {},
+        text: `Jordan Taylor - Senior Cloud Developer
+Summary: Experienced engineer with React TypeScript Node.js Docker AWS
+Experience: Cloud Architect at TechLab building scalable Kubernetes microservices`,
+        version: "1.10.100",
+      };
+    },
+  };
+});
 
 // Valid minimal PDF containing text for pdf-parse
 const minimalPdfContent = `%PDF-1.4

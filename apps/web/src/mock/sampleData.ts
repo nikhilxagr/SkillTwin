@@ -1,11 +1,13 @@
-import type {
-  ResumeExtraction,
-  SkillMatrix,
-  JobExtraction,
-  JobAnalysis,
-  GapAnalysisReport,
-  ResumeOptimizationReport,
-  JobSpecificTailoredResume,
+import {
+  computeCareerReadiness,
+  type ResumeExtraction,
+  type SkillMatrix,
+  type JobExtraction,
+  type JobAnalysis,
+  type GapAnalysisReport,
+  type ResumeOptimizationReport,
+  type JobSpecificTailoredResume,
+  type CareerReadinessReport,
 } from "@skilltwin/contracts";
 
 export const sampleResume: ResumeExtraction = {
@@ -1566,5 +1568,16 @@ export const sampleJobSpecificTailoredResume: JobSpecificTailoredResume = {
   ],
   generatedAt: "2026-10-04T22:00:00.000Z",
 };
+
+/**
+ * PHASE 8: Precomputed Sample Career Readiness Report
+ */
+export const sampleCareerReadinessReport: CareerReadinessReport = computeCareerReadiness({
+  matrix: sampleSkillMatrix,
+  resume: sampleResume,
+  job: sampleJobDescription,
+  gapReport: sampleGapAnalysis,
+});
+
 
 

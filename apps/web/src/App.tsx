@@ -18,6 +18,7 @@ import {
   sampleGapAnalysis,
   sampleResumeOptimization,
   sampleJobSpecificTailoredResume,
+  sampleCareerReadinessReport,
 } from "./mock/sampleData.js";
 import {
   uploadResumeFile,
@@ -27,17 +28,20 @@ import {
   compareGap,
   optimizeResume,
   tailorResume,
+  evaluateReadiness,
   ApiError,
 } from "./api/client.js";
 import type { ActiveScreen } from "./types/navigation.js";
-import type {
-  ResumeExtraction,
-  SkillMatrix,
-  JobExtraction,
-  JobAnalysis,
-  GapAnalysisReport,
-  ResumeOptimizationReport,
-  JobSpecificTailoredResume,
+import {
+  computeCareerReadiness,
+  type ResumeExtraction,
+  type SkillMatrix,
+  type JobExtraction,
+  type JobAnalysis,
+  type GapAnalysisReport,
+  type ResumeOptimizationReport,
+  type JobSpecificTailoredResume,
+  type CareerReadinessReport,
 } from "@skilltwin/contracts";
 
 const parseHash = (hash: string): ActiveScreen => {
@@ -119,6 +123,7 @@ export const App: React.FC = () => {
   const [gapReport, setGapReport] = useState<GapAnalysisReport | null>(null);
   const [optimization, setOptimization] = useState<ResumeOptimizationReport | null>(null);
   const [tailoredResume, setTailoredResume] = useState<JobSpecificTailoredResume | null>(null);
+  const [readinessReport, setReadinessReport] = useState<CareerReadinessReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [isSampleLoaded, setIsSampleLoaded] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -199,6 +204,7 @@ export const App: React.FC = () => {
     setGapReport(sampleGapAnalysis);
     setOptimization(sampleResumeOptimization);
     setTailoredResume(sampleJobSpecificTailoredResume);
+    setReadinessReport(sampleCareerReadinessReport);
     setIsSampleLoaded(true);
     setLoading(false);
     setApiError(null);
@@ -220,6 +226,7 @@ export const App: React.FC = () => {
     setGapReport(null);
     setOptimization(null);
     setTailoredResume(null);
+    setReadinessReport(null);
     setIsSampleLoaded(false);
     setApiError(null);
     setCurrentScreen("landing");
@@ -511,6 +518,32 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleEvaluateReadiness = async () => {
+    const effectiveMatrix = matrix || sampleSkillMatrix;
+    const effectiveResume = resume || sampleResume;
+    const effectiveJob = job || sampleJobDescription;
+    const effectiveGap = gapReport || sampleGapAnalysis;
+
+    setLoading(true);
+    setApiError(null);
+
+    try {
+      const rep = await evaluateReadiness(effectiveMatrix, effectiveResume, effectiveJob, effectiveGap);
+      setReadinessReport(rep);
+      setLoading(false);
+    } catch (err: any) {
+      console.warn("Live readiness evaluation failed, falling back to deterministic local evaluation:", err);
+      const rep = computeCareerReadiness({
+        matrix: effectiveMatrix,
+        resume: effectiveResume,
+        job: effectiveJob,
+        gapReport: effectiveGap,
+      });
+      setReadinessReport(rep);
+      setLoading(false);
+    }
+  };
+
   // If on landing screen, show standalone LandingPage
   if (currentScreen === "landing") {
     return (
@@ -540,9 +573,12 @@ export const App: React.FC = () => {
         <DashboardView
           resume={resume}
           matrix={matrix}
+          job={job}
           gapReport={gapReport}
+          readinessReport={readinessReport}
           onNavigate={handleNavigate}
           onLoadSample={handleLoadSample}
+          onRefreshReadiness={handleEvaluateReadiness}
         />
       )}
 
