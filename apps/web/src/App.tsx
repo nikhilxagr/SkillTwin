@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Shell } from "./components/layout/Shell.js";
 import { LandingPage } from "./components/landing/LandingPage.js";
 import { DashboardView } from "./components/dashboard/DashboardView.js";
@@ -36,6 +36,70 @@ import type {
   ResumeOptimizationReport,
 } from "@skilltwin/contracts";
 
+const parseHash = (hash: string): ActiveScreen => {
+  const clean = hash.replace(/^#\/?/, "").toLowerCase().trim();
+  switch (clean) {
+    case "dashboard":
+      return "dashboard";
+    case "resume":
+    case "resume-upload":
+      return "resume_upload";
+    case "resume-view":
+      return "resume_view";
+    case "skills":
+    case "skill-matrix":
+      return "skill_matrix";
+    case "job":
+    case "job-analysis":
+    case "jd-analysis":
+      return "jd_analysis";
+    case "job-upload":
+    case "jd-upload":
+      return "jd_upload";
+    case "gap-analysis":
+    case "gaps":
+      return "gap_analysis";
+    case "recommendations":
+    case "resume-improvement":
+      return "resume_improvement";
+    case "landing":
+    case "home":
+    case "":
+      return "landing";
+    default:
+      return "landing";
+  }
+};
+
+const screenToHash = (screen: ActiveScreen): string => {
+  switch (screen) {
+    case "landing":
+      return "#/";
+    case "dashboard":
+      return "#/dashboard";
+    case "resume":
+    case "resume_upload":
+      return "#/resume";
+    case "resume_view":
+      return "#/resume-view";
+    case "skills":
+    case "skill_matrix":
+      return "#/skills";
+    case "job_analysis":
+    case "jd_analysis":
+      return "#/job-analysis";
+    case "jd_upload":
+      return "#/job-upload";
+    case "gap_analysis":
+      return "#/gap-analysis";
+    case "recommendations":
+    case "resume_improvement":
+      return "#/recommendations";
+    default:
+      return "#/";
+  }
+};
+
 export const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<ActiveScreen>("landing");
   const [resume, setResume] = useState<ResumeExtraction | null>(null);
@@ -48,22 +112,67 @@ export const App: React.FC = () => {
   const [isSampleLoaded, setIsSampleLoaded] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
+  // Hash-based client routing synchronization
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (typeof window !== "undefined") {
+        const route = parseHash(window.location.hash);
+        setCurrentScreen(route);
+      }
+    };
+
+    if (typeof window !== "undefined" && window.location.hash) {
+      const initial = parseHash(window.location.hash);
+      if (initial !== "landing") {
+        setCurrentScreen(initial);
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("hashchange", handleHashChange);
+      return () => window.removeEventListener("hashchange", handleHashChange);
+    }
+  }, []);
+
   const handleNavigate = (screen: ActiveScreen) => {
-    if (screen === "gap_analysis" && matrix && job && !gapReport) {
+    const resolved: ActiveScreen =
+      screen === "resume"
+        ? "resume_upload"
+        : screen === "skills"
+        ? "skill_matrix"
+        : screen === "job_analysis"
+        ? "jd_analysis"
+        : screen === "recommendations"
+        ? "resume_improvement"
+        : screen;
+
+    if (resolved === "gap_analysis" && matrix && job && !gapReport) {
       handleRunGapAnalysis();
       return;
     }
-    if (screen === "resume_improvement" && (resume || matrix) && (job || gapReport) && !optimization) {
+    if (resolved === "resume_improvement" && (resume || matrix) && (job || gapReport) && !optimization) {
       handleRunResumeOptimization();
       return;
     }
-    setCurrentScreen(screen);
-    try {
-      if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+
+    setCurrentScreen(resolved);
+
+    if (typeof window !== "undefined") {
+      const targetHash = screenToHash(resolved);
+      if (window.location.hash !== targetHash) {
+        try {
+          window.location.hash = targetHash;
+        } catch {
+          // Ignore in environments where window.location.hash cannot be set
+        }
       }
-    } catch {
-      // Ignore in test environments without full scroll behavior support
+      try {
+        if (typeof window.scrollTo === "function") {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      } catch {
+        // Ignore in test environments without full scroll behavior support
+      }
     }
   };
 
@@ -78,6 +187,13 @@ export const App: React.FC = () => {
     setLoading(false);
     setApiError(null);
     setCurrentScreen("dashboard");
+    if (typeof window !== "undefined") {
+      try {
+        window.location.hash = "#/dashboard";
+      } catch {
+        // Ignore
+      }
+    }
   };
 
   const handleReset = () => {
@@ -90,6 +206,13 @@ export const App: React.FC = () => {
     setIsSampleLoaded(false);
     setApiError(null);
     setCurrentScreen("landing");
+    if (typeof window !== "undefined") {
+      try {
+        window.location.hash = "#/";
+      } catch {
+        // Ignore
+      }
+    }
   };
 
   const handleUploadResumeFile = async (file: File) => {

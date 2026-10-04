@@ -1,12 +1,16 @@
 export type ActiveScreen =
   | "landing"
   | "dashboard"
+  | "resume"
   | "resume_upload"
   | "resume_view"
+  | "skills"
   | "skill_matrix"
+  | "job_analysis"
   | "jd_upload"
   | "jd_analysis"
   | "gap_analysis"
+  | "recommendations"
   | "resume_improvement";
 
 export interface NavigationItem {

@@ -8,6 +8,9 @@ import {
   Upload,
   CheckCircle2,
   Target,
+  Clock,
+  Briefcase,
+  FileText,
 } from "lucide-react";
 import { Card } from "../common/Card.js";
 import { Badge } from "../common/Badge.js";
@@ -48,51 +51,58 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   const topSkills = matrix.items.filter((item) => item.proficiency === "Strong").slice(0, 4);
 
+  // Recent analyses mock records for Phase 1 dashboard
+  const recentAnalyses = [
+    {
+      id: "analysis_1",
+      role: gapReport?.targetRole || "Senior Full Stack Engineer",
+      company: gapReport?.company || "Linear Systems Inc.",
+      score: gapReport?.summary.alignmentScore ?? 58,
+      status: (gapReport?.summary.alignmentScore ?? 58) >= 70 ? "Strong Match" : "Needs Attention",
+      date: "Today",
+      criticalGaps: gapReport?.summary.criticalGapCount ?? 3,
+    },
+    {
+      id: "analysis_2",
+      role: "Frontend React Specialist",
+      company: "Modern UI Labs",
+      score: 82,
+      status: "Strong Match",
+      date: "2 days ago",
+      criticalGaps: 0,
+    },
+    {
+      id: "analysis_3",
+      role: "Full Stack Engineer",
+      company: "CloudScale Distributed",
+      score: 64,
+      status: "Partial Match",
+      date: "1 week ago",
+      criticalGaps: 2,
+    },
+  ];
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      {/* Top Banner: What Should I Do Next? */}
-      <div
-        style={{
-          background: "var(--color-light-blue)",
-          border: "1px solid #bfdbfe",
-          borderRadius: "var(--radius-lg)",
-          padding: "20px 24px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "20px",
-          flexWrap: "wrap",
-        }}
-      >
-        <div style={{ maxWidth: "720px" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              fontSize: "11px",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              color: "var(--color-primary-blue)",
-              marginBottom: "6px",
-            }}
-          >
-            <Target size={13} /> Recommended Next Action
+    <div className="flex flex-col gap-6">
+      {/* 1. Profile Summary & Next Actions Banner */}
+      <div className="bg-brand-light border border-blue-200 rounded-lg p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="max-w-2xl">
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-blue mb-1.5">
+            <Target size={13} /> Next Action
           </div>
-          <h2 style={{ fontSize: "18px", fontWeight: 700, color: "var(--color-deep-navy)", marginBottom: "6px" }}>
+          <h2 className="text-lg font-bold text-brand-navy mb-1">
             {gapReport && gapReport.criticalGaps.length > 0
               ? `Resolve ${gapReport.criticalGaps.length} Critical Gaps: ${gapReport.criticalGaps.map((g) => g.canonicalName).join(", ")}`
               : "Strengthen Project Evidence with Quantifiable Technical Context"}
           </h2>
-          <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+          <p className="text-xs text-content-secondary leading-relaxed">
             {gapReport && gapReport.criticalGaps.length > 0
-              ? "Your frontend stack matches the target role, but Docker and Automated Testing lack implementation proof. Adding tests to your active project will immediately upgrade your profile."
+              ? "Your demonstrated frontend stack matches the target role, but Docker and Automated Testing lack verifiable proof. Adding tests to your active project will immediately upgrade your profile."
               : "Review your detailed skill matrix to inspect source evidence and verify your technical competencies."}
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "8px" }}>
+        <div className="flex gap-2 shrink-0">
           {gapReport ? (
             <Button
               variant="primary"
@@ -118,21 +128,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* Metrics Row */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: "14px",
-        }}
-      >
+      {/* 2. Key Readiness KPI Strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         <div className="stat-card">
           <span className="stat-label">
             <BarChart2 size={13} /> Skills Tracked
           </span>
           <span className="stat-value">{matrix.summary.totalSkills}</span>
           <span className="stat-subtext">
-            <strong style={{ color: "var(--color-match)" }}>{matrix.summary.demonstratedCount}</strong> demonstrated • {matrix.summary.claimedOnlyCount} claimed only
+            <strong className="text-status-success">{matrix.summary.demonstratedCount}</strong> demonstrated • {matrix.summary.claimedOnlyCount} claimed only
           </span>
         </div>
 
@@ -154,7 +158,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <span className="stat-label">
             <AlertTriangle size={13} /> Critical Gaps
           </span>
-          <span className="stat-value" style={{ color: "var(--color-gap)" }}>
+          <span className="stat-value text-status-error">
             {gapReport ? gapReport.summary.criticalGapCount : 0}
           </span>
           <span className="stat-subtext">Mandatory skills without evidence</span>
@@ -169,126 +173,164 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* 2-Column Detail Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "16px" }}>
-        {/* Left: Top Demonstrated Skills */}
-        <Card
-          title="Demonstrated Technical Strengths"
-          description="Skills with multi-source project and commercial evidence."
-          action={
-            <Button variant="outline" size="sm" onClick={() => onNavigate("skill_matrix")}>
-              View Full Matrix ({matrix.items.length})
-            </Button>
-          }
-        >
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {topSkills.map((skill) => (
-              <div
-                key={skill.canonicalName}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                  paddingBottom: "10px",
-                  borderBottom: "1px solid var(--border-subtle)",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontWeight: 600, fontSize: "13.5px", color: "var(--text-primary)" }}>{skill.canonicalName}</span>
-                    <Badge variant="neutral">{skill.category}</Badge>
-                    <Badge variant="match">Demonstrated</Badge>
-                  </div>
-                  <span className="font-mono" style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
-                    {skill.confidence}% Confidence
-                  </span>
-                </div>
-                <ProgressBar value={skill.confidence} color="var(--color-match)" />
-                <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
-                  {skill.explanation}
-                </p>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Right: Gap & Quick Actions */}
-        <Card
-          title="Role Requirements Summary"
-          description={gapReport ? `Target: ${gapReport.targetRole}` : "No active job description"}
-          action={
-            <Button variant="outline" size="sm" onClick={() => onNavigate("jd_upload")}>
-              Change JD
-            </Button>
-          }
-        >
-          {gapReport ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: "var(--radius-md)",
-                  background: "var(--bg-subtle)",
-                  border: "1px solid var(--border-subtle)",
-                  fontSize: "12.5px",
-                  color: "var(--text-secondary)",
-                  lineHeight: 1.45,
-                }}
-              >
-                {gapReport.summary.alignmentExplanation}
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <div style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-secondary)", letterSpacing: "0.04em" }}>
-                  Critical Gaps to Address ({gapReport.criticalGaps.length})
-                </div>
-                {gapReport.criticalGaps.map((gap) => (
-                  <div
-                    key={gap.canonicalName}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "8px 12px",
-                      background: "var(--color-gap-bg)",
-                      border: "1px solid var(--color-gap-border)",
-                      borderRadius: "var(--radius-md)",
-                    }}
-                  >
-                    <div>
-                      <span style={{ fontWeight: 600, fontSize: "13px", color: "#991b1b" }}>
-                        {gap.canonicalName}
-                      </span>
-                      <p style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "1px" }}>
-                        Required: {gap.requiredProficiency} • Current: {gap.candidateProficiency}
-                      </p>
-                    </div>
-                    <Badge variant="gap">GAP</Badge>
-                  </div>
-                ))}
-              </div>
-
-              <Button
-                variant="primary"
-                size="sm"
-                icon={<ArrowRight size={13} />}
-                onClick={() => onNavigate("gap_analysis")}
-                style={{ marginTop: "6px" }}
-              >
-                Open Full Gap Analysis
+      {/* 3. Main Dashboard Sections Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Left Column: Strongest Skills (7 cols) */}
+        <div className="lg:col-span-7">
+          <Card
+            title="Demonstrated Technical Strengths"
+            description="Skills with multi-source project and commercial evidence."
+            action={
+              <Button variant="outline" size="sm" onClick={() => onNavigate("skill_matrix")}>
+                View Full Matrix ({matrix.items.length})
               </Button>
+            }
+          >
+            <div className="flex flex-col gap-3.5">
+              {topSkills.map((skill) => (
+                <div
+                  key={skill.canonicalName}
+                  className="flex flex-col gap-1.5 pb-2.5 border-b border-border-subtle last:border-0"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm text-content-primary">{skill.canonicalName}</span>
+                      <Badge variant="neutral">{skill.category}</Badge>
+                      <Badge variant="match">Demonstrated</Badge>
+                    </div>
+                    <span className="font-mono text-xs text-content-secondary">
+                      {skill.confidence}% Confidence
+                    </span>
+                  </div>
+                  <ProgressBar value={skill.confidence} color="var(--color-match)" />
+                  <p className="text-xs text-content-secondary mt-0.5 leading-relaxed">
+                    {skill.explanation}
+                  </p>
+                </div>
+              ))}
             </div>
-          ) : (
-            <EmptyState
-              icon={<Upload size={20} />}
-              title="Compare with a Job"
-              description="Upload a job description to calculate your 5-tier skill match."
-              actionText="Upload Job Description"
-              onAction={() => onNavigate("jd_upload")}
-            />
-          )}
-        </Card>
+          </Card>
+        </div>
+
+        {/* Right Column: Latest Job Analysis & Skills Needing Attention (5 cols) */}
+        <div className="lg:col-span-5 flex flex-col gap-4">
+          <Card
+            title="Role Requirements Summary"
+            description={gapReport ? `Target: ${gapReport.targetRole}` : "No active job description"}
+            action={
+              <Button variant="outline" size="sm" onClick={() => onNavigate("jd_upload")}>
+                Change JD
+              </Button>
+            }
+          >
+            {gapReport ? (
+              <div className="flex flex-col gap-3">
+                <div className="p-3 rounded bg-surface-subtle border border-border-subtle text-xs text-content-secondary leading-relaxed">
+                  {gapReport.summary.alignmentExplanation}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <div className="text-xs font-bold uppercase tracking-wider text-content-secondary">
+                    Critical Gaps ({gapReport.criticalGaps.length})
+                  </div>
+                  {gapReport.criticalGaps.map((gap) => (
+                    <div
+                      key={gap.canonicalName}
+                      className="flex justify-between items-center p-2.5 bg-status-error/10 border border-status-error/20 rounded"
+                    >
+                      <div>
+                        <span className="font-semibold text-xs text-status-error">
+                          {gap.canonicalName}
+                        </span>
+                        <p className="text-[11px] text-content-secondary mt-0.5">
+                          Required: {gap.requiredProficiency} • Current: {gap.candidateProficiency}
+                        </p>
+                      </div>
+                      <Badge variant="gap">GAP</Badge>
+                    </div>
+                  ))}
+                </div>
+
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={<ArrowRight size={13} />}
+                  onClick={() => onNavigate("gap_analysis")}
+                  className="mt-1"
+                >
+                  Open Full Gap Analysis
+                </Button>
+              </div>
+            ) : (
+              <EmptyState
+                icon={<Upload size={20} />}
+                title="Compare with a Job"
+                description="Upload a job description to calculate your 5-tier skill match."
+                actionText="Upload Job Description"
+                onAction={() => onNavigate("jd_upload")}
+              />
+            )}
+          </Card>
+        </div>
       </div>
+
+      {/* 4. Recent Analyses Section */}
+      <Card
+        title="Recent Career Analyses"
+        description="Historical benchmark snapshots and role comparisons."
+      >
+        <div className="overflow-x-auto">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Target Role & Company</th>
+                <th>Alignment Score</th>
+                <th>Critical Gaps</th>
+                <th>Status</th>
+                <th>Analyzed</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentAnalyses.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <div className="font-semibold text-xs text-brand-navy">{item.role}</div>
+                    <div className="text-[11px] text-content-secondary">{item.company}</div>
+                  </td>
+                  <td>
+                    <span className="font-mono font-bold text-xs text-brand-blue">{item.score}%</span>
+                  </td>
+                  <td>
+                    <span className="text-xs font-medium text-content-secondary">
+                      {item.criticalGaps === 0 ? "0 gaps" : `${item.criticalGaps} critical`}
+                    </span>
+                  </td>
+                  <td>
+                    <Badge variant={item.score >= 70 ? "match" : "partial"}>
+                      {item.status}
+                    </Badge>
+                  </td>
+                  <td className="text-xs text-content-muted">
+                    <span className="inline-flex items-center gap-1">
+                      <Clock size={11} /> {item.date}
+                    </span>
+                  </td>
+                  <td>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onNavigate("gap_analysis")}
+                    >
+                      Review
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 };

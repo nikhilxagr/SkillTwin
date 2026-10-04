@@ -6,6 +6,7 @@ import { App } from "../App.js";
 describe("SkillTwin Web Application Shell & UI Views", () => {
   beforeEach(() => {
     window.scrollTo = () => {};
+    window.location.hash = "";
   });
 
   it("renders the Landing Page with core value proposition", () => {
@@ -31,7 +32,7 @@ describe("SkillTwin Web Application Shell & UI Views", () => {
     // Check Dashboard KPI stats
     expect(screen.getByText(/Skills Tracked/i)).toBeDefined();
     expect(screen.getByText(/Role Alignment/i)).toBeDefined();
-    expect(screen.getByText(/58%/i)).toBeDefined();
+    expect(screen.getAllByText(/58%/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Critical Gaps/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Demonstrated Technical Strengths/i)).toBeDefined();
   });

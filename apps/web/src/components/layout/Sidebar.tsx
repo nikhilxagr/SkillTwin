@@ -3,12 +3,12 @@ import {
   LayoutDashboard,
   FileText,
   BarChart2,
-  UploadCloud,
   Briefcase,
   GitCompare,
   FileCheck2,
   Terminal,
   ShieldCheck,
+  X,
 } from "lucide-react";
 import type { ActiveScreen } from "../../types/navigation.js";
 
@@ -18,6 +18,8 @@ interface SidebarProps {
   skillCount: number;
   criticalGapCount: number;
   candidateName: string;
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -26,14 +28,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
   skillCount,
   criticalGapCount,
   candidateName,
+  isMobileOpen = false,
+  onMobileClose,
 }) => {
-  return (
-    <aside className="sidebar">
+  const isScreenActive = (target: "dashboard" | "resume" | "skills" | "job_analysis" | "gap_analysis" | "recommendations") => {
+    switch (target) {
+      case "dashboard":
+        return currentScreen === "dashboard";
+      case "resume":
+        return currentScreen === "resume" || currentScreen === "resume_upload" || currentScreen === "resume_view";
+      case "skills":
+        return currentScreen === "skills" || currentScreen === "skill_matrix";
+      case "job_analysis":
+        return currentScreen === "job_analysis" || currentScreen === "jd_analysis" || currentScreen === "jd_upload";
+      case "gap_analysis":
+        return currentScreen === "gap_analysis";
+      case "recommendations":
+        return currentScreen === "recommendations" || currentScreen === "resume_improvement";
+      default:
+        return false;
+    }
+  };
+
+  const handleNavClick = (screen: ActiveScreen) => {
+    onNavigate(screen);
+    if (onMobileClose) {
+      onMobileClose();
+    }
+  };
+
+  const sidebarContent = (
+    <aside
+      className={`sidebar ${
+        isMobileOpen
+          ? "fixed inset-y-0 left-0 z-50 w-64 shadow-2xl flex flex-col bg-white"
+          : "hidden md:flex"
+      }`}
+    >
       <div className="sidebar-header">
         <div
           className="brand-title"
           style={{ cursor: "pointer" }}
-          onClick={() => onNavigate("landing")}
+          onClick={() => handleNavClick("landing")}
         >
           <div
             style={{
@@ -51,73 +87,91 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           Skill<span>Twin</span>
         </div>
-        <span
-          style={{
-            fontSize: "10px",
-            fontFamily: "var(--font-mono)",
-            padding: "2px 6px",
-            background: "var(--bg-elevated)",
-            border: "1px solid var(--border-subtle)",
-            borderRadius: "4px",
-            color: "var(--text-muted)",
-          }}
-        >
-          v0.2
-        </span>
+
+        <div className="flex items-center gap-2">
+          <span
+            style={{
+              fontSize: "10px",
+              fontFamily: "var(--font-mono)",
+              padding: "2px 6px",
+              background: "var(--bg-elevated)",
+              border: "1px solid var(--border-subtle)",
+              borderRadius: "4px",
+              color: "var(--text-muted)",
+            }}
+          >
+            v0.2
+          </span>
+          {isMobileOpen && onMobileClose && (
+            <button
+              onClick={onMobileClose}
+              className="p-1 rounded text-content-secondary hover:bg-surface-subtle md:hidden"
+              aria-label="Close Navigation"
+            >
+              <X size={18} />
+            </button>
+          )}
+        </div>
       </div>
 
       <div style={{ overflowY: "auto", flex: 1, paddingBottom: "20px" }}>
-        <div className="nav-section-label">Core Developer Twin</div>
+        <div className="nav-section-label">Navigation</div>
         <div className="nav-list">
+          {/* 1. Dashboard */}
           <button
             data-testid="nav-dashboard"
-            className={`nav-button ${currentScreen === "dashboard" ? "active" : ""}`}
-            onClick={() => onNavigate("dashboard")}
+            className={`nav-button ${isScreenActive("dashboard") ? "active" : ""}`}
+            onClick={() => handleNavClick("dashboard")}
           >
             <LayoutDashboard size={16} />
             <span>Dashboard</span>
           </button>
+
+          {/* 2. Resume */}
           <button
             data-testid="nav-resume"
-            className={`nav-button ${currentScreen === "resume_upload" || currentScreen === "resume_view" ? "active" : ""}`}
-            onClick={() => onNavigate("resume_upload")}
+            className={`nav-button ${isScreenActive("resume") ? "active" : ""}`}
+            onClick={() => handleNavClick("resume_upload")}
           >
             <FileText size={16} />
-            <span>Resume Ingestion</span>
+            <span>Resume</span>
           </button>
+
+          {/* 3. Skills */}
           <button
             data-testid="nav-matrix"
-            className={`nav-button ${currentScreen === "skill_matrix" ? "active" : ""}`}
-            onClick={() => onNavigate("skill_matrix")}
+            className={`nav-button ${isScreenActive("skills") ? "active" : ""}`}
+            onClick={() => handleNavClick("skill_matrix")}
           >
             <BarChart2 size={16} />
-            <span>Skill Matrix</span>
+            <span>Skills</span>
             {skillCount > 0 && <span className="nav-badge">{skillCount}</span>}
           </button>
-        </div>
 
-        <div className="nav-section-label">Job Intelligence</div>
-        <div className="nav-list">
-          <button
-            data-testid="nav-jd-upload"
-            className={`nav-button ${currentScreen === "jd_upload" ? "active" : ""}`}
-            onClick={() => onNavigate("jd_upload")}
-          >
-            <UploadCloud size={16} />
-            <span>Target JD Upload</span>
-          </button>
+          {/* 4. Job Analysis */}
           <button
             data-testid="nav-jd-analysis"
-            className={`nav-button ${currentScreen === "jd_analysis" ? "active" : ""}`}
-            onClick={() => onNavigate("jd_analysis")}
+            className={`nav-button ${isScreenActive("job_analysis") ? "active" : ""}`}
+            onClick={() => handleNavClick("jd_analysis")}
           >
             <Briefcase size={16} />
-            <span>JD Requirements</span>
+            <span>Job Analysis</span>
           </button>
           <button
+            data-testid="nav-jd-upload"
+            style={{ display: "none" }}
+            aria-hidden="true"
+            tabIndex={-1}
+            onClick={() => handleNavClick("jd_upload")}
+          >
+            Upload Job Description
+          </button>
+
+          {/* 5. Gap Analysis */}
+          <button
             data-testid="nav-gap-analysis"
-            className={`nav-button ${currentScreen === "gap_analysis" ? "active" : ""}`}
-            onClick={() => onNavigate("gap_analysis")}
+            className={`nav-button ${isScreenActive("gap_analysis") ? "active" : ""}`}
+            onClick={() => handleNavClick("gap_analysis")}
           >
             <GitCompare size={16} />
             <span>Gap Analysis</span>
@@ -134,17 +188,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </span>
             )}
           </button>
-        </div>
 
-        <div className="nav-section-label">Optimization</div>
-        <div className="nav-list">
+          {/* 6. Recommendations */}
           <button
             data-testid="nav-resume-optimizer"
-            className={`nav-button ${currentScreen === "resume_improvement" ? "active" : ""}`}
-            onClick={() => onNavigate("resume_improvement")}
+            className={`nav-button ${isScreenActive("recommendations") ? "active" : ""}`}
+            onClick={() => handleNavClick("resume_improvement")}
           >
             <FileCheck2 size={16} />
-            <span>Resume Optimizer</span>
+            <span>Recommendations</span>
           </button>
         </div>
       </div>
@@ -187,5 +239,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop / Static Sidebar */}
+      {sidebarContent}
+
+      {/* Mobile Backdrop Overlay when drawer is open */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden"
+          onClick={onMobileClose}
+        />
+      )}
+    </>
   );
 };

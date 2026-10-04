@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, RefreshCw, Layers } from "lucide-react";
+import { CheckCircle2, RefreshCw, Layers, Menu } from "lucide-react";
 import { Button } from "../common/Button.js";
 
 interface HeaderProps {
@@ -9,6 +9,7 @@ interface HeaderProps {
   onLoadSample: () => void;
   onReset: () => void;
   isSampleLoaded: boolean;
+  onToggleMobileMenu?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,10 +19,22 @@ export const Header: React.FC<HeaderProps> = ({
   onLoadSample,
   onReset,
   isSampleLoaded,
+  onToggleMobileMenu,
 }) => {
   return (
     <header className="top-bar">
-      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        {/* Mobile Hamburger Button */}
+        {onToggleMobileMenu && (
+          <button
+            onClick={onToggleMobileMenu}
+            className="md:hidden p-1.5 rounded border border-border-subtle text-content-primary hover:bg-surface-subtle"
+            aria-label="Toggle navigation menu"
+          >
+            <Menu size={18} />
+          </button>
+        )}
+
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span
             style={{
@@ -32,13 +45,13 @@ export const Header: React.FC<HeaderProps> = ({
             }}
           />
           <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: 500 }}>
-            {hasResume ? "Evidence Active" : "No Resume Uploaded"}
+            {hasResume ? "Evidence Active" : "No Resume"}
           </span>
         </div>
 
-        <div style={{ height: "16px", width: "1px", background: "var(--border-subtle)" }} />
+        <div style={{ height: "16px", width: "1px", background: "var(--border-subtle)" }} className="hidden sm:block" />
 
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }} className="hidden sm:flex">
           <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Target Role:</span>
           <span
             style={{
@@ -53,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <Button
           variant={isSampleLoaded ? "secondary" : "primary"}
           size="sm"
