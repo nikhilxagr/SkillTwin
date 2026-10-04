@@ -416,6 +416,14 @@ export const ResumeOptimizerView: React.FC<ResumeOptimizerViewProps> = ({
           >
             Gap Analysis
           </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onNavigate("tailored_resume")}
+          >
+            Job-Specific Tailoring
+          </Button>
         </div>
       </div>
 

@@ -11,7 +11,8 @@ export type ActiveScreen =
   | "jd_analysis"
   | "gap_analysis"
   | "recommendations"
-  | "resume_improvement";
+  | "resume_improvement"
+  | "tailored_resume";
 
 export interface NavigationItem {
   id: ActiveScreen;

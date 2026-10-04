@@ -8,6 +8,7 @@ import {
   FileCheck2,
   Terminal,
   ShieldCheck,
+  Layers,
   X,
 } from "lucide-react";
 import type { ActiveScreen } from "../../types/navigation.js";
@@ -31,7 +32,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isMobileOpen = false,
   onMobileClose,
 }) => {
-  const isScreenActive = (target: "dashboard" | "resume" | "skills" | "job_analysis" | "gap_analysis" | "recommendations") => {
+  const isScreenActive = (
+    target: "dashboard" | "resume" | "skills" | "job_analysis" | "gap_analysis" | "recommendations" | "tailored_resume"
+  ) => {
     switch (target) {
       case "dashboard":
         return currentScreen === "dashboard";
@@ -45,6 +48,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         return currentScreen === "gap_analysis";
       case "recommendations":
         return currentScreen === "recommendations" || currentScreen === "resume_improvement";
+      case "tailored_resume":
+        return currentScreen === "tailored_resume";
       default:
         return false;
     }
@@ -197,6 +202,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <FileCheck2 size={16} />
             <span>Recommendations</span>
+          </button>
+
+          {/* 7. Tailored Resume (Phase 7) */}
+          <button
+            data-testid="nav-tailored-resume"
+            className={`nav-button ${isScreenActive("tailored_resume") ? "active" : ""}`}
+            onClick={() => handleNavClick("tailored_resume")}
+          >
+            <Layers size={16} />
+            <span>Tailored Resume</span>
           </button>
         </div>
       </div>

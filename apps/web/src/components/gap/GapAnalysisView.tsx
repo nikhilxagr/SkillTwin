@@ -11,6 +11,7 @@ import {
   RotateCcw,
   Star,
   AlertCircle,
+  Layers,
 } from "lucide-react";
 import { Card } from "../common/Card.js";
 import { Badge } from "../common/Badge.js";
@@ -120,6 +121,15 @@ export const GapAnalysisView: React.FC<GapAnalysisViewProps> = ({
             }}
           >
             Generate Resume Recommendations
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            icon={<Layers size={13} />}
+            onClick={() => onNavigate("tailored_resume")}
+          >
+            Tailor Resume for Job
           </Button>
         </div>
       </div>

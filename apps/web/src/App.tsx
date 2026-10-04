@@ -9,6 +9,7 @@ import { JobUploadView } from "./components/job/JobUploadView.js";
 import { JobAnalysisView } from "./components/job/JobAnalysisView.js";
 import { GapAnalysisView } from "./components/gap/GapAnalysisView.js";
 import { ResumeOptimizerView } from "./components/optimizer/ResumeOptimizerView.js";
+import { JobSpecificResumeView } from "./components/tailoring/JobSpecificResumeView.js";
 import {
   sampleResume,
   sampleSkillMatrix,
@@ -16,6 +17,7 @@ import {
   sampleJobAnalysis,
   sampleGapAnalysis,
   sampleResumeOptimization,
+  sampleJobSpecificTailoredResume,
 } from "./mock/sampleData.js";
 import {
   uploadResumeFile,
@@ -24,6 +26,7 @@ import {
   uploadJobText,
   compareGap,
   optimizeResume,
+  tailorResume,
   ApiError,
 } from "./api/client.js";
 import type { ActiveScreen } from "./types/navigation.js";
@@ -34,6 +37,7 @@ import type {
   JobAnalysis,
   GapAnalysisReport,
   ResumeOptimizationReport,
+  JobSpecificTailoredResume,
 } from "@skilltwin/contracts";
 
 const parseHash = (hash: string): ActiveScreen => {
@@ -62,6 +66,10 @@ const parseHash = (hash: string): ActiveScreen => {
     case "recommendations":
     case "resume-improvement":
       return "resume_improvement";
+    case "tailored":
+    case "tailored-resume":
+    case "tailoring":
+      return "tailored_resume";
     case "landing":
     case "home":
     case "":
@@ -95,6 +103,8 @@ const screenToHash = (screen: ActiveScreen): string => {
     case "recommendations":
     case "resume_improvement":
       return "#/recommendations";
+    case "tailored_resume":
+      return "#/tailored-resume";
     default:
       return "#/";
   }
@@ -108,6 +118,7 @@ export const App: React.FC = () => {
   const [jobAnalysis, setJobAnalysis] = useState<JobAnalysis | null>(null);
   const [gapReport, setGapReport] = useState<GapAnalysisReport | null>(null);
   const [optimization, setOptimization] = useState<ResumeOptimizationReport | null>(null);
+  const [tailoredResume, setTailoredResume] = useState<JobSpecificTailoredResume | null>(null);
   const [loading, setLoading] = useState(false);
   const [isSampleLoaded, setIsSampleLoaded] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -154,6 +165,10 @@ export const App: React.FC = () => {
       handleRunResumeOptimization();
       return;
     }
+    if (resolved === "tailored_resume" && (resume || matrix) && (job || gapReport) && !tailoredResume) {
+      handleRunJobTailoring();
+      return;
+    }
 
     setCurrentScreen(resolved);
 
@@ -183,6 +198,7 @@ export const App: React.FC = () => {
     setJobAnalysis(sampleJobAnalysis);
     setGapReport(sampleGapAnalysis);
     setOptimization(sampleResumeOptimization);
+    setTailoredResume(sampleJobSpecificTailoredResume);
     setIsSampleLoaded(true);
     setLoading(false);
     setApiError(null);
@@ -203,6 +219,7 @@ export const App: React.FC = () => {
     setJobAnalysis(null);
     setGapReport(null);
     setOptimization(null);
+    setTailoredResume(null);
     setIsSampleLoaded(false);
     setApiError(null);
     setCurrentScreen("landing");
@@ -465,6 +482,35 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleRunJobTailoring = async () => {
+    setLoading(true);
+    setApiError(null);
+
+    const effectiveResume = resume || sampleResume;
+    const effectiveMatrix = matrix || sampleSkillMatrix;
+    const effectiveJob = job || sampleJobDescription;
+    const effectiveGap = gapReport || sampleGapAnalysis;
+
+    try {
+      const result = await tailorResume(
+        effectiveResume,
+        effectiveMatrix,
+        effectiveJob,
+        effectiveGap,
+        effectiveResume.id,
+        effectiveJob.id
+      );
+      setTailoredResume(result);
+      setLoading(false);
+      setCurrentScreen("tailored_resume");
+    } catch (err: any) {
+      console.warn("Live tailoring failed, falling back to sample tailored resume:", err);
+      setTailoredResume(sampleJobSpecificTailoredResume);
+      setLoading(false);
+      setCurrentScreen("tailored_resume");
+    }
+  };
+
   // If on landing screen, show standalone LandingPage
   if (currentScreen === "landing") {
     return (
@@ -566,6 +612,17 @@ export const App: React.FC = () => {
           onNavigate={handleNavigate}
           onLoadSample={handleLoadSample}
           onRecomputeOptimization={handleRunResumeOptimization}
+        />
+      )}
+
+      {currentScreen === "tailored_resume" && (
+        <JobSpecificResumeView
+          tailoredResume={tailoredResume}
+          masterResume={resume}
+          selectedJob={job}
+          onNavigate={handleNavigate}
+          onLoadSample={handleLoadSample}
+          onRecomputeTailoring={handleRunJobTailoring}
         />
       )}
     </Shell>

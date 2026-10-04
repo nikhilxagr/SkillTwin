@@ -282,3 +282,46 @@ export async function getLatestOptimizationReport(): Promise<ResumeOptimizationR
 
   return body.data as ResumeOptimizationReport;
 }
+
+/**
+ * PHASE 7: Generate a job-specific tailored resume recommendation
+ */
+export async function tailorResume(
+  resume?: any,
+  matrix?: any,
+  job?: any,
+  gapReport?: any,
+  resumeId?: string,
+  jobId?: string
+): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/optimizer/tailor`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ resume, matrix, job, gapReport, resumeId, jobId }),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "Failed to generate job-specific tailored resume.", body.code, response.status);
+  }
+
+  return body.data;
+}
+
+/**
+ * Retrieve the latest job-specific tailored resume
+ */
+export async function getLatestTailoredResume(): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/optimizer/tailored/latest`);
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "No job-specific tailored resume found.", undefined, response.status);
+  }
+
+  return body.data;
+}
+

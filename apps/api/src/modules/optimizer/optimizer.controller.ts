@@ -76,3 +76,78 @@ optimizerRouter.get("/:id", (req: Request, res: Response) => {
     data: report,
   });
 });
+
+/**
+ * POST /api/v1/optimizer/tailor
+ * Generate a job-specific tailored resume recommendation (Phase 7).
+ */
+optimizerRouter.post("/tailor", async (req: Request, res: Response) => {
+  try {
+    const { resume, matrix, job, gapReport, resumeId, jobId } = req.body;
+
+    const tailored = await optimizerService.tailor({
+      resume,
+      matrix,
+      job,
+      gapReport,
+      resumeId,
+      jobId,
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: tailored,
+    });
+  } catch (err: any) {
+    const isNotFound = err.message?.includes("not found");
+    res.status(isNotFound ? 404 : 400).json({
+      status: "error",
+      code: isNotFound ? "NOT_FOUND" : "TAILORING_FAILED",
+      message: err.message || "Failed to generate job-specific tailored resume.",
+    });
+  }
+});
+
+/**
+ * GET /api/v1/optimizer/tailored/latest
+ * Retrieve the latest job-specific tailored resume.
+ */
+optimizerRouter.get("/tailored/latest", (_req: Request, res: Response) => {
+  const tailored = optimizerService.getLatestTailoredResume();
+  if (!tailored) {
+    res.status(404).json({
+      status: "error",
+      code: "NOT_FOUND",
+      message: "No job-specific tailored resume has been generated yet.",
+    });
+    return;
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: tailored,
+  });
+});
+
+/**
+ * GET /api/v1/optimizer/tailored/:id
+ * Retrieve a specific job-specific tailored resume by ID.
+ */
+optimizerRouter.get("/tailored/:id", (req: Request, res: Response) => {
+  const tailoredId = String(req.params.id);
+  const tailored = optimizerService.getTailoredResume(tailoredId);
+  if (!tailored) {
+    res.status(404).json({
+      status: "error",
+      code: "NOT_FOUND",
+      message: `Job-specific tailored resume '${tailoredId}' not found.`,
+    });
+    return;
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: tailored,
+  });
+});
+

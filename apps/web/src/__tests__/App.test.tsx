@@ -334,5 +334,53 @@ describe("SkillTwin Web Application Shell & UI Views", () => {
       expect(screen.getAllByText(/Evidence Requirement:/i).length).toBeGreaterThan(0);
     });
   });
+
+  it("navigates to Job-Specific Tailoring workflow, renders Alignment Summary, Master vs Job-Specific comparison, and allows Accept/Reject/Edit", async () => {
+    render(<App />);
+
+    // Load sample profile
+    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
+    });
+
+    // 1. Navigate to Tailored Resume on sidebar
+    fireEvent.click(screen.getByTestId("nav-tailored-resume"));
+
+    // 2. Verify Job-Specific Resume Workflow view
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Job-Specific Resume Workflow/i)).toBeDefined();
+        expect(screen.getByText(/Alignment Summary/i)).toBeDefined();
+        expect(screen.getAllByText(/MASTER RESUME/i).length).toBeGreaterThan(0);
+        expect(screen.getAllByText(/JOB-SPECIFIC VERSION/i).length).toBeGreaterThan(0);
+        expect(screen.getByText(/Untouched & Locked/i)).toBeDefined();
+        expect(screen.getAllByText(/Zero-Fabrication Guarantee/i).length).toBeGreaterThan(0);
+      },
+      { timeout: 4000 }
+    );
+
+    // 3. Verify Alignment Summary elements
+    expect(screen.getByText(/Master Baseline/i)).toBeDefined();
+    expect(screen.getByText(/Tailored Match/i)).toBeDefined();
+    expect(screen.getByText(/Core Skills Prioritized/i)).toBeDefined();
+    expect(screen.getByText(/Why this tailored version is better aligned:/i)).toBeDefined();
+
+    // 4. Verify Accept, Reject, and Edit recommendation controls
+    expect(screen.getAllByRole("button", { name: /Accept/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: /Reject/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: /Edit/i }).length).toBeGreaterThan(0);
+
+    // 5. Toggle to Job-Specific Version Document draft tab
+    fireEvent.click(screen.getByRole("button", { name: /View Job-Specific Version/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Job-Specific Tailored Resume Draft/i)).toBeDefined();
+      expect(screen.getByRole("button", { name: /Download \.md/i })).toBeDefined();
+      expect(screen.getByRole("button", { name: /Copy Markdown/i })).toBeDefined();
+    });
+  });
 });
+
 
