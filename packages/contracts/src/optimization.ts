@@ -4,6 +4,7 @@ export const optimizationHighlightTagSchema = z.enum([
   "MATCHED",
   "MISSING",
   "WEAK_EVIDENCE",
+  "RELEVANT",
   "RECOMMENDED",
 ]);
 export type OptimizationHighlightTag = z.infer<typeof optimizationHighlightTagSchema>;
@@ -16,7 +17,7 @@ export const bulletImprovementSchema = z.object({
   rationale: z.string().min(1),
   evidenceConfirmed: z.boolean(),
   truthWarning: z.string().optional(),
-  highlightTag: optimizationHighlightTagSchema.default("RECOMMENDED"),
+  highlightTag: optimizationHighlightTagSchema.default("RELEVANT"),
   sourceSection: z.string().optional(),
 });
 export type BulletImprovement = z.infer<typeof bulletImprovementSchema>;
@@ -38,7 +39,7 @@ export const projectImprovementSchema = z.object({
   projectName: z.string().min(1),
   currentSummary: z.string().min(1),
   targetedSkills: z.array(z.string()).default([]),
-  highlightTag: optimizationHighlightTagSchema.default("RECOMMENDED"),
+  highlightTag: optimizationHighlightTagSchema.default("RELEVANT"),
   suggestedEnhancement: z.string().min(1),
   truthCheckNote: z.string().min(1),
   evidenceRequiredNote: z.string().min(1),
@@ -53,13 +54,25 @@ export const resumeSectionRecommendationSchema = z.object({
     "Work Experience",
     "Projects",
     "Education & Certifications",
+    "Section Ordering",
   ]),
-  highlightTag: optimizationHighlightTagSchema.default("RECOMMENDED"),
+  highlightTag: optimizationHighlightTagSchema.default("RELEVANT"),
   currentEvaluation: z.string().min(1),
   recommendedChange: z.string().min(1),
   truthCheckNote: z.string().min(1),
 });
 export type ResumeSectionRecommendation = z.infer<typeof resumeSectionRecommendationSchema>;
+
+export const sectionOrderingRecommendationSchema = z.object({
+  id: z.string().default("sec-order-1"),
+  highlightTag: optimizationHighlightTagSchema.default("RELEVANT"),
+  currentOrder: z.array(z.string()).default([]),
+  recommendedOrder: z.array(z.string()),
+  reason: z.string(),
+  rationale: z.string(),
+  truthCheckNote: z.string(),
+});
+export type SectionOrderingRecommendation = z.infer<typeof sectionOrderingRecommendationSchema>;
 
 export const skillsSectionCategorySchema = z.object({
   categoryName: z.string().min(1),
@@ -69,7 +82,7 @@ export const skillsSectionCategorySchema = z.object({
 export type SkillsSectionCategory = z.infer<typeof skillsSectionCategorySchema>;
 
 export const skillsSectionRecommendationSchema = z.object({
-  highlightTag: z.literal("RECOMMENDED").default("RECOMMENDED"),
+  highlightTag: optimizationHighlightTagSchema.default("RELEVANT"),
   layoutStyle: z.string().min(1),
   categories: z.array(skillsSectionCategorySchema).default([]),
   formattingAdvice: z.string().min(1),
@@ -82,7 +95,7 @@ export const jdAlignmentRecommendationSchema = z.object({
   title: z.string().min(1),
   targetJobExpectation: z.string().min(1),
   alignmentSuggestion: z.string().min(1),
-  highlightTag: optimizationHighlightTagSchema.default("RECOMMENDED"),
+  highlightTag: optimizationHighlightTagSchema.default("RELEVANT"),
   truthCheckNote: z.string().min(1),
 });
 export type JdAlignmentRecommendation = z.infer<typeof jdAlignmentRecommendationSchema>;
@@ -99,7 +112,7 @@ export const truthfulRecommendationSchema = z.object({
   description: z.string().min(1),
   truthCheckNote: z.string().min(1),
   suggestedAction: z.string().min(1),
-  highlightTag: optimizationHighlightTagSchema.default("RECOMMENDED"),
+  highlightTag: optimizationHighlightTagSchema.default("RELEVANT"),
 });
 export type TruthfulRecommendation = z.infer<typeof truthfulRecommendationSchema>;
 
@@ -135,6 +148,7 @@ export const resumeOptimizationReportSchema = z.object({
   poorlyRepresentedSkills: z.array(poorlyRepresentedSkillSchema).default([]),
   projectImprovements: z.array(projectImprovementSchema).default([]),
   sectionRecommendations: z.array(resumeSectionRecommendationSchema).default([]),
+  sectionOrdering: sectionOrderingRecommendationSchema.optional(),
   skillsSectionRecommendation: skillsSectionRecommendationSchema.optional(),
   jdAlignmentRecommendations: z.array(jdAlignmentRecommendationSchema).default([]),
   truthfulRecommendations: z.array(truthfulRecommendationSchema).default([]),

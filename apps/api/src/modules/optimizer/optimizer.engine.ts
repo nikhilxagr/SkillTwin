@@ -9,6 +9,7 @@ import type {
   PoorlyRepresentedSkill,
   ProjectImprovement,
   ResumeSectionRecommendation,
+  SectionOrderingRecommendation,
   SkillsSectionRecommendation,
   JdAlignmentRecommendation,
   TruthfulRecommendation,
@@ -63,19 +64,22 @@ export class ResumeOptimizerEngine {
     // 5. Resume section recommendations (Summary, Skills, Experience, Projects, Education)
     const sectionRecommendations = this.generateSectionRecommendations(input);
 
-    // 6. Concrete skills section structure & advice
+    // 6. Section ordering recommendation tailored to role seniority & recruiter scanning patterns
+    const sectionOrdering = this.generateSectionOrdering(input);
+
+    // 7. Concrete skills section structure & advice
     const skillsSectionRecommendation = this.generateSkillsSectionRecommendation(input);
 
-    // 7. Tactical JD alignment recommendations
+    // 8. Tactical JD alignment recommendations
     const jdAlignmentRecommendations = this.generateJdAlignmentRecommendations(input);
 
-    // 8. Bullet-point improvements (Before / After diffs with zero fabricated metrics)
+    // 9. Bullet-point improvements (Before / After diffs with zero fabricated metrics)
     const bulletImprovements = this.generateBulletImprovements(input);
 
-    // 9. Truthful high-level next actions (backward compatibility & strategic guidance)
+    // 10. Truthful high-level next actions (backward compatibility & strategic guidance)
     const truthfulRecommendations = this.generateTruthfulRecommendations(input);
 
-    // 10. Non-negotiable anti-fabrication rules
+    // 11. Non-negotiable anti-fabrication rules
     const truthfulGuidanceRules = [
       "Never fabricate statistics, metrics, or performance improvements (e.g. 'boosted efficiency by 40%') not measured in production.",
       "Do not claim experience with technologies you cannot confidently explain in a live technical screen or system design session.",
@@ -95,6 +99,7 @@ export class ResumeOptimizerEngine {
       poorlyRepresentedSkills,
       projectImprovements,
       sectionRecommendations,
+      sectionOrdering,
       skillsSectionRecommendation,
       jdAlignmentRecommendations,
       truthfulRecommendations,
@@ -435,6 +440,52 @@ export class ResumeOptimizerEngine {
     });
 
     return recommendations;
+  }
+
+  private generateSectionOrdering(input: OptimizerEngineInput): SectionOrderingRecommendation {
+    const { resume, job } = input;
+    const currentOrder = resume.profile?.summary
+      ? ["Professional Summary", "Skills", "Work Experience", "Projects", "Education"]
+      : ["Skills", "Work Experience", "Projects", "Education"];
+
+    const isSenior =
+      (job.experience?.minYears || 0) >= 3 ||
+      job.title.toLowerCase().includes("senior") ||
+      job.title.toLowerCase().includes("lead");
+
+    const recommendedOrder = isSenior
+      ? [
+          "Professional Summary",
+          "Technical Skills",
+          "Work Experience",
+          "Technical Projects",
+          "Education & Certifications",
+        ]
+      : [
+          "Professional Summary",
+          "Technical Skills",
+          "Technical Projects",
+          "Work Experience",
+          "Education & Certifications",
+        ];
+
+    const reason = isSenior
+      ? `For ${job.title}, recruiters and hiring managers scan for proven production ownership and technical core competencies first. Placing Technical Skills and Work Experience above academic credentials ensures immediate qualification recognition.`
+      : `Highlighting hands-on Technical Projects immediately beneath Technical Skills establishes verified code deliverables and demonstrable architectural competencies.`;
+
+    const rationale = `Prioritizes verified evidence in the first third of the resume, matching standard engineering review patterns.`;
+
+    const truthCheckNote = `Maintain standard, recognizable section headers (e.g. 'Work Experience' rather than unconventional phrases) to ensure compatibility with Applicant Tracking Systems (ATS).`;
+
+    return {
+      id: `sec-order-${crypto.randomUUID()}`,
+      highlightTag: "RELEVANT",
+      currentOrder,
+      recommendedOrder,
+      reason,
+      rationale,
+      truthCheckNote,
+    };
   }
 
   private generateSkillsSectionRecommendation(input: OptimizerEngineInput): SkillsSectionRecommendation {
