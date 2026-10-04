@@ -3,6 +3,7 @@ import {
   generateInterviewQuestions,
   generateProjectRecommendations,
   generateProjectBlueprint,
+  compareGithubEvidence,
   type ResumeExtraction,
   type SkillMatrix,
   type JobExtraction,
@@ -15,6 +16,8 @@ import {
   type InterviewHistoryItem,
   type ProjectRecommendationReport,
   type ProjectBlueprint,
+  type AnalyzedRepository,
+  type GithubEvidenceReport,
 } from "@skilltwin/contracts";
 
 export const sampleResume: ResumeExtraction = {
@@ -33,7 +36,7 @@ Languages: JavaScript (ES6+), TypeScript, Python, HTML5, CSS3/Sass
 Frontend: React.js, React Hooks, Redux Toolkit, Tailwind CSS, Next.js (Basic)
 Backend: Node.js, Express.js, RESTful APIs, JWT Authentication
 Databases: MongoDB, Mongoose, PostgreSQL (Basic)
-Tools & DevOps: Git, GitHub, Docker (Basic), Vite, Postman, Linux
+Tools & DevOps: Git, GitHub, Docker (Basic), AWS (Basic), Vite, Postman, Linux
 
 PROJECTS
 DevPulse — Developer Analytics & Sprint Dashboard (github.com/alexrivera-dev/devpulse)
@@ -86,6 +89,7 @@ Bachelor of Science in Computer Science | University of California, Davis (2017 
     "PostgreSQL",
     "Git",
     "Docker",
+    "AWS",
     "Linux",
   ],
   projects: [
@@ -1648,6 +1652,177 @@ export const sampleProjectRecommendations: ProjectRecommendationReport = generat
 export const sampleProjectBlueprint: ProjectBlueprint = generateProjectBlueprint(
   sampleProjectRecommendations.projects[0]
 );
+
+export const sampleAnalyzedRepositories: AnalyzedRepository[] = [
+  {
+    id: "repo-devpulse",
+    name: "devpulse",
+    fullName: "alexrivera-dev/devpulse",
+    description: "Developer sprint dashboard & productivity tracker with real-time metrics",
+    htmlUrl: "https://github.com/alexrivera-dev/devpulse",
+    defaultBranch: "main",
+    isFork: false,
+    starsCount: 14,
+    forksCount: 3,
+    openIssuesCount: 2,
+    updatedAt: "2026-09-24T18:00:00Z",
+    pushedAt: "2026-09-24T18:30:00Z",
+    languages: [
+      { name: "TypeScript", percentage: 65, bytes: 142000 },
+      { name: "JavaScript", percentage: 20, bytes: 43000 },
+      { name: "CSS", percentage: 15, bytes: 32000 },
+    ],
+    primaryLanguage: "TypeScript",
+    topics: ["react", "nodejs", "docker", "vitest", "mongodb"],
+    detectedTechnologies: ["React", "Express.js", "Node.js", "MongoDB", "Redux Toolkit", "Tailwind CSS", "Jest", "Docker"],
+    activityLevel: "Active",
+    structure: {
+      hasSrc: true,
+      hasTests: true,
+      hasDocs: true,
+      keyDirectories: ["src", "tests", "docs"],
+    },
+    dependencies: [
+      { name: "react", version: "^18.2.0", category: "framework" },
+      { name: "express", version: "^4.19.0", category: "framework" },
+      { name: "@reduxjs/toolkit", version: "^2.0.0", category: "framework" },
+      { name: "mongodb", version: "^6.3.0", category: "database" },
+      { name: "tailwindcss", version: "^3.4.0", category: "tool" },
+      { name: "jest", version: "^29.7.0", category: "testing" },
+    ],
+    readmeSummary: "Full-stack sprint analytics dashboard with React 18 frontend, Express API gateway, MongoDB persistence, and Docker compose orchestration.",
+    testing: {
+      detected: true,
+      frameworks: ["Jest"],
+      testFileCount: 14,
+      testDirectories: ["tests"],
+    },
+    docker: {
+      detected: true,
+      hasDockerfile: true,
+      hasDockerCompose: true,
+      files: ["Dockerfile", "docker-compose.yml"],
+    },
+    deployment: {
+      detected: true,
+      platforms: ["GitHub Actions", "Vercel"],
+      configFiles: [".github/workflows/ci.yml", "vercel.json"],
+    },
+  },
+  {
+    id: "repo-cloudcart",
+    name: "cloudcart",
+    fullName: "alexrivera-dev/cloudcart",
+    description: "Headless e-commerce cart & checkout microservice with role-based auth",
+    htmlUrl: "https://github.com/alexrivera-dev/cloudcart",
+    defaultBranch: "main",
+    isFork: false,
+    starsCount: 8,
+    forksCount: 1,
+    openIssuesCount: 0,
+    updatedAt: "2026-08-15T14:00:00Z",
+    pushedAt: "2026-08-15T14:10:00Z",
+    languages: [
+      { name: "TypeScript", percentage: 55, bytes: 98000 },
+      { name: "JavaScript", percentage: 40, bytes: 71000 },
+      { name: "HTML", percentage: 5, bytes: 8900 },
+    ],
+    primaryLanguage: "TypeScript",
+    topics: ["ecommerce", "react", "nodejs"],
+    detectedTechnologies: ["React", "Node.js", "MongoDB", "Jest"],
+    activityLevel: "Steady",
+    structure: {
+      hasSrc: true,
+      hasTests: true,
+      hasDocs: false,
+      keyDirectories: ["src", "test"],
+    },
+    dependencies: [
+      { name: "react", version: "^18.0.0", category: "framework" },
+      { name: "jose", version: "^5.2.0", category: "tool" },
+      { name: "mongodb", version: "^6.5.0", category: "database" },
+      { name: "jest", version: "^29.7.0", category: "testing" },
+    ],
+    readmeSummary: "Headless checkout workflow with role-based access control and Jest unit tests.",
+    testing: {
+      detected: true,
+      frameworks: ["Jest"],
+      testFileCount: 8,
+      testDirectories: ["test"],
+    },
+    docker: {
+      detected: false,
+      hasDockerfile: false,
+      hasDockerCompose: false,
+      files: [],
+    },
+    deployment: {
+      detected: true,
+      platforms: ["GitHub Actions"],
+      configFiles: [".github/workflows/deploy.yml"],
+    },
+  },
+  {
+    id: "repo-task-orchestrator",
+    name: "task-orchestrator",
+    fullName: "alexrivera-dev/task-orchestrator",
+    description: "High-throughput asynchronous job queue engine with Redis backing",
+    htmlUrl: "https://github.com/alexrivera-dev/task-orchestrator",
+    defaultBranch: "main",
+    isFork: false,
+    starsCount: 22,
+    forksCount: 5,
+    openIssuesCount: 1,
+    updatedAt: "2026-10-01T09:30:00Z",
+    pushedAt: "2026-10-01T09:45:00Z",
+    languages: [
+      { name: "TypeScript", percentage: 85, bytes: 210000 },
+      { name: "Dockerfile", percentage: 10, bytes: 24000 },
+      { name: "Shell", percentage: 5, bytes: 12000 },
+    ],
+    primaryLanguage: "TypeScript",
+    topics: ["redis", "bullmq", "vitest", "docker"],
+    detectedTechnologies: ["TypeScript", "Node.js", "Redis", "Vitest", "Docker"],
+    activityLevel: "Active",
+    structure: {
+      hasSrc: true,
+      hasTests: true,
+      hasDocs: true,
+      keyDirectories: ["src", "tests", "deploy"],
+    },
+    dependencies: [
+      { name: "typescript", version: "^5.4.0", category: "tool" },
+      { name: "ioredis", version: "^5.3.2", category: "database" },
+      { name: "vitest", version: "^1.4.0", category: "testing" },
+    ],
+    readmeSummary: "Distributed task orchestrator with Redis bullmq integration, containerized worker nodes, and Vitest suite.",
+    testing: {
+      detected: true,
+      frameworks: ["Vitest"],
+      testFileCount: 19,
+      testDirectories: ["tests"],
+    },
+    docker: {
+      detected: true,
+      hasDockerfile: true,
+      hasDockerCompose: true,
+      files: ["Dockerfile", "docker-compose.yml"],
+    },
+    deployment: {
+      detected: true,
+      platforms: ["GitHub Actions"],
+      configFiles: [".github/workflows/ci.yml"],
+    },
+  },
+];
+
+export const sampleGithubEvidenceReport: GithubEvidenceReport = compareGithubEvidence({
+  username: "alexrivera-dev",
+  repositories: sampleAnalyzedRepositories,
+  resume: sampleResume,
+  matrix: sampleSkillMatrix,
+});
+
 
 
 

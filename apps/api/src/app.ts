@@ -22,6 +22,7 @@ import { optimizerRouter } from "./modules/optimizer/optimizer.controller.js";
 import { readinessRouter } from "./modules/readiness/readiness.controller.js";
 import { simulatorRouter } from "./modules/simulator/simulator.controller.js";
 import { projectsRouter } from "./modules/projects/projects.controller.js";
+import { githubRouter } from "./modules/github/github.controller.js";
 
 export const app = express();
 const logger = pino();
@@ -73,6 +74,9 @@ app.use("/api/v1/simulator", simulatorRouter);
 
 // Phase 10: Project Recommendation Engine
 app.use("/api/v1/projects", projectsRouter);
+
+// Phase 11: GitHub Integration & Evidence Verification
+app.use("/api/v1/github", githubRouter);
 
 app.get("/health", (_request, response) => {
   response.json(
@@ -126,8 +130,7 @@ app.post("/api/v1/resume", upload.single("resume"), async (request, response, ne
     next(error);
   }
 });
-app.get("/api/v1/github/status", (_request, response) => response.json(githubStatus));
-app.post("/api/v1/github/sync", (_request, response) => response.json(demoGithubSync));
+
 app.post("/api/v1/analyses", (request, response) => {
   const resumeStatements = Array.isArray(request.body?.resumeStatements)
     ? request.body.resumeStatements.filter((statement: unknown): statement is string => typeof statement === "string")

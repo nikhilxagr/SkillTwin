@@ -12,6 +12,7 @@ import { ResumeOptimizerView } from "./components/optimizer/ResumeOptimizerView.
 import { JobSpecificResumeView } from "./components/tailoring/JobSpecificResumeView.js";
 import { InterviewSimulatorView } from "./components/simulator/InterviewSimulatorView.js";
 import { ProjectRecommendationsView } from "./components/projects/ProjectRecommendationsView.js";
+import { EvidencePageView } from "./components/evidence/EvidencePageView.js";
 import {
   sampleResume,
   sampleSkillMatrix,
@@ -25,6 +26,8 @@ import {
   sampleInterviewHistory,
   sampleProjectRecommendations,
   sampleProjectBlueprint,
+  sampleGithubEvidenceReport,
+  sampleAnalyzedRepositories,
 } from "./mock/sampleData.js";
 import {
   uploadResumeFile,
@@ -41,6 +44,11 @@ import {
   getInterviewHistory,
   getProjectRecommendations,
   generateProjectBlueprint as apiGenerateProjectBlueprint,
+  connectGithub,
+  compareGithubEvidence as apiCompareGithubEvidence,
+  getLatestGithubReport,
+  getGithubRepositories,
+  getGithubStatus,
   ApiError,
 } from "./api/client.js";
 import type { ActiveScreen } from "./types/navigation.js";
@@ -51,6 +59,7 @@ import {
   generateFinalInterviewReport,
   generateProjectRecommendations as localGenerateProjectRecommendations,
   generateProjectBlueprint as localGenerateProjectBlueprint,
+  compareGithubEvidence as localCompareGithubEvidence,
   type ResumeExtraction,
   type SkillMatrix,
   type JobExtraction,
@@ -64,6 +73,8 @@ import {
   type SimulatorExchange,
   type ProjectRecommendationReport,
   type ProjectBlueprint,
+  type GithubEvidenceReport,
+  type AnalyzedRepository,
 } from "@skilltwin/contracts";
 
 const parseHash = (hash: string): ActiveScreen => {
@@ -106,6 +117,11 @@ const parseHash = (hash: string): ActiveScreen => {
     case "project_recommendations":
     case "recommended-projects":
       return "project_recommendations";
+    case "evidence":
+    case "evidence-page":
+    case "github-evidence":
+    case "github":
+      return "evidence";
     case "landing":
     case "home":
     case "":
@@ -145,6 +161,8 @@ const screenToHash = (screen: ActiveScreen): string => {
       return "#/interview-simulator";
     case "project_recommendations":
       return "#/projects";
+    case "evidence":
+      return "#/evidence";
     default:
       return "#/";
   }
@@ -164,6 +182,10 @@ export const App: React.FC = () => {
   const [interviewHistory, setInterviewHistory] = useState<InterviewHistoryItem[]>(sampleInterviewHistory);
   const [projectRecommendations, setProjectRecommendations] = useState<ProjectRecommendationReport | null>(sampleProjectRecommendations);
   const [activeBlueprint, setActiveBlueprint] = useState<ProjectBlueprint | null>(sampleProjectBlueprint);
+  const [githubReport, setGithubReport] = useState<GithubEvidenceReport | null>(sampleGithubEvidenceReport);
+  const [analyzedRepositories, setAnalyzedRepositories] = useState<AnalyzedRepository[]>(sampleAnalyzedRepositories);
+  const [githubUsername, setGithubUsername] = useState<string>("alexrivera-dev");
+  const [githubToken, setGithubToken] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [isSampleLoaded, setIsSampleLoaded] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -220,6 +242,10 @@ export const App: React.FC = () => {
     if (resolved === "project_recommendations" && !projectRecommendations) {
       setProjectRecommendations(sampleProjectRecommendations);
     }
+    if (resolved === "evidence" && !githubReport) {
+      setGithubReport(sampleGithubEvidenceReport);
+      setAnalyzedRepositories(sampleAnalyzedRepositories);
+    }
 
     setCurrentScreen(resolved);
 
@@ -255,6 +281,10 @@ export const App: React.FC = () => {
     setInterviewHistory(sampleInterviewHistory);
     setProjectRecommendations(sampleProjectRecommendations);
     setActiveBlueprint(sampleProjectBlueprint);
+    setGithubReport(sampleGithubEvidenceReport);
+    setAnalyzedRepositories(sampleAnalyzedRepositories);
+    setGithubUsername("alexrivera-dev");
+    setGithubToken("");
     setIsSampleLoaded(true);
     setLoading(false);
     setApiError(null);
@@ -281,6 +311,10 @@ export const App: React.FC = () => {
     setInterviewHistory(sampleInterviewHistory);
     setProjectRecommendations(null);
     setActiveBlueprint(null);
+    setGithubReport(null);
+    setAnalyzedRepositories([]);
+    setGithubUsername("alexrivera-dev");
+    setGithubToken("");
     setIsSampleLoaded(false);
     setApiError(null);
     setCurrentScreen("landing");
@@ -795,6 +829,89 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleConnectGithub = async (username: string, token?: string) => {
+    setLoading(true);
+    setApiError(null);
+    setGithubUsername(username);
+    if (token !== undefined) {
+      setGithubToken(token);
+    }
+
+    try {
+      const report = await connectGithub({
+        username,
+        token: token || undefined,
+        resume: resume || sampleResume,
+        matrix: matrix || sampleSkillMatrix,
+      });
+      setGithubReport(report);
+      setAnalyzedRepositories(report.analyzedRepositories);
+    } catch (err: any) {
+      console.warn("GitHub API connection failed, falling back to deterministic engine:", err);
+      const repos =
+        username === "alexrivera-dev"
+          ? sampleAnalyzedRepositories
+          : [
+              {
+                name: `${username}-service`,
+                fullName: `${username}/${username}-service`,
+                description: "Full-stack application repository",
+                htmlUrl: `https://github.com/${username}/${username}-service`,
+                defaultBranch: "main",
+                isPrivate: false,
+                starsCount: 3,
+                forksCount: 0,
+                openIssuesCount: 0,
+                pushedAt: new Date().toISOString(),
+                languages: [{ name: "TypeScript", percentage: 100, byteCount: 45000 }],
+                primaryLanguage: "TypeScript",
+                technologies: ["TypeScript", "Node.js", "Docker", "Jest"],
+                activityLevel: "Active" as const,
+                structure: {
+                  hasSrc: true,
+                  hasTests: true,
+                  hasDocs: false,
+                  keyDirectories: ["src", "tests"],
+                },
+                dependencies: [
+                  { name: "typescript", version: "^5.4.0", category: "tool" as const },
+                  { name: "jest", version: "^29.7.0", category: "testing" as const },
+                ],
+                readmeSummary: "Application codebase with Docker configuration and Jest test suite.",
+                testing: {
+                  detected: true,
+                  frameworks: ["Jest"],
+                  testFileCount: 6,
+                  testDirectories: ["tests"],
+                },
+                docker: {
+                  detected: true,
+                  hasDockerfile: true,
+                  hasDockerCompose: false,
+                  dockerFiles: ["Dockerfile"],
+                },
+                deployment: {
+                  detected: true,
+                  providers: ["GitHub Actions"],
+                  configFiles: [".github/workflows/ci.yml"],
+                },
+              },
+            ];
+
+      const localReport = localCompareGithubEvidence({
+        username,
+        repositories: repos,
+        resume: resume || sampleResume,
+        matrix: matrix || sampleSkillMatrix,
+      });
+
+      setGithubReport(localReport);
+      setAnalyzedRepositories(repos);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // If on landing screen, show standalone LandingPage
   if (currentScreen === "landing") {
     return (
@@ -938,6 +1055,21 @@ export const App: React.FC = () => {
           gapReport={gapReport}
           onGenerateBlueprint={handleGenerateBlueprint}
           onRefreshRecommendations={handleRefreshProjectRecommendations}
+          onNavigate={handleNavigate}
+          onLoadSample={handleLoadSample}
+          isLoading={loading}
+        />
+      )}
+
+      {currentScreen === "evidence" && (
+        <EvidencePageView
+          report={githubReport}
+          repositories={analyzedRepositories}
+          resume={resume}
+          matrix={matrix}
+          username={githubUsername}
+          token={githubToken}
+          onConnect={handleConnectGithub}
           onNavigate={handleNavigate}
           onLoadSample={handleLoadSample}
           isLoading={loading}

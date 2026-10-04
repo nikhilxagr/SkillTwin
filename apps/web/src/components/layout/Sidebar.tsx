@@ -35,7 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onMobileClose,
 }) => {
   const isScreenActive = (
-    target: "dashboard" | "resume" | "skills" | "job_analysis" | "gap_analysis" | "recommendations" | "tailored_resume" | "interview_simulator" | "project_recommendations"
+    target: "dashboard" | "resume" | "skills" | "job_analysis" | "gap_analysis" | "recommendations" | "tailored_resume" | "interview_simulator" | "project_recommendations" | "evidence"
   ) => {
     switch (target) {
       case "dashboard":
@@ -56,6 +56,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         return currentScreen === "interview_simulator";
       case "project_recommendations":
         return currentScreen === "project_recommendations";
+      case "evidence":
+        return currentScreen === "evidence";
       default:
         return false;
     }
@@ -238,6 +240,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <Code2 size={16} />
             <span>Recommended Projects</span>
+          </button>
+
+          {/* 10. Evidence Verification (Phase 11) */}
+          <button
+            data-testid="nav-evidence"
+            className={`nav-button ${isScreenActive("evidence") ? "active" : ""}`}
+            onClick={() => handleNavClick("evidence")}
+          >
+            <ShieldCheck size={16} />
+            <span>Evidence</span>
           </button>
         </div>
       </div>

@@ -12,3 +12,5 @@ export * from "./interview.js";
 export * from "./interview-engine.js";
 export * from "./project-recommendations.js";
 export * from "./project-recommendations-engine.js";
+export * from "./github-evidence.js";
+export * from "./github-evidence-engine.js";

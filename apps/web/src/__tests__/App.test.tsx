@@ -576,6 +576,74 @@ describe("SkillTwin Web Application Shell & UI Views", () => {
     expect(closeBtn).toBeDefined();
     fireEvent.click(closeBtn);
   });
+
+  it("PHASE 11: navigates to Evidence page, verifies authorized API mode, repository signals, cross-verification matrix, and respectful discrepancy notices", async () => {
+    render(<App />);
+
+    // Load sample profile
+    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
+    });
+
+    // Navigate to Evidence tab on sidebar
+    const navEvidenceBtn = screen.getByTestId("nav-evidence");
+    expect(navEvidenceBtn).toBeDefined();
+    fireEvent.click(navEvidenceBtn);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("evidence-page")).toBeDefined();
+      expect(screen.getByText(/Evidence Verification & GitHub Integration/i)).toBeDefined();
+      expect(screen.getByText(/Authorized API Mode \(No Scraping\)/i)).toBeDefined();
+    });
+
+    // Check KPI counts
+    expect(screen.getByTestId("stat-repos-count")).toBeDefined();
+    expect(screen.getByTestId("stat-verified-count")).toBeDefined();
+    expect(screen.getByTestId("stat-discrepancy-count")).toBeDefined();
+    expect(screen.getByTestId("stat-github-only-count")).toBeDefined();
+
+    // Check connected repositories and detected signals (Docker, tests, CI)
+    expect(screen.getByTestId("repo-card-devpulse")).toBeDefined();
+    expect(screen.getByTestId("repo-card-cloudcart")).toBeDefined();
+    expect(screen.getByTestId("repo-card-task-orchestrator")).toBeDefined();
+    expect(screen.getByTestId("repo-devpulse-docker-badge")).toBeDefined();
+    expect(screen.getByTestId("repo-devpulse-tests-badge")).toBeDefined();
+    expect(screen.getByTestId("repo-devpulse-ci-badge")).toBeDefined();
+
+    // Verify respectful discrepancy notice for AWS (as specified: "AWS is listed on your resume, but current connected evidence does not demonstrate it.")
+    const awsCallout = screen.getByTestId("discrepancy-aws");
+    expect(awsCallout).toBeDefined();
+    expect(
+      screen.getByText(/AWS is listed on your resume, but current connected evidence does not demonstrate it\./i)
+    ).toBeDefined();
+
+    // Check Cross-Verification Matrix for Docker (Resume: Yes, GitHub: Yes, Project: Strong, Confidence: High)
+    const dockerRow = screen.getByTestId("matrix-row-docker");
+    expect(dockerRow).toBeDefined();
+    expect(dockerRow.textContent).toContain("Docker");
+    expect(dockerRow.textContent).toContain("Yes");
+    expect(dockerRow.textContent).toContain("Strong");
+    expect(dockerRow.textContent).toContain("High");
+    expect(dockerRow.textContent).toContain("Verified Match");
+
+    // Test filter tabs: Click "Discrepancies"
+    const discrepanciesTab = screen.getByRole("button", { name: /^Discrepancies/i });
+    fireEvent.click(discrepanciesTab);
+    expect(screen.getByTestId("matrix-row-aws")).toBeDefined();
+
+    // Test filter tabs: Click "Verified"
+    const verifiedTab = screen.getByRole("button", { name: /^Verified/i });
+    fireEvent.click(verifiedTab);
+    expect(screen.getByTestId("matrix-row-docker")).toBeDefined();
+
+    // Test input connection form and Demo Profile button
+    const usernameInput = screen.getByTestId("github-username-input") as HTMLInputElement;
+    expect(usernameInput.value).toBe("alexrivera-dev");
+    const demoBtn = screen.getByTestId("load-demo-profile-btn");
+    fireEvent.click(demoBtn);
+  });
 });
 
 

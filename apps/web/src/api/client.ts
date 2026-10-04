@@ -6,6 +6,9 @@ import type {
   GapAnalysisReport,
   CareerReadinessReport,
   ResumeOptimizationReport,
+  GithubEvidenceReport,
+  AnalyzedRepository,
+  SkillEvidenceComparison,
 } from "@skilltwin/contracts";
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:4000";
@@ -553,5 +556,130 @@ export async function getProjectBlueprint(projectId: string): Promise<any> {
 
   return body.data;
 }
+
+/**
+ * PHASE 11: Connect to GitHub via authorized API and generate evidence report
+ */
+export async function connectGithub(params: {
+  username: string;
+  token?: string;
+  resume?: ResumeExtraction | null;
+  matrix?: SkillMatrix | null;
+}): Promise<GithubEvidenceReport> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/github/connect`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(params),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "Failed to connect to GitHub.", body.code, response.status);
+  }
+
+  return body.data as GithubEvidenceReport;
+}
+
+/**
+ * PHASE 11: Cross-verify GitHub repository evidence against resume claims
+ */
+export async function compareGithubEvidence(params: {
+  username?: string;
+  token?: string;
+  resume: ResumeExtraction;
+  matrix?: SkillMatrix | null;
+}): Promise<GithubEvidenceReport> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/github/compare`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(params),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "Failed to compare GitHub evidence.", body.code, response.status);
+  }
+
+  return body.data as GithubEvidenceReport;
+}
+
+/**
+ * PHASE 11: Check current GitHub connection status
+ */
+export async function getGithubStatus(): Promise<{
+  connected: boolean;
+  username: string | null;
+  repositoriesCount: number;
+  mode: string;
+  message: string;
+}> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/github/status`);
+  const body = await response.json();
+
+  if (!response.ok) {
+    throw new ApiError(body.message || "Failed to get GitHub status.", undefined, response.status);
+  }
+
+  return body;
+}
+
+/**
+ * PHASE 11: Fetch latest cached GitHub evidence report
+ */
+export async function getLatestGithubReport(): Promise<GithubEvidenceReport | null> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/github/report/latest`);
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    return null;
+  }
+
+  return body.data as GithubEvidenceReport;
+}
+
+/**
+ * PHASE 11: Fetch analyzed repositories list
+ */
+export async function getGithubRepositories(): Promise<AnalyzedRepository[]> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/github/repositories`);
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "Failed to get GitHub repositories.", body.code, response.status);
+  }
+
+  return body.data as AnalyzedRepository[];
+}
+
+/**
+ * PHASE 11: Legacy GitHub sync
+ */
+export async function syncGithub(params?: {
+  username?: string;
+  token?: string;
+  resume?: ResumeExtraction | null;
+  matrix?: SkillMatrix | null;
+}): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/github/sync`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(params || {}),
+  });
+
+  const body = await response.json();
+  if (!response.ok) {
+    throw new ApiError(body.message || "GitHub sync failed", undefined, response.status);
+  }
+  return body;
+}
+
 
 
