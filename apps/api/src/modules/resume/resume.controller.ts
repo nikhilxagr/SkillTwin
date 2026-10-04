@@ -126,3 +126,16 @@ resumeRouter.get("/:id/matrix", (req: Request, res: Response): void => {
   }
   res.json({ status: "success", data: matrix });
 });
+
+/**
+ * GET /api/v1/resumes/:id/analysis
+ */
+resumeRouter.get("/:id/analysis", (req: Request, res: Response): void => {
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const analysis = resumeService.getAnalysis(String(id));
+  if (!analysis) {
+    res.status(404).json({ status: "error", message: "Resume analysis not found for this resume." });
+    return;
+  }
+  res.json({ status: "success", data: analysis });
+});

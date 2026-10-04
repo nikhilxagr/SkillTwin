@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { UploadCloud, FileText, CheckCircle2, AlertCircle, Layers, ArrowRight } from "lucide-react";
+import { UploadCloud, FileText, CheckCircle2, AlertCircle, Layers, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "../common/Button.js";
 import { Card } from "../common/Card.js";
 import { Badge } from "../common/Badge.js";
@@ -32,6 +32,8 @@ export const ResumeUploadView: React.FC<ResumeUploadViewProps> = ({
   const [fileName, setFileName] = useState("Pasted_Resume.txt");
   const [dragActive, setDragActive] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+
+  const currentStep = loading ? 3 : currentResume ? 4 : 1;
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -108,6 +110,7 @@ export const ResumeUploadView: React.FC<ResumeUploadViewProps> = ({
           )}
         </div>
       )}
+
       {/* Header Info */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "16px" }}>
         <div>
@@ -129,6 +132,80 @@ export const ResumeUploadView: React.FC<ResumeUploadViewProps> = ({
           Load Verified Sample Resume
         </Button>
       </div>
+
+      {/* 4-Step Resume Workflow Stepper */}
+      <div className="bg-white border border-border-subtle rounded-lg p-3.5 flex items-center justify-between text-xs">
+        <div className="flex items-center gap-2">
+          <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${
+            currentStep >= 1 ? "bg-brand-blue text-white" : "bg-surface-subtle text-content-secondary border border-border-subtle"
+          }`}>
+            1
+          </span>
+          <span className={`font-semibold ${currentStep === 1 ? "text-brand-navy" : "text-content-secondary"}`}>
+            Upload
+          </span>
+        </div>
+
+        <div className="flex-1 mx-3 border-t border-border-subtle" />
+
+        <div className="flex items-center gap-2">
+          <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${
+            currentStep >= 2 ? "bg-brand-blue text-white" : "bg-surface-subtle text-content-secondary border border-border-subtle"
+          }`}>
+            2
+          </span>
+          <span className={`font-semibold ${currentStep === 2 ? "text-brand-navy" : "text-content-secondary"}`}>
+            Processing
+          </span>
+        </div>
+
+        <div className="flex-1 mx-3 border-t border-border-subtle" />
+
+        <div className="flex items-center gap-2">
+          <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${
+            currentStep >= 3 ? "bg-brand-blue text-white" : "bg-surface-subtle text-content-secondary border border-border-subtle"
+          }`}>
+            3
+          </span>
+          <span className={`font-semibold ${currentStep === 3 ? "text-brand-navy" : "text-content-secondary"}`}>
+            Analysis
+          </span>
+        </div>
+
+        <div className="flex-1 mx-3 border-t border-border-subtle" />
+
+        <div className="flex items-center gap-2">
+          <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${
+            currentStep >= 4 ? "bg-status-success text-white" : "bg-surface-subtle text-content-secondary border border-border-subtle"
+          }`}>
+            4
+          </span>
+          <span className={`font-semibold ${currentStep === 4 ? "text-brand-navy" : "text-content-secondary"}`}>
+            Results
+          </span>
+        </div>
+      </div>
+
+      {/* Subtle Loading Progress Banner */}
+      {loading && (
+        <div className="bg-brand-light border border-blue-200 rounded-lg p-4 flex flex-col gap-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-brand-blue uppercase tracking-wider flex items-center gap-2">
+              <Loader2 className="animate-spin" size={14} /> Resume Intelligence Pipeline Active
+            </span>
+            <span className="text-xs font-mono text-content-secondary">
+              {selectedFileName ? `Ingesting ${selectedFileName}` : "Analyzing Content"}
+            </span>
+          </div>
+          <div className="w-full bg-blue-100 rounded-full h-1.5 overflow-hidden">
+            <div className="bg-brand-blue h-1.5 rounded-full animate-pulse" style={{ width: "65%" }} />
+          </div>
+          <div className="text-xs text-content-secondary flex justify-between">
+            <span>Extracting canonical skills & validating schema...</span>
+            <span className="font-mono text-[11px]">Strict Non-Hallucination Active</span>
+          </div>
+        </div>
+      )}
 
       {/* Upload Panel */}
       <div style={{ display: "grid", gridTemplateColumns: currentResume ? "1.2fr 1fr" : "1fr", gap: "20px" }}>

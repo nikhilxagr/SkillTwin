@@ -1,8 +1,10 @@
 import type { ResumeExtraction, SkillMatrix } from "@skilltwin/contracts";
+import type { GeminiResumeAnalysis } from "../../services/ai/schemas/resume-schema.js";
 
 export class ResumeRepository {
   private resumes: Map<string, ResumeExtraction> = new Map();
   private matrices: Map<string, SkillMatrix> = new Map();
+  private rawAnalyses: Map<string, GeminiResumeAnalysis> = new Map();
   private latestResumeId: string | null = null;
 
   saveResume(resume: ResumeExtraction): void {
@@ -27,9 +29,18 @@ export class ResumeRepository {
     return this.matrices.get(resumeId);
   }
 
+  saveAnalysis(resumeId: string, analysis: GeminiResumeAnalysis): void {
+    this.rawAnalyses.set(resumeId, analysis);
+  }
+
+  getAnalysis(resumeId: string): GeminiResumeAnalysis | undefined {
+    return this.rawAnalyses.get(resumeId);
+  }
+
   clear(): void {
     this.resumes.clear();
     this.matrices.clear();
+    this.rawAnalyses.clear();
     this.latestResumeId = null;
   }
 }

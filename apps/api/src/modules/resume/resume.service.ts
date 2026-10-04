@@ -5,7 +5,7 @@ import {
   type SkillMatrix,
 } from "@skilltwin/contracts";
 import { documentService, type ExtractedDocument } from "../document/document.service.js";
-import { activeAIProvider } from "../../providers/ai-factory.js";
+import { resumeAnalyzer, type GeminiResumeAnalysis } from "../../services/ai/index.js";
 import { skillNormalizer } from "../skills/index.js";
 import { skillMatrixService } from "../skills/skill-matrix.service.js";
 import { resumeRepository } from "./resume.repository.js";
@@ -13,11 +13,12 @@ import { resumeRepository } from "./resume.repository.js";
 export interface ResumeProcessingResult {
   resume: ResumeExtraction;
   matrix: SkillMatrix;
+  analysis?: GeminiResumeAnalysis;
 }
 
 export class ResumeService {
   /**
-   * Complete pipeline: File buffer -> Validation -> Extract text -> AI parsing -> Skill Matrix -> Persist
+   * Complete pipeline: File buffer -> Validation -> Extract text -> Gemini AI parsing -> Skill Matrix -> Persist
    */
   async processResumeFile(
     fileName: string,
@@ -29,7 +30,7 @@ export class ResumeService {
   }
 
   /**
-   * Complete pipeline: Raw text -> Validation -> Normalize -> AI parsing -> Skill Matrix -> Persist
+   * Complete pipeline: Raw text -> Validation -> Normalize -> Gemini AI parsing -> Skill Matrix -> Persist
    */
   async processResumeText(fileName: string, text: string): Promise<ResumeProcessingResult> {
     const doc = documentService.processText(fileName, text);
@@ -37,8 +38,9 @@ export class ResumeService {
   }
 
   private async executePipeline(doc: ExtractedDocument): Promise<ResumeProcessingResult> {
-    // 1. Run AI extraction with strict Zod validation
-    const aiData = await activeAIProvider.extractResume(doc.normalizedText);
+    // 1. Send structured content to Gemini with strict schema validation
+    const geminiAnalysis = await resumeAnalyzer.analyzeResume(doc.normalizedText);
+    const aiData = resumeAnalyzer.toAIResumeExtraction(geminiAnalysis);
 
     // 2. Assemble and normalize claimed skills using the Skill Engine
     const rawClaimed: string[] = [];
@@ -91,10 +93,12 @@ export class ResumeService {
     // 5. Store in repository
     resumeRepository.saveResume(validatedResume);
     resumeRepository.saveMatrix(matrix);
+    resumeRepository.saveAnalysis(resumeId, geminiAnalysis);
 
     return {
       resume: validatedResume,
       matrix,
+      analysis: geminiAnalysis,
     };
   }
 
@@ -108,6 +112,10 @@ export class ResumeService {
 
   getMatrix(resumeId: string): SkillMatrix | undefined {
     return resumeRepository.getMatrix(resumeId);
+  }
+
+  getAnalysis(resumeId: string): GeminiResumeAnalysis | undefined {
+    return resumeRepository.getAnalysis(resumeId);
   }
 }
 
