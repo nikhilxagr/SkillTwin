@@ -36,7 +36,7 @@ export const Shell: React.FC<ShellProps> = ({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const isNavActive = (
-    target: "dashboard" | "resume" | "skills" | "job_analysis" | "gap_analysis" | "recommendations" | "tailored_resume"
+    target: "dashboard" | "resume" | "skills" | "job_analysis" | "gap_analysis" | "recommendations" | "tailored_resume" | "interview_simulator"
   ) => {
     switch (target) {
       case "dashboard":
@@ -51,6 +51,10 @@ export const Shell: React.FC<ShellProps> = ({
         return currentScreen === "gap_analysis";
       case "recommendations":
         return currentScreen === "recommendations" || currentScreen === "resume_improvement";
+      case "tailored_resume":
+        return currentScreen === "tailored_resume";
+      case "interview_simulator":
+        return currentScreen === "interview_simulator";
       default:
         return false;
     }

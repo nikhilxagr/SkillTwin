@@ -9,6 +9,7 @@ import {
   Terminal,
   ShieldCheck,
   Layers,
+  MessageSquare,
   X,
 } from "lucide-react";
 import type { ActiveScreen } from "../../types/navigation.js";
@@ -33,7 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onMobileClose,
 }) => {
   const isScreenActive = (
-    target: "dashboard" | "resume" | "skills" | "job_analysis" | "gap_analysis" | "recommendations" | "tailored_resume"
+    target: "dashboard" | "resume" | "skills" | "job_analysis" | "gap_analysis" | "recommendations" | "tailored_resume" | "interview_simulator"
   ) => {
     switch (target) {
       case "dashboard":
@@ -50,6 +51,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         return currentScreen === "recommendations" || currentScreen === "resume_improvement";
       case "tailored_resume":
         return currentScreen === "tailored_resume";
+      case "interview_simulator":
+        return currentScreen === "interview_simulator";
       default:
         return false;
     }
@@ -212,6 +215,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <Layers size={16} />
             <span>Tailored Resume</span>
+          </button>
+
+          {/* 8. Interview Simulator (Phase 9) */}
+          <button
+            data-testid="nav-interview-simulator"
+            className={`nav-button ${isScreenActive("interview_simulator") ? "active" : ""}`}
+            onClick={() => handleNavClick("interview_simulator")}
+          >
+            <MessageSquare size={16} />
+            <span>Interview Simulator</span>
           </button>
         </div>
       </div>

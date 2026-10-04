@@ -10,6 +10,7 @@ import { JobAnalysisView } from "./components/job/JobAnalysisView.js";
 import { GapAnalysisView } from "./components/gap/GapAnalysisView.js";
 import { ResumeOptimizerView } from "./components/optimizer/ResumeOptimizerView.js";
 import { JobSpecificResumeView } from "./components/tailoring/JobSpecificResumeView.js";
+import { InterviewSimulatorView } from "./components/simulator/InterviewSimulatorView.js";
 import {
   sampleResume,
   sampleSkillMatrix,
@@ -19,6 +20,8 @@ import {
   sampleResumeOptimization,
   sampleJobSpecificTailoredResume,
   sampleCareerReadinessReport,
+  sampleInterviewSession,
+  sampleInterviewHistory,
 } from "./mock/sampleData.js";
 import {
   uploadResumeFile,
@@ -29,11 +32,18 @@ import {
   optimizeResume,
   tailorResume,
   evaluateReadiness,
+  startInterviewSession,
+  submitInterviewAnswer,
+  getInterviewSession,
+  getInterviewHistory,
   ApiError,
 } from "./api/client.js";
 import type { ActiveScreen } from "./types/navigation.js";
 import {
   computeCareerReadiness,
+  generateInterviewQuestions,
+  evaluateInterviewAnswer,
+  generateFinalInterviewReport,
   type ResumeExtraction,
   type SkillMatrix,
   type JobExtraction,
@@ -42,6 +52,9 @@ import {
   type ResumeOptimizationReport,
   type JobSpecificTailoredResume,
   type CareerReadinessReport,
+  type InterviewSessionState,
+  type InterviewHistoryItem,
+  type SimulatorExchange,
 } from "@skilltwin/contracts";
 
 const parseHash = (hash: string): ActiveScreen => {
@@ -74,6 +87,11 @@ const parseHash = (hash: string): ActiveScreen => {
     case "tailored-resume":
     case "tailoring":
       return "tailored_resume";
+    case "interview":
+    case "interview-simulator":
+    case "interview_simulator":
+    case "simulator":
+      return "interview_simulator";
     case "landing":
     case "home":
     case "":
@@ -109,6 +127,8 @@ const screenToHash = (screen: ActiveScreen): string => {
       return "#/recommendations";
     case "tailored_resume":
       return "#/tailored-resume";
+    case "interview_simulator":
+      return "#/interview-simulator";
     default:
       return "#/";
   }
@@ -124,6 +144,8 @@ export const App: React.FC = () => {
   const [optimization, setOptimization] = useState<ResumeOptimizationReport | null>(null);
   const [tailoredResume, setTailoredResume] = useState<JobSpecificTailoredResume | null>(null);
   const [readinessReport, setReadinessReport] = useState<CareerReadinessReport | null>(null);
+  const [interviewSession, setInterviewSession] = useState<InterviewSessionState | null>(sampleInterviewSession);
+  const [interviewHistory, setInterviewHistory] = useState<InterviewHistoryItem[]>(sampleInterviewHistory);
   const [loading, setLoading] = useState(false);
   const [isSampleLoaded, setIsSampleLoaded] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -174,6 +196,9 @@ export const App: React.FC = () => {
       handleRunJobTailoring();
       return;
     }
+    if (resolved === "interview_simulator" && !interviewSession) {
+      setInterviewSession(sampleInterviewSession);
+    }
 
     setCurrentScreen(resolved);
 
@@ -205,6 +230,8 @@ export const App: React.FC = () => {
     setOptimization(sampleResumeOptimization);
     setTailoredResume(sampleJobSpecificTailoredResume);
     setReadinessReport(sampleCareerReadinessReport);
+    setInterviewSession(sampleInterviewSession);
+    setInterviewHistory(sampleInterviewHistory);
     setIsSampleLoaded(true);
     setLoading(false);
     setApiError(null);
@@ -227,6 +254,8 @@ export const App: React.FC = () => {
     setOptimization(null);
     setTailoredResume(null);
     setReadinessReport(null);
+    setInterviewSession(null);
+    setInterviewHistory(sampleInterviewHistory);
     setIsSampleLoaded(false);
     setApiError(null);
     setCurrentScreen("landing");
@@ -544,6 +573,163 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleStartNewInterview = async (options?: { customCount?: number }) => {
+    const effectiveResume = resume || sampleResume;
+    const effectiveMatrix = matrix || sampleSkillMatrix;
+    const effectiveJob = job || sampleJobDescription;
+    const effectiveGap = gapReport || sampleGapAnalysis;
+
+    setLoading(true);
+    setApiError(null);
+
+    try {
+      const newSession = await startInterviewSession({
+        resumeId: effectiveResume.id,
+        jobId: effectiveJob.id,
+        customQuestionsCount: options?.customCount || 5,
+      });
+      setInterviewSession(newSession);
+      try {
+        const hist = await getInterviewHistory();
+        setInterviewHistory(hist);
+      } catch {
+        // preserve local history
+      }
+      setCurrentScreen("interview_simulator");
+      if (typeof window !== "undefined") {
+        window.location.hash = "#/interview-simulator";
+      }
+      setLoading(false);
+    } catch (err: any) {
+      console.warn("Live interview start failed, falling back to local deterministic generation:", err);
+      const questions = generateInterviewQuestions({
+        resume: effectiveResume,
+        matrix: effectiveMatrix,
+        job: effectiveJob,
+        gapReport: effectiveGap,
+        customCount: options?.customCount || 5,
+      });
+
+      const fallbackSession: InterviewSessionState = {
+        id: `sim-${Date.now()}`,
+        resumeId: effectiveResume.id,
+        jobId: effectiveJob.id,
+        jobTitle: effectiveJob.title,
+        company: effectiveJob.company || "Target Company",
+        status: "in_progress",
+        currentStepIndex: 0,
+        totalSteps: questions.length,
+        currentQuestion: questions[0] || null,
+        plannedQuestions: questions,
+        exchanges: [],
+        finalReport: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      setInterviewSession(fallbackSession);
+      setCurrentScreen("interview_simulator");
+      if (typeof window !== "undefined") {
+        window.location.hash = "#/interview-simulator";
+      }
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitInterviewAnswer = async (params: {
+    sessionId: string;
+    questionId: string;
+    answer: string;
+  }) => {
+    setLoading(true);
+    setApiError(null);
+
+    try {
+      const result = await submitInterviewAnswer(params);
+      setInterviewSession(result.session);
+      try {
+        const hist = await getInterviewHistory();
+        setInterviewHistory(hist);
+      } catch {
+        // preserve local
+      }
+      setLoading(false);
+    } catch (err: any) {
+      console.warn("Live answer evaluation failed, falling back to local evaluation:", err);
+      if (interviewSession && interviewSession.currentQuestion) {
+        const q = interviewSession.currentQuestion;
+        const evaluation = evaluateInterviewAnswer({
+          question: q,
+          answer: params.answer,
+          previousExchanges: interviewSession.exchanges,
+          resume: resume || sampleResume,
+          matrix: matrix || sampleSkillMatrix,
+          job: job || sampleJobDescription,
+          gapReport: gapReport || sampleGapAnalysis,
+        });
+
+        const exchange: SimulatorExchange = {
+          id: `ex-${Date.now()}`,
+          step: interviewSession.exchanges.length + 1,
+          question: q,
+          answer: params.answer.trim(),
+          evaluation,
+          timestamp: new Date().toISOString(),
+        };
+
+        const updatedExchanges = [...interviewSession.exchanges, exchange];
+        const nextIndex = interviewSession.currentStepIndex + 1;
+        const isNowCompleted = nextIndex >= interviewSession.plannedQuestions.length;
+
+        const updatedSession: InterviewSessionState = {
+          ...interviewSession,
+          currentStepIndex: nextIndex,
+          currentQuestion: isNowCompleted ? null : interviewSession.plannedQuestions[nextIndex],
+          status: isNowCompleted ? "completed" : "in_progress",
+          exchanges: updatedExchanges,
+          finalReport: isNowCompleted
+            ? generateFinalInterviewReport({
+                sessionId: interviewSession.id,
+                jobTitle: interviewSession.jobTitle,
+                company: interviewSession.company,
+                exchanges: updatedExchanges,
+              })
+            : null,
+          updatedAt: new Date().toISOString(),
+        };
+
+        setInterviewSession(updatedSession);
+
+        if (isNowCompleted && updatedSession.finalReport) {
+          const newHistItem: InterviewHistoryItem = {
+            id: updatedSession.id,
+            jobTitle: updatedSession.jobTitle,
+            company: updatedSession.company,
+            status: "completed",
+            overallScore: updatedSession.finalReport.overallScore,
+            completedQuestionsCount: updatedExchanges.length,
+            totalQuestionsCount: updatedSession.totalSteps,
+            createdAt: updatedSession.createdAt,
+            completedAt: updatedSession.finalReport.completedAt,
+          };
+          setInterviewHistory((prev) => [newHistItem, ...prev]);
+        }
+      }
+      setLoading(false);
+    }
+  };
+
+  const handleSelectHistoricalSession = async (sessionId: string) => {
+    try {
+      const fetched = await getInterviewSession(sessionId);
+      setInterviewSession(fetched);
+    } catch {
+      if (sessionId === sampleInterviewSession.id) {
+        setInterviewSession(sampleInterviewSession);
+      }
+    }
+    setCurrentScreen("interview_simulator");
+  };
+
   // If on landing screen, show standalone LandingPage
   if (currentScreen === "landing") {
     return (
@@ -659,6 +845,22 @@ export const App: React.FC = () => {
           onNavigate={handleNavigate}
           onLoadSample={handleLoadSample}
           onRecomputeTailoring={handleRunJobTailoring}
+        />
+      )}
+
+      {currentScreen === "interview_simulator" && (
+        <InterviewSimulatorView
+          session={interviewSession}
+          history={interviewHistory}
+          resume={resume}
+          job={job}
+          matrix={matrix}
+          gapReport={gapReport}
+          onStartNewInterview={handleStartNewInterview}
+          onSubmitAnswer={handleSubmitInterviewAnswer}
+          onSelectHistoricalSession={handleSelectHistoricalSession}
+          onNavigate={handleNavigate}
+          isLoading={loading}
         />
       )}
     </Shell>

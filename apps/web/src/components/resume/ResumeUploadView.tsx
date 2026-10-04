@@ -33,7 +33,7 @@ export const ResumeUploadView: React.FC<ResumeUploadViewProps> = ({
   const [dragActive, setDragActive] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
-  const currentStep = loading ? 3 : currentResume ? 4 : 1;
+  const currentStep: number = loading ? 2 : currentResume ? 3 : 1;
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();

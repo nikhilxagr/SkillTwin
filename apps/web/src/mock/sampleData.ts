@@ -1,5 +1,6 @@
 import {
   computeCareerReadiness,
+  generateInterviewQuestions,
   type ResumeExtraction,
   type SkillMatrix,
   type JobExtraction,
@@ -8,6 +9,8 @@ import {
   type ResumeOptimizationReport,
   type JobSpecificTailoredResume,
   type CareerReadinessReport,
+  type InterviewSessionState,
+  type InterviewHistoryItem,
 } from "@skilltwin/contracts";
 
 export const sampleResume: ResumeExtraction = {
@@ -1578,6 +1581,59 @@ export const sampleCareerReadinessReport: CareerReadinessReport = computeCareerR
   job: sampleJobDescription,
   gapReport: sampleGapAnalysis,
 });
+
+/**
+ * PHASE 9: Precomputed Sample Interview Session & History
+ */
+export const sampleInterviewQuestions = generateInterviewQuestions({
+  resume: sampleResume,
+  matrix: sampleSkillMatrix,
+  job: sampleJobDescription,
+  gapReport: sampleGapAnalysis,
+  customCount: 5,
+});
+
+export const sampleInterviewSession: InterviewSessionState = {
+  id: "sim-sample-session-01",
+  resumeId: sampleResume.id,
+  jobId: sampleJobDescription.id,
+  jobTitle: sampleJobDescription.title,
+  company: sampleJobDescription.company || "Linear Systems Inc.",
+  status: "in_progress",
+  currentStepIndex: 0,
+  totalSteps: sampleInterviewQuestions.length,
+  currentQuestion: sampleInterviewQuestions[0],
+  plannedQuestions: sampleInterviewQuestions,
+  exchanges: [],
+  finalReport: null,
+  createdAt: "2026-10-04T22:30:00.000Z",
+  updatedAt: "2026-10-04T22:30:00.000Z",
+};
+
+export const sampleInterviewHistory: InterviewHistoryItem[] = [
+  {
+    id: "sim-hist-01",
+    jobTitle: "Senior Full-Stack Engineer",
+    company: "Linear Systems Inc.",
+    status: "completed",
+    overallScore: 88,
+    completedQuestionsCount: 4,
+    totalQuestionsCount: 4,
+    createdAt: "2026-10-03T16:00:00.000Z",
+    completedAt: "2026-10-03T16:25:00.000Z",
+  },
+  {
+    id: "sim-hist-02",
+    jobTitle: "Staff Platform Engineer",
+    company: "Vanguard Tech Labs",
+    status: "completed",
+    overallScore: 79,
+    completedQuestionsCount: 3,
+    totalQuestionsCount: 3,
+    createdAt: "2026-09-28T11:15:00.000Z",
+    completedAt: "2026-09-28T11:35:00.000Z",
+  },
+];
 
 
 

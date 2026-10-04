@@ -441,6 +441,82 @@ describe("SkillTwin Web Application Shell & UI Views", () => {
       expect(screen.getByText(/Deterministic Gap Analysis/i)).toBeDefined();
     });
   });
+
+  it("PHASE 9: navigates to Interview Simulator, executes Question -> Answer -> Feedback -> Next Question flow, and checks history", async () => {
+    render(<App />);
+
+    // Load sample profile
+    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
+    });
+
+    // Navigate to Interview Simulator from sidebar
+    const simulatorNavBtn = screen.getByTestId("nav-interview-simulator");
+    expect(simulatorNavBtn).toBeDefined();
+    fireEvent.click(simulatorNavBtn);
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("interview-simulator-view")).toBeDefined();
+        expect(screen.getAllByText(/Interview Simulator/i).length).toBeGreaterThan(0);
+      },
+      { timeout: 4000 }
+    );
+
+    // 1. QUESTION SECTION
+    expect(screen.getByTestId("question-card")).toBeDefined();
+    expect(screen.getByText(/Why asked:/i)).toBeDefined();
+
+    // 2. ANSWER SECTION
+    const answerInput = screen.getByTestId("interview-answer-input");
+    expect(answerInput).toBeDefined();
+
+    fireEvent.change(answerInput, {
+      target: {
+        value:
+          "To architect scalable workflows for Linear Systems, I structure components into clean domain boundaries using TypeScript and React. We containerize microservices using Docker and manage state and concurrency with asynchronous queues and automated integration testing to ensure zero regression in production.",
+      },
+    });
+
+    const submitBtn = screen.getByTestId("btn-submit-answer");
+    expect(submitBtn).toBeDefined();
+    fireEvent.click(submitBtn);
+
+    // 3. FEEDBACK SECTION
+    await waitFor(() => {
+      expect(screen.getByTestId("feedback-card")).toBeDefined();
+      expect(screen.getByText(/Answer Evaluation/i)).toBeDefined();
+      expect(screen.getByText(/Technical Accuracy/i)).toBeDefined();
+      expect(screen.getByText(/Technical Depth/i)).toBeDefined();
+      expect(screen.getByText(/Communication/i)).toBeDefined();
+      expect(screen.getByText(/Project Grounding/i)).toBeDefined();
+      expect(screen.getByText(/Interviewer Feedback:/i)).toBeDefined();
+      expect(screen.getByText(/Strengths Observed/i)).toBeDefined();
+      expect(screen.getByText(/Areas to Improve/i)).toBeDefined();
+    });
+
+    // 4. NEXT QUESTION ACTION
+    const nextBtn = screen.getByTestId("btn-next-question");
+    expect(nextBtn).toBeDefined();
+    fireEvent.click(nextBtn);
+
+    // 5. INTERVIEW HISTORY MODAL
+    const historyBtn = screen.getByTestId("btn-interview-history");
+    expect(historyBtn).toBeDefined();
+    fireEvent.click(historyBtn);
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/Interview History/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/Senior Full-Stack Engineer/i).length).toBeGreaterThan(0);
+      expect(screen.getByText(/Staff Platform Engineer/i)).toBeDefined();
+    });
+
+    const closeBtn = screen.getByRole("button", { name: /Close/i });
+    fireEvent.click(closeBtn);
+  });
 });
+
 
 

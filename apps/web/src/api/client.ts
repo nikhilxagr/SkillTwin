@@ -5,6 +5,7 @@ import type {
   JobAnalysis,
   GapAnalysisReport,
   CareerReadinessReport,
+  ResumeOptimizationReport,
 } from "@skilltwin/contracts";
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:4000";
@@ -364,6 +365,119 @@ export async function getLatestReadiness(): Promise<CareerReadinessReport> {
   }
 
   return body.data as CareerReadinessReport;
+}
+
+/**
+ * PHASE 9: Start an interview simulation session
+ */
+export async function startInterviewSession(params: {
+  resumeId?: string;
+  jobId?: string;
+  customQuestionsCount?: number;
+}): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/simulator/start`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(params),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "Failed to start interview session.", body.code, response.status);
+  }
+
+  return body.data;
+}
+
+/**
+ * PHASE 9: Submit an answer to the current interview question
+ */
+export async function submitInterviewAnswer(params: {
+  sessionId: string;
+  questionId: string;
+  answer: string;
+}): Promise<{ session: any; exchange: any }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/simulator/answer`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(params),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "Failed to evaluate answer.", body.code, response.status);
+  }
+
+  return body.data;
+}
+
+/**
+ * PHASE 9: Complete an interview session
+ */
+export async function completeInterviewSession(sessionId: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/simulator/complete`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ sessionId }),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "Failed to complete interview.", body.code, response.status);
+  }
+
+  return body.data;
+}
+
+/**
+ * PHASE 9: Retrieve an interview session by ID
+ */
+export async function getInterviewSession(id: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/simulator/session/${encodeURIComponent(id)}`);
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "Interview session not found.", undefined, response.status);
+  }
+
+  return body.data;
+}
+
+/**
+ * PHASE 9: Retrieve interview history
+ */
+export async function getInterviewHistory(): Promise<any[]> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/simulator/history`);
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "Failed to fetch interview history.", undefined, response.status);
+  }
+
+  return body.data;
+}
+
+/**
+ * PHASE 9: Retrieve latest interview session
+ */
+export async function getLatestInterviewSession(): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/simulator/latest`);
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "No interview session found.", undefined, response.status);
+  }
+
+  return body.data;
 }
 
 

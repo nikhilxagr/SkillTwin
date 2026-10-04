@@ -132,6 +132,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       skill_matrix: "skill_matrix",
       resume_improvement: "resume_improvement",
       tailored_resume: "tailored_resume",
+      interview_simulator: "interview_simulator",
       jd_upload: "jd_upload",
       resume_upload: "resume_upload",
     };
@@ -184,6 +185,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             onClick={() => onNavigate("skill_matrix")}
           >
             Skill Matrix
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onNavigate("interview_simulator")}
+          >
+            Simulator
           </Button>
           <Button
             variant="primary"
