@@ -15,6 +15,11 @@ import { demoGithubSync, githubStatus } from "./github.js";
 import { intelligenceProvider } from "./ai.js";
 import { analysisRepository } from "./analysis-repository.js";
 
+import { resumeRouter } from "./modules/resume/resume.controller.js";
+import { jobRouter } from "./modules/job/job.controller.js";
+import { gapRouter } from "./modules/gap/gap.controller.js";
+import { optimizerRouter } from "./modules/optimizer/optimizer.controller.js";
+
 export const app = express();
 const logger = pino();
 const upload = multer({
@@ -23,14 +28,39 @@ const upload = multer({
   fileFilter: (_request, file, callback) => callback(null, file.mimetype === "application/pdf"),
 });
 
+const allowedOrigins = Array.from(new Set([config.WEB_ORIGIN, "http://localhost:5173", "http://localhost:5174"]));
+
 app.use(helmet());
-app.use(cors({ origin: config.WEB_ORIGIN }));
-app.use(express.json({ limit: "1mb" }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || config.NODE_ENV !== "production") {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+app.use(express.json({ limit: "5mb" }));
 app.use(rateLimit({ windowMs: 60_000, limit: 120 }));
 app.use((request, _response, next) => {
   logger.info({ method: request.method, path: request.path }, "request");
   next();
 });
+
+// Phase 2: Resume Intelligence pipeline
+app.use("/api/v1/resumes", resumeRouter);
+
+// Phase 4: Job Description Intelligence pipeline
+app.use("/api/v1/jobs", jobRouter);
+
+// Phase 5: Skill Gap Engine
+app.use("/api/v1/gap", gapRouter);
+
+// Phase 6: Resume Optimization Engine
+app.use("/api/v1/optimizer", optimizerRouter);
 
 app.get("/health", (_request, response) => {
   response.json(
