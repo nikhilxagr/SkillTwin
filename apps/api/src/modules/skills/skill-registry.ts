@@ -46,13 +46,40 @@ const DEFAULT_SKILL_DEFINITIONS: CanonicalSkillDefinition[] = [
     evidenceExpectations: ["Spring enterprise services", "Unit tests with JUnit"],
   },
   {
+    id: "lang-c",
+    canonicalName: "C",
+    category: "Languages",
+    aliases: ["ANSI C", "C-Lang", "C Language"],
+    description: "Foundational procedural programming language with direct memory manipulation.",
+    ecosystemPartners: ["C++", "Linux", "Data Structures"],
+    evidenceExpectations: ["Pointers, memory management, and systems programming"],
+  },
+  {
     id: "lang-cpp",
     canonicalName: "C++",
     category: "Languages",
-    aliases: ["CPP", "cpp", "C/C++", "C Plus Plus"],
+    aliases: ["CPP", "cpp", "C Plus Plus"],
     description: "High-performance systems programming language.",
     ecosystemPartners: ["Linux", "Data Structures", "Algorithms"],
     evidenceExpectations: ["Memory management and systems level programming"],
+  },
+  {
+    id: "lang-php",
+    canonicalName: "PHP",
+    category: "Languages",
+    aliases: ["PHP8", "php", "PHP7"],
+    description: "Server-side scripting language designed for web development.",
+    ecosystemPartners: ["MySQL", "Laravel", "WordPress"],
+    evidenceExpectations: ["Backend web development and server-side processing"],
+  },
+  {
+    id: "lang-ruby",
+    canonicalName: "Ruby",
+    category: "Languages",
+    aliases: ["Ruby on Rails", "Rails", "ruby"],
+    description: "Dynamic, open source programming language with a focus on simplicity and productivity.",
+    ecosystemPartners: ["PostgreSQL", "Redis"],
+    evidenceExpectations: ["Ruby on Rails MVC architecture and Gem management"],
   },
   {
     id: "lang-go",
@@ -459,6 +486,72 @@ const DEFAULT_SKILL_DEFINITIONS: CanonicalSkillDefinition[] = [
     ecosystemPartners: ["Agile / Scrum"],
     evidenceExpectations: ["Cross-team coordination, technical RFCs, and product delivery"],
   },
+  // --- Data Engineering & Analytics ---
+  {
+    id: "data-pandas",
+    canonicalName: "Pandas",
+    category: "Data",
+    aliases: ["pandas", "pd"],
+    description: "Fast, powerful, flexible and easy to use open source data analysis and manipulation tool.",
+    ecosystemPartners: ["Python", "NumPy", "Data Warehousing"],
+    evidenceExpectations: ["DataFrames, aggregations, data cleansing, and transformation pipelines"],
+  },
+  {
+    id: "data-spark",
+    canonicalName: "Apache Spark",
+    category: "Data",
+    aliases: ["Spark", "PySpark", "apache-spark"],
+    description: "Unified analytics engine for large-scale data processing.",
+    ecosystemPartners: ["Python", "Hadoop", "Data Warehousing"],
+    evidenceExpectations: ["Distributed dataset transformations, RDDs, and Spark SQL"],
+  },
+  {
+    id: "data-warehousing",
+    canonicalName: "Data Warehousing",
+    category: "Data",
+    aliases: ["BigQuery", "Snowflake", "Redshift", "ETL", "ELT"],
+    description: "Enterprise system used for the analysis and reporting of structured and semi-structured data.",
+    ecosystemPartners: ["SQL", "Python", "Apache Spark"],
+    evidenceExpectations: ["Star schemas, ETL pipelines, and high-volume analytical querying"],
+  },
+
+  // --- AI & Machine Learning ---
+  {
+    id: "aiml-machine-learning",
+    canonicalName: "Machine Learning",
+    category: "AI/ML",
+    aliases: ["ML", "Deep Learning", "Artificial Intelligence", "AI"],
+    description: "Development of algorithms and statistical models that computer systems use to perform tasks without explicit instructions.",
+    ecosystemPartners: ["Python", "PyTorch", "TensorFlow"],
+    evidenceExpectations: ["Model training, evaluation metrics, feature engineering, and inference pipelines"],
+  },
+  {
+    id: "aiml-pytorch",
+    canonicalName: "PyTorch",
+    category: "AI/ML",
+    aliases: ["torch", "pytorch"],
+    description: "Optimized tensor library for deep learning using GPUs and CPUs.",
+    ecosystemPartners: ["Python", "Machine Learning", "CUDA"],
+    evidenceExpectations: ["Neural network architectures, PyTorch Dataset/DataLoader, and tensor ops"],
+  },
+  {
+    id: "aiml-tensorflow",
+    canonicalName: "TensorFlow",
+    category: "AI/ML",
+    aliases: ["tensorflow", "Keras", "TF2", "TensorFlow 2"],
+    description: "End-to-end open source platform for machine learning.",
+    ecosystemPartners: ["Python", "Machine Learning"],
+    evidenceExpectations: ["Keras model layers, training loops, and model export"],
+  },
+  {
+    id: "aiml-llm",
+    canonicalName: "LLMs",
+    category: "AI/ML",
+    aliases: ["Large Language Models", "Generative AI", "GenAI", "LangChain", "RAG"],
+    description: "Applications leveraging foundation models for generative text, code, and multimodal tasks.",
+    ecosystemPartners: ["Python", "TypeScript", "Vector Databases"],
+    evidenceExpectations: ["Prompt engineering, RAG pipelines, embeddings, and API orchestration"],
+  },
 ];
 
 /**
@@ -557,6 +650,8 @@ export class SkillRegistry {
     if (lower.includes("system") || lower.includes("architecture") || lower.includes("distributed")) return "System Design";
     if (lower.includes("lead") || lower.includes("team") || lower.includes("agile") || lower.includes("mentor") || lower.includes("scrum")) return "Soft Skills";
     if (lower.includes("git") || lower.includes("linux") || lower.includes("tool") || lower.includes("ide")) return "Tools";
+    if (lower.includes("model") || lower.includes("ai") || lower.includes("torch") || lower.includes("learn") || lower.includes("llm")) return "AI/ML";
+    if (lower.includes("data") || lower.includes("spark") || lower.includes("panda") || lower.includes("etl")) return "Data";
     return "Languages";
   }
 }

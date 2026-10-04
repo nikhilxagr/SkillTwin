@@ -1,18 +1,28 @@
 import { z } from "zod";
 
-export const skillCategorySchema = z.enum([
-  "Languages",
+export const standardSkillCategories = [
   "Frontend",
   "Backend",
+  "Programming Languages",
+  "Languages",
+  "Database",
   "Databases",
+  "DevOps",
+  "Cloud",
   "Cloud/DevOps",
   "Testing",
-  "System Design",
-  "Tools",
+  "Security",
   "Cybersecurity",
+  "Tools",
+  "Data",
+  "AI/ML",
+  "System Design",
   "Soft Skills",
-]);
-export type SkillCategory = z.infer<typeof skillCategorySchema>;
+] as const;
+
+export type StandardSkillCategory = (typeof standardSkillCategories)[number];
+export type SkillCategory = StandardSkillCategory | string;
+export const skillCategorySchema = z.string().min(1);
 
 export const skillProficiencySchema = z.enum([
   "Strong",
@@ -58,6 +68,7 @@ export const skillMatrixItemSchema = z.object({
   confidence: z.number().min(0).max(100),
   evidenceLevel: skillEvidenceLevelSchema,
   evidence: z.array(evidenceItemSchema).default([]),
+  source: z.string().optional(),
   explanation: z.string().min(1),
   missingEvidence: z.array(z.string()).default([]),
   relatedSkills: z.array(z.string()).default([]),

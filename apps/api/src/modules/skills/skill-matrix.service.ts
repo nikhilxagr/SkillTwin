@@ -110,7 +110,7 @@ export class SkillMatrixService {
         });
 
         const matchingBullets = proj.bullets.filter((b) =>
-          allSearchTerms.some((term) => new RegExp(`\\b${escapeRegExp(term)}\\b`, "i").test(b))
+          allSearchTerms.some((term) => createSkillSearchRegex(term).test(b))
         );
 
         if (inTechList || matchingBullets.length > 0) {
@@ -134,7 +134,7 @@ export class SkillMatrixService {
         });
 
         const matchingBullets = exp.bullets.filter((b) =>
-          allSearchTerms.some((term) => new RegExp(`\\b${escapeRegExp(term)}\\b`, "i").test(b))
+          allSearchTerms.some((term) => createSkillSearchRegex(term).test(b))
         );
 
         if (inTechList || matchingBullets.length > 0) {
@@ -170,6 +170,7 @@ export class SkillMatrixService {
         confidence: evalResult.confidence,
         evidenceLevel: evalResult.evidenceLevel,
         evidence: evalResult.evidence,
+        source: "Resume Extraction",
         explanation: evalResult.explanation,
         missingEvidence: evalResult.missingEvidence,
         relatedSkills: def.ecosystemPartners,
@@ -215,6 +216,26 @@ export class SkillMatrixService {
 
 function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function createSkillSearchRegex(term: string): RegExp {
+  const trimmed = term.trim();
+  const escaped = escapeRegExp(trimmed);
+
+  // If the term is "C", explicitly prevent matching C++ or C#
+  if (trimmed.toLowerCase() === "c") {
+    return new RegExp(`\\bC(?![+#\\w])`, "i");
+  }
+
+  // If the term ends with special characters like ++ or #
+  if (/[+#]$/.test(trimmed)) {
+    return new RegExp(`\\b${escaped}(?![+#\\w])`, "i");
+  }
+
+  // Standard boundary
+  const leading = /^\w/.test(trimmed) ? "\\b" : "(?<!\\w)";
+  const trailing = /\w$/.test(trimmed) ? "\\b" : "(?!\\w)";
+  return new RegExp(`${leading}${escaped}${trailing}`, "i");
 }
 
 export const skillMatrixService = new SkillMatrixService();

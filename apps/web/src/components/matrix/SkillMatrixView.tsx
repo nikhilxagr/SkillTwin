@@ -26,16 +26,25 @@ interface SkillMatrixViewProps {
   onLoadSample: () => void;
 }
 
-const CATEGORIES: Array<"All" | SkillCategory> = [
+const CATEGORIES = [
   "All",
-  "Languages",
   "Frontend",
   "Backend",
+  "Programming Languages",
+  "Languages",
+  "Database",
   "Databases",
+  "DevOps",
+  "Cloud",
   "Cloud/DevOps",
   "Testing",
-  "System Design",
+  "Security",
+  "Cybersecurity",
   "Tools",
+  "Data",
+  "AI/ML",
+  "System Design",
+  "Soft Skills",
 ];
 
 export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
@@ -43,7 +52,9 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
   onNavigate,
   onLoadSample,
 }) => {
-  const [selectedCategory, setSelectedCategory] = useState<"All" | SkillCategory>("All");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [selectedProficiency, setSelectedProficiency] = useState<string>("All");
+  const [selectedConfidence, setSelectedConfidence] = useState<string>("All");
   const [selectedLevel, setSelectedLevel] = useState<"All" | SkillEvidenceLevel>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [inspectedSkill, setInspectedSkill] = useState<SkillMatrixItem | null>(null);
@@ -62,18 +73,35 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
     );
   }
 
-  // Filter skills
+  // Filter skills by category, proficiency, confidence, evidence level, and search query
   const filteredSkills = matrix.items.filter((item) => {
     const matchesCategory =
-      selectedCategory === "All" || item.category === selectedCategory;
+      selectedCategory === "All" ||
+      item.category.toLowerCase() === selectedCategory.toLowerCase() ||
+      (selectedCategory === "Database" && item.category === "Databases") ||
+      (selectedCategory === "Programming Languages" && item.category === "Languages") ||
+      (selectedCategory === "Cloud" && item.category === "Cloud/DevOps") ||
+      (selectedCategory === "DevOps" && item.category === "Cloud/DevOps") ||
+      (selectedCategory === "Security" && item.category === "Cybersecurity");
+
+    const matchesProficiency =
+      selectedProficiency === "All" || item.proficiency === selectedProficiency;
+
+    const matchesConfidence =
+      selectedConfidence === "All" ||
+      (selectedConfidence === "High (80%+)" && item.confidence >= 80) ||
+      (selectedConfidence === "Moderate (60-79%)" && item.confidence >= 60 && item.confidence < 80) ||
+      (selectedConfidence === "Developing (<60%)" && item.confidence < 60);
+
     const matchesLevel =
       selectedLevel === "All" || item.evidenceLevel === selectedLevel;
+
     const matchesSearch =
       searchQuery === "" ||
       item.canonicalName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.aliases.some((a) => a.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    return matchesCategory && matchesLevel && matchesSearch;
+    return matchesCategory && matchesProficiency && matchesConfidence && matchesLevel && matchesSearch;
   });
 
   return (
@@ -194,25 +222,96 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
               />
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Evidence Filter:</span>
-              <select
-                value={selectedLevel}
-                onChange={(e) => setSelectedLevel(e.target.value as any)}
-                style={{
-                  padding: "7px 12px",
-                  borderRadius: "6px",
-                  background: "var(--bg-canvas)",
-                  border: "1px solid var(--border-subtle)",
-                  color: "var(--text-primary)",
-                  fontSize: "12.5px",
-                }}
-              >
-                <option value="All">All Evidence Levels</option>
-                <option value="Demonstrated">Demonstrated (Project & Work)</option>
-                <option value="ClaimedOnly">Claimed Only (In List)</option>
-                <option value="WeakEvidence">Weak Evidence (Needs Proof)</option>
-              </select>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+              {/* Category Filter */}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Category:</span>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  style={{
+                    padding: "7px 10px",
+                    borderRadius: "6px",
+                    background: "var(--bg-canvas)",
+                    border: "1px solid var(--border-subtle)",
+                    color: "var(--text-primary)",
+                    fontSize: "12px",
+                  }}
+                >
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Proficiency Filter */}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Proficiency:</span>
+                <select
+                  value={selectedProficiency}
+                  onChange={(e) => setSelectedProficiency(e.target.value)}
+                  style={{
+                    padding: "7px 10px",
+                    borderRadius: "6px",
+                    background: "var(--bg-canvas)",
+                    border: "1px solid var(--border-subtle)",
+                    color: "var(--text-primary)",
+                    fontSize: "12px",
+                  }}
+                >
+                  <option value="All">All Proficiencies</option>
+                  <option value="Strong">Strong</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Weak">Weak</option>
+                </select>
+              </div>
+
+              {/* Confidence Filter */}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Confidence:</span>
+                <select
+                  value={selectedConfidence}
+                  onChange={(e) => setSelectedConfidence(e.target.value)}
+                  style={{
+                    padding: "7px 10px",
+                    borderRadius: "6px",
+                    background: "var(--bg-canvas)",
+                    border: "1px solid var(--border-subtle)",
+                    color: "var(--text-primary)",
+                    fontSize: "12px",
+                  }}
+                >
+                  <option value="All">All Confidence</option>
+                  <option value="High (80%+)">High (80%+)</option>
+                  <option value="Moderate (60-79%)">Moderate (60-79%)</option>
+                  <option value="Developing (<60%)">Developing (&lt;60%)</option>
+                </select>
+              </div>
+
+              {/* Evidence Filter */}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Evidence:</span>
+                <select
+                  value={selectedLevel}
+                  onChange={(e) => setSelectedLevel(e.target.value as any)}
+                  style={{
+                    padding: "7px 10px",
+                    borderRadius: "6px",
+                    background: "var(--bg-canvas)",
+                    border: "1px solid var(--border-subtle)",
+                    color: "var(--text-primary)",
+                    fontSize: "12px",
+                  }}
+                >
+                  <option value="All">All Evidence Levels</option>
+                  <option value="Demonstrated">Demonstrated (Project & Work)</option>
+                  <option value="ClaimedOnly">Claimed Only (In List)</option>
+                  <option value="WeakEvidence">Weak Evidence (Needs Proof)</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>

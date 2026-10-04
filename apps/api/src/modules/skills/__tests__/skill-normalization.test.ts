@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { skillNormalizer, skillRegistry, confidenceEvaluator, skillMatrixService } from "../index.js";
+import {
+  skillNormalizer,
+  skillRegistry,
+  confidenceEvaluator,
+  skillMatrixService,
+  createSkillSearchRegex,
+} from "../index.js";
 
 describe("Phase 3: Normalized Skill Engine", () => {
   describe("1. Canonical Alias Resolution", () => {
@@ -22,6 +28,25 @@ describe("Phase 3: Normalized Skill Engine", () => {
       expect(skillNormalizer.areSkillsEquivalent("React", "Angular")).toBe(false);
     });
 
+    it("strictly preserves boundaries and never merges unrelated technologies", () => {
+      // Strict boundary: Java vs JavaScript
+      expect(skillNormalizer.areSkillsEquivalent("Java", "JavaScript")).toBe(false);
+      expect(skillNormalizer.areSkillsEquivalent("Java", "JS")).toBe(false);
+
+      // Strict boundary: C vs C++ vs C#
+      expect(skillNormalizer.areSkillsEquivalent("C", "C++")).toBe(false);
+      expect(skillNormalizer.areSkillsEquivalent("C", "C#")).toBe(false);
+      expect(skillNormalizer.areSkillsEquivalent("C++", "C#")).toBe(false);
+      expect(skillNormalizer.areSkillsEquivalent("C++", "CPP")).toBe(true);
+      expect(skillNormalizer.areSkillsEquivalent("C#", "CSharp")).toBe(true);
+
+      // Strict boundary: Python vs PHP
+      expect(skillNormalizer.areSkillsEquivalent("Python", "PHP")).toBe(false);
+
+      // Strict boundary: Go vs Rust
+      expect(skillNormalizer.areSkillsEquivalent("Go", "Rust")).toBe(false);
+    });
+
     it("resolves common technology aliases accurately", () => {
       const cases: Array<{ inputs: string[]; expectedCanonical: string; category: string }> = [
         { inputs: ["Node", "Node.js", "NodeJS", "nodejs", "node.js"], expectedCanonical: "Node.js", category: "Backend" },
@@ -38,9 +63,13 @@ describe("Phase 3: Normalized Skill Engine", () => {
         { inputs: ["Next", "Next.js", "NextJS", "nextjs"], expectedCanonical: "Next.js", category: "Frontend" },
         { inputs: ["Tailwind", "TailwindCSS", "tailwindcss"], expectedCanonical: "Tailwind CSS", category: "Frontend" },
         { inputs: ["TF", "Terraform", "Infrastructure as Code"], expectedCanonical: "Terraform", category: "Cloud/DevOps" },
+        { inputs: ["C", "ANSI C", "C-Lang"], expectedCanonical: "C", category: "Languages" },
         { inputs: ["C++", "CPP", "c plus plus"], expectedCanonical: "C++", category: "Languages" },
         { inputs: ["C#", "CSharp", "c-sharp", "c sharp"], expectedCanonical: "C#", category: "Languages" },
         { inputs: ["JWT", "JSON Web Token", "JSON Web Tokens"], expectedCanonical: "JWT Authentication", category: "Cybersecurity" },
+        { inputs: ["Pandas", "pandas", "pd"], expectedCanonical: "Pandas", category: "Data" },
+        { inputs: ["Machine Learning", "ML", "Artificial Intelligence"], expectedCanonical: "Machine Learning", category: "AI/ML" },
+        { inputs: ["PyTorch", "torch", "pytorch"], expectedCanonical: "PyTorch", category: "AI/ML" },
       ];
 
       for (const testCase of cases) {
@@ -217,6 +246,111 @@ describe("Phase 3: Normalized Skill Engine", () => {
       // Verify matrix summary
       expect(matrix.summary.demonstratedCount).toBeGreaterThan(0);
       expect(matrix.summary.totalSkills).toBeGreaterThan(0);
+    });
+  });
+
+  describe("6. Skill Model & Evidence Completeness", () => {
+    it("ensures every canonical skill matrix item implements the complete evidence model schema", () => {
+      const matrix = skillMatrixService.generateMatrix(
+        "res-model-test",
+        {
+          profile: { name: "Full Schema Candidate" },
+          categorizedSkills: {
+            programmingLanguages: ["TypeScript", "Python"],
+            frameworks: ["React", "FastAPI"],
+            libraries: ["Pandas"],
+            databases: ["PostgreSQL"],
+            tools: ["Git", "Docker"],
+            cloudDevOps: ["AWS"],
+            cybersecurity: ["JWT Authentication"],
+            softSkills: ["Technical Mentorship"],
+            otherTechnical: [],
+          },
+          projects: [
+            {
+              name: "Analytics Engine",
+              technologies: ["Python", "FastAPI", "Pandas"],
+              bullets: ["Engineered data processing pipeline with Pandas and FastAPI."],
+            },
+          ],
+          experience: [
+            {
+              company: "CloudScale Inc",
+              role: "Senior Engineer",
+              current: true,
+              technologies: ["React", "TypeScript", "AWS"],
+              bullets: ["Built frontend architecture with React and TypeScript deployed on AWS."],
+            },
+          ],
+          education: [],
+          certifications: [],
+          achievements: [],
+        },
+        ["TypeScript", "React", "Python", "FastAPI", "Pandas", "PostgreSQL", "AWS"]
+      );
+
+      expect(matrix.items.length).toBeGreaterThan(0);
+
+      for (const item of matrix.items) {
+        // Required Phase 3 Skill Model properties
+        expect(item.canonicalName).toBeDefined();
+        expect(typeof item.canonicalName).toBe("string");
+        expect(item.canonicalName.length).toBeGreaterThan(0);
+
+        expect(item.category).toBeDefined();
+        expect(typeof item.category).toBe("string");
+
+        expect(Array.isArray(item.aliases)).toBe(true);
+
+        expect(["Strong", "Intermediate", "Beginner", "Weak"]).toContain(item.proficiency);
+        expect(item.confidence).toBeGreaterThanOrEqual(0);
+        expect(item.confidence).toBeLessThanOrEqual(100);
+
+        expect(Array.isArray(item.evidence)).toBe(true);
+        expect(item.source).toBe("Resume Extraction");
+        expect(Array.isArray(item.relatedSkills)).toBe(true);
+        expect(Array.isArray(item.missingEvidence)).toBe(true);
+        expect(typeof item.explanation).toBe("string");
+        expect(typeof item.claimed).toBe("boolean");
+        expect(typeof item.demonstrated).toBe("boolean");
+      }
+    });
+  });
+
+  describe("7. Safe Regex Boundary Matching (C, C++, C#, Java, JavaScript)", () => {
+    it("distinguishes C from C++ and C# without false positives", () => {
+      const cRegex = createSkillSearchRegex("C");
+      const cppRegex = createSkillSearchRegex("C++");
+      const csharpRegex = createSkillSearchRegex("C#");
+
+      // C text should match C but not C++ or C#
+      expect(cRegex.test("Implemented low-level device drivers in C.")).toBe(true);
+      expect(cRegex.test("Developed firmware in C and assembly.")).toBe(true);
+      expect(cRegex.test("Engineered high-performance graphics in C++.")).toBe(false);
+      expect(cRegex.test("Built enterprise web applications in C#.")).toBe(false);
+
+      // C++ text should match C++ but not C#
+      expect(cppRegex.test("Engineered high-performance graphics in C++.")).toBe(true);
+      expect(cppRegex.test("Engineered in C++ with modern smart pointers.")).toBe(true);
+      expect(cppRegex.test("Implemented low-level device drivers in C.")).toBe(false);
+      expect(cppRegex.test("Built enterprise web applications in C#.")).toBe(false);
+
+      // C# text should match C# but not C++
+      expect(csharpRegex.test("Built enterprise web applications in C#.")).toBe(true);
+      expect(csharpRegex.test("Backend development with C# and .NET Core.")).toBe(true);
+      expect(csharpRegex.test("Engineered high-performance graphics in C++.")).toBe(false);
+      expect(csharpRegex.test("Implemented low-level device drivers in C.")).toBe(false);
+    });
+
+    it("distinguishes Java from JavaScript without boundary confusion", () => {
+      const javaRegex = createSkillSearchRegex("Java");
+      const jsRegex = createSkillSearchRegex("JavaScript");
+
+      expect(javaRegex.test("Developed microservices using Java 17 and Spring Boot.")).toBe(true);
+      expect(javaRegex.test("Built single-page applications using JavaScript.")).toBe(false);
+
+      expect(jsRegex.test("Built single-page applications using JavaScript.")).toBe(true);
+      expect(jsRegex.test("Developed microservices using Java 17 and Spring Boot.")).toBe(false);
     });
   });
 });

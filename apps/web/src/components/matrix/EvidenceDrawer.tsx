@@ -105,7 +105,7 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ skill, onClose }
       {/* Rationale Explanation */}
       <div style={{ marginBottom: "20px" }}>
         <h4 style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>
-          Assessment Rationale
+          Assessment Rationale • Why SkillTwin believes you have this skill
         </h4>
         <p style={{ fontSize: "13px", color: "var(--text-primary)", lineHeight: "1.55" }}>
           {skill.explanation}
@@ -135,7 +135,7 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ skill, onClose }
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "3px" }}>
-                  <span style={{ fontSize: "11.5px", fontWeight: 600, color: "var(--color-match)", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <span style={{ fontSize: "11.5px", fontWeight: 600, color: "var(--color-primary-blue)", display: "flex", alignItems: "center", gap: "4px" }}>
                     <CheckCircle2 size={12} /> {ev.sourceType.replace("_", " ").toUpperCase()}
                   </span>
                   {ev.sourceTitle && (
@@ -162,25 +162,31 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ skill, onClose }
           Missing Evidence Checklist
         </h4>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          {skill.missingEvidence.map((item, idx) => (
-            <div
-              key={idx}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "8px 12px",
-                background: "var(--color-weak-bg)",
-                border: "1px solid var(--color-weak-border)",
-                borderRadius: "var(--radius-md)",
-                fontSize: "12px",
-                color: "#92400e",
-              }}
-            >
-              <AlertTriangle size={13} style={{ flexShrink: 0 }} />
-              <span>{item}</span>
+          {skill.missingEvidence.length === 0 ? (
+            <div style={{ padding: "8px 12px", fontSize: "12px", color: "var(--text-secondary)" }}>
+              No critical evidence gaps identified for this competency.
             </div>
-          ))}
+          ) : (
+            skill.missingEvidence.map((item, idx) => (
+              <div
+                key={idx}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px 12px",
+                  background: "var(--color-weak-bg)",
+                  border: "1px solid var(--color-weak-border)",
+                  borderRadius: "var(--radius-md)",
+                  fontSize: "12px",
+                  color: "#92400e",
+                }}
+              >
+                <AlertTriangle size={13} style={{ flexShrink: 0 }} />
+                <span>{item}</span>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -188,7 +194,7 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ skill, onClose }
       {skill.relatedSkills.length > 0 && (
         <div style={{ marginTop: "auto", paddingTop: "14px", borderTop: "1px solid var(--border-subtle)" }}>
           <h4 style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>
-            Detected Ecosystem Neighbors
+            Related Skills • Ecosystem Neighbors
           </h4>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
             {skill.relatedSkills.map((rel) => (
