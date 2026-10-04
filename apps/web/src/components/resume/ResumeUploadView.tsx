@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { UploadCloud, FileText, CheckCircle2, AlertCircle, Sparkles, ArrowRight } from "lucide-react";
+import { UploadCloud, FileText, CheckCircle2, AlertCircle, Layers, ArrowRight } from "lucide-react";
 import { Button } from "../common/Button.js";
 import { Card } from "../common/Card.js";
 import { Badge } from "../common/Badge.js";
@@ -123,7 +123,7 @@ export const ResumeUploadView: React.FC<ResumeUploadViewProps> = ({
         <Button
           variant="secondary"
           size="sm"
-          icon={<Sparkles size={13} />}
+          icon={<Layers size={13} />}
           onClick={onLoadSample}
         >
           Load Verified Sample Resume

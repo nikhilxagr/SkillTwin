@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import {
   UploadCloud,
   Briefcase,
-  Sparkles,
+  Layers,
   ArrowRight,
   Building,
   CheckCircle2,
@@ -153,7 +153,7 @@ export const JobUploadView: React.FC<JobUploadViewProps> = ({
         <Button
           variant="secondary"
           size="sm"
-          icon={<Sparkles size={13} />}
+          icon={<Layers size={13} />}
           onClick={onLoadSample}
         >
           Load Verified Senior JD

@@ -5,7 +5,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
-  Sparkles,
+  Layers,
   GitCompare,
   Code2,
   FileSearch,
@@ -23,17 +23,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onLoadSamp
     <div
       style={{
         minHeight: "100vh",
-        background:
-          "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(56, 189, 248, 0.15), rgba(7, 9, 14, 1))",
+        background: "var(--bg-canvas)",
         color: "var(--text-primary)",
-        padding: "32px 24px 80px",
+        padding: "0 24px 80px",
       }}
     >
       {/* Top Navbar */}
       <nav
         style={{
-          maxWidth: "1140px",
-          margin: "0 auto 80px",
+          maxWidth: "1160px",
+          margin: "0 auto 64px",
+          padding: "20px 0",
+          borderBottom: "1px solid var(--border-subtle)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -42,26 +43,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onLoadSamp
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div
             style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "8px",
-              background: "linear-gradient(135deg, #2563eb, #38bdf8)",
+              width: "28px",
+              height: "28px",
+              borderRadius: "6px",
+              background: "var(--color-primary-blue)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "white",
             }}
           >
-            <Terminal size={18} />
+            <Terminal size={15} />
           </div>
-          <span style={{ fontSize: "20px", fontWeight: 800, letterSpacing: "-0.03em" }}>
-            Skill<span style={{ color: "var(--text-accent)" }}>Twin</span>
+          <span style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.03em", color: "var(--color-deep-navy)" }}>
+            Skill<span style={{ color: "var(--color-primary-blue)" }}>Twin</span>
           </span>
           <Badge variant="neutral">Developer Career Intelligence</Badge>
         </div>
 
-        <div style={{ display: "flex", gap: "12px" }}>
-          <Button variant="outline" size="sm" onClick={onLoadSample} icon={<Sparkles size={13} />}>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <Button variant="outline" size="sm" onClick={onLoadSample} icon={<Layers size={13} />}>
             Explore Sample Profile
           </Button>
           <Button variant="primary" size="sm" onClick={onEnterApp}>
@@ -73,7 +74,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onLoadSamp
       {/* Hero Section */}
       <section
         style={{
-          maxWidth: "960px",
+          maxWidth: "920px",
           margin: "0 auto 64px",
           textAlign: "center",
         }}
@@ -82,62 +83,57 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onLoadSamp
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: "8px",
-            padding: "6px 14px",
+            gap: "6px",
+            padding: "4px 12px",
             borderRadius: "9999px",
-            background: "rgba(59, 130, 246, 0.1)",
-            border: "1px solid rgba(59, 130, 246, 0.3)",
+            background: "var(--color-light-blue)",
+            border: "1px solid #bfdbfe",
             fontSize: "12px",
             fontWeight: 600,
-            color: "var(--text-accent)",
-            marginBottom: "24px",
+            color: "var(--color-primary-blue)",
+            marginBottom: "20px",
           }}
         >
-          <ShieldCheck size={14} /> Evidence-First AI Career Intelligence
+          <ShieldCheck size={13} /> Evidence-First Career Intelligence
         </div>
 
         <h1
           style={{
-            fontSize: "clamp(36px, 6vw, 62px)",
+            fontSize: "clamp(34px, 5.5vw, 56px)",
             fontWeight: 800,
-            lineHeight: 1.08,
-            letterSpacing: "-0.04em",
-            marginBottom: "24px",
+            lineHeight: 1.12,
+            letterSpacing: "-0.03em",
+            color: "var(--color-deep-navy)",
+            marginBottom: "20px",
           }}
         >
           Stop guessing your readiness. <br />
-          <span
-            style={{
-              background: "linear-gradient(to right, #60a5fa, #38bdf8, #34d399)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
+          <span style={{ color: "var(--color-primary-blue)" }}>
             Quantify your actual skills with evidence.
           </span>
         </h1>
 
         <p
           style={{
-            fontSize: "18px",
+            fontSize: "17px",
             color: "var(--text-secondary)",
             maxWidth: "680px",
-            margin: "0 auto 36px",
+            margin: "0 auto 32px",
             lineHeight: 1.6,
           }}
         >
-          SkillTwin ingests your real developer resume, extracts claimed vs. demonstrated technical
-          skills, compares them against target job descriptions, and gives you transparent,
+          SkillTwin ingests your developer resume, extracts claimed versus demonstrated technical
+          skills, benchmarks them against target job descriptions, and provides structured,
           non-hallucinatory career guidance.
         </p>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: "14px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: "12px", flexWrap: "wrap" }}>
           <Button
             variant="primary"
             size="lg"
             onClick={onEnterApp}
-            icon={<ArrowRight size={16} />}
-            style={{ padding: "14px 28px", fontSize: "15px" }}
+            icon={<ArrowRight size={15} />}
+            style={{ padding: "12px 24px", fontSize: "14px" }}
           >
             Analyze My Career Data
           </Button>
@@ -145,8 +141,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onLoadSamp
             variant="secondary"
             size="lg"
             onClick={onLoadSample}
-            icon={<Sparkles size={16} />}
-            style={{ padding: "14px 24px", fontSize: "15px" }}
+            icon={<Layers size={15} />}
+            style={{ padding: "12px 22px", fontSize: "14px" }}
           >
             Load Realistic Demo Profile
           </Button>
@@ -156,86 +152,86 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onLoadSamp
       {/* Feature Showcase Grid */}
       <section
         style={{
-          maxWidth: "1140px",
-          margin: "0 auto 64px",
+          maxWidth: "1160px",
+          margin: "0 auto 56px",
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: "20px",
+          gap: "16px",
         }}
       >
-        <div className="twin-panel" style={{ background: "var(--bg-surface)" }}>
+        <div className="twin-panel">
           <div
             style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "8px",
-              background: "rgba(59, 130, 246, 0.15)",
-              color: "var(--text-accent)",
+              width: "36px",
+              height: "36px",
+              borderRadius: "6px",
+              background: "var(--color-light-blue)",
+              color: "var(--color-primary-blue)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              marginBottom: "16px",
+              marginBottom: "14px",
             }}
           >
-            <Code2 size={20} />
+            <Code2 size={18} />
           </div>
-          <h3 style={{ fontSize: "17px", fontWeight: 700, marginBottom: "8px" }}>
+          <h3 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "6px", color: "var(--color-deep-navy)" }}>
             Claimed vs. Demonstrated Skills
           </h3>
-          <p style={{ fontSize: "13.5px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+          <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
             Anyone can write "Docker" or "Testing" in a skills list. SkillTwin inspects your actual
-            project bullets, frameworks, and architecture to build an honest confidence score.
+            project bullets, architecture, and codebase evidence to establish honest proficiency.
           </p>
         </div>
 
-        <div className="twin-panel" style={{ background: "var(--bg-surface)" }}>
+        <div className="twin-panel">
           <div
             style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "8px",
-              background: "rgba(16, 185, 129, 0.15)",
+              width: "36px",
+              height: "36px",
+              borderRadius: "6px",
+              background: "var(--color-match-bg)",
               color: "var(--color-match)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              marginBottom: "16px",
+              marginBottom: "14px",
             }}
           >
-            <GitCompare size={20} />
+            <GitCompare size={18} />
           </div>
-          <h3 style={{ fontSize: "17px", fontWeight: 700, marginBottom: "8px" }}>
+          <h3 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "6px", color: "var(--color-deep-navy)" }}>
             Deterministic 5-Tier Gap Engine
           </h3>
-          <p style={{ fontSize: "13.5px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-            Categorizes your gaps into <strong>Critical Gaps</strong>, <strong>Partial Gaps</strong>,{" "}
+          <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
+            Categorizes requirements into <strong>Critical Gaps</strong>, <strong>Partial Gaps</strong>,{" "}
             <strong>Weak Evidence</strong>, <strong>Matches</strong>, and <strong>Optional</strong>.
-            No arbitrary "ATS 87%" guesswork.
+            Transparent logic rather than opaque scoring.
           </p>
         </div>
 
-        <div className="twin-panel" style={{ background: "var(--bg-surface)" }}>
+        <div className="twin-panel">
           <div
             style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "8px",
-              background: "rgba(245, 158, 11, 0.15)",
+              width: "36px",
+              height: "36px",
+              borderRadius: "6px",
+              background: "var(--color-partial-bg)",
               color: "var(--color-partial)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              marginBottom: "16px",
+              marginBottom: "14px",
             }}
           >
-            <FileSearch size={20} />
+            <FileSearch size={18} />
           </div>
-          <h3 style={{ fontSize: "17px", fontWeight: 700, marginBottom: "8px" }}>
+          <h3 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "6px", color: "var(--color-deep-navy)" }}>
             Zero-Hallucination Optimization
           </h3>
-          <p style={{ fontSize: "13.5px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+          <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
             Never invents fake metrics or unpracticed technologies. Offers grounded bullet
-            enhancements and advises you when a skill should be genuinely practiced first.
+            enhancements and explicitly notes when evidence is required.
           </p>
         </div>
       </section>
@@ -243,19 +239,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onLoadSamp
       {/* Interactive Micro-Preview */}
       <section
         style={{
-          maxWidth: "1140px",
+          maxWidth: "1160px",
           margin: "0 auto",
-          background: "var(--bg-surface)",
+          background: "var(--bg-canvas)",
           border: "1px solid var(--border-subtle)",
-          borderRadius: "14px",
-          padding: "32px",
+          borderRadius: "var(--radius-lg)",
+          padding: "24px",
+          boxShadow: "var(--shadow-sm)",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
           <div>
-            <h4 style={{ fontSize: "16px", fontWeight: 700 }}>Live Intelligence Preview</h4>
-            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-              Sample Developer: Alex Rivera vs Senior Full Stack Engineer JD
+            <h4 style={{ fontSize: "15px", fontWeight: 700, color: "var(--color-deep-navy)" }}>Live Intelligence Preview</h4>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+              Sample Profile: Alex Rivera vs Senior Full Stack Engineer JD
             </p>
           </div>
           <Button variant="secondary" size="sm" onClick={onLoadSample}>
@@ -263,34 +260,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onLoadSamp
           </Button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
-          <div style={{ padding: "16px", background: "var(--bg-elevated)", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-              <span style={{ fontWeight: 600, fontSize: "14px" }}>React.js</span>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "14px" }}>
+          <div style={{ padding: "14px", background: "var(--bg-subtle)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <span style={{ fontWeight: 600, fontSize: "13.5px", color: "var(--text-primary)" }}>React.js</span>
               <Badge variant="match">MATCH • Strong</Badge>
             </div>
-            <p style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
-              ✓ Listed in resume • Used in 2 major projects • Component library demonstrated.
+            <p style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.45 }}>
+              ✓ Listed in resume • Used in 2 major production projects • Component architecture demonstrated.
             </p>
           </div>
 
-          <div style={{ padding: "16px", background: "var(--bg-elevated)", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-              <span style={{ fontWeight: 600, fontSize: "14px" }}>Docker</span>
+          <div style={{ padding: "14px", background: "var(--bg-subtle)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <span style={{ fontWeight: 600, fontSize: "13.5px", color: "var(--text-primary)" }}>Docker</span>
               <Badge variant="gap">CRITICAL GAP</Badge>
             </div>
-            <p style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
-              ⚠ Listed as 'Basic' in skills list; 0 Dockerfiles or container bullets found.
+            <p style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.45 }}>
+              ⚠ Listed in skills list; production container configuration or Dockerfiles not demonstrated.
             </p>
           </div>
 
-          <div style={{ padding: "16px", background: "var(--bg-elevated)", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-              <span style={{ fontWeight: 600, fontSize: "14px" }}>Automated Testing</span>
-              <Badge variant="gap">CRITICAL GAP</Badge>
+          <div style={{ padding: "14px", background: "var(--bg-subtle)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <span style={{ fontWeight: 600, fontSize: "13.5px", color: "var(--text-primary)" }}>Automated Testing</span>
+              <Badge variant="gap">NOT DEMONSTRATED</Badge>
             </div>
-            <p style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
-              ✗ Required for Senior role; Vitest or Jest test suites not demonstrated.
+            <p style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.45 }}>
+              ✗ Required for Senior role; unit or integration test suites not demonstrated in candidate evidence.
             </p>
           </div>
         </div>

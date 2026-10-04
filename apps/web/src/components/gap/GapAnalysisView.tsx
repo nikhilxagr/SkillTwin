@@ -5,7 +5,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   HelpCircle,
-  Sparkles,
+  FileCheck2,
   ArrowRight,
   ShieldCheck,
   RotateCcw,
@@ -102,7 +102,7 @@ export const GapAnalysisView: React.FC<GapAnalysisViewProps> = ({
           <Button
             variant="primary"
             size="sm"
-            icon={<Sparkles size={13} />}
+            icon={<FileCheck2 size={13} />}
             onClick={() => {
               if (onRunOptimization) {
                 onRunOptimization();

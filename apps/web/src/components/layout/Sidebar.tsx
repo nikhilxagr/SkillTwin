@@ -2,11 +2,11 @@ import React from "react";
 import {
   LayoutDashboard,
   FileText,
-  Binary,
+  BarChart2,
   UploadCloud,
   Briefcase,
   GitCompare,
-  Wand2,
+  FileCheck2,
   Terminal,
   ShieldCheck,
 } from "lucide-react";
@@ -37,17 +37,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <div
             style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "6px",
-              background: "linear-gradient(135deg, #2563eb, #38bdf8)",
+              width: "26px",
+              height: "26px",
+              borderRadius: "5px",
+              background: "var(--color-primary-blue)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "white",
             }}
           >
-            <Terminal size={16} />
+            <Terminal size={14} />
           </div>
           Skill<span>Twin</span>
         </div>
@@ -90,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className={`nav-button ${currentScreen === "skill_matrix" ? "active" : ""}`}
             onClick={() => onNavigate("skill_matrix")}
           >
-            <Binary size={16} />
+            <BarChart2 size={16} />
             <span>Skill Matrix</span>
             {skillCount > 0 && <span className="nav-badge">{skillCount}</span>}
           </button>
@@ -143,7 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className={`nav-button ${currentScreen === "resume_improvement" ? "active" : ""}`}
             onClick={() => onNavigate("resume_improvement")}
           >
-            <Wand2 size={16} />
+            <FileCheck2 size={16} />
             <span>Resume Optimizer</span>
           </button>
         </div>

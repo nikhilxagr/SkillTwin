@@ -4,11 +4,10 @@ import {
   AlertTriangle,
   ArrowRight,
   TrendingUp,
-  Binary,
-  Layers,
-  Sparkles,
+  BarChart2,
   Upload,
   CheckCircle2,
+  Target,
 } from "lucide-react";
 import { Card } from "../common/Card.js";
 import { Badge } from "../common/Badge.js";
@@ -50,18 +49,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const topSkills = matrix.items.filter((item) => item.proficiency === "Strong").slice(0, 4);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       {/* Top Banner: What Should I Do Next? */}
       <div
         style={{
-          background: "linear-gradient(135deg, rgba(30, 58, 138, 0.4), rgba(15, 23, 42, 0.8))",
-          border: "1px solid rgba(59, 130, 246, 0.3)",
-          borderRadius: "12px",
-          padding: "24px",
+          background: "var(--color-light-blue)",
+          border: "1px solid #bfdbfe",
+          borderRadius: "var(--radius-lg)",
+          padding: "20px 24px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          gap: "24px",
+          gap: "20px",
           flexWrap: "wrap",
         }}
       >
@@ -74,30 +73,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               fontSize: "11px",
               fontWeight: 700,
               textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              color: "var(--text-accent)",
-              marginBottom: "8px",
+              letterSpacing: "0.06em",
+              color: "var(--color-primary-blue)",
+              marginBottom: "6px",
             }}
           >
-            <Sparkles size={13} /> Recommended Next Action
+            <Target size={13} /> Recommended Next Action
           </div>
-          <h2 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "8px" }}>
+          <h2 style={{ fontSize: "18px", fontWeight: 700, color: "var(--color-deep-navy)", marginBottom: "6px" }}>
             {gapReport && gapReport.criticalGaps.length > 0
               ? `Resolve ${gapReport.criticalGaps.length} Critical Gaps: ${gapReport.criticalGaps.map((g) => g.canonicalName).join(", ")}`
               : "Strengthen Project Evidence with Quantifiable Technical Context"}
           </h2>
-          <p style={{ fontSize: "13.5px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+          <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
             {gapReport && gapReport.criticalGaps.length > 0
               ? "Your frontend stack matches the target role, but Docker and Automated Testing lack implementation proof. Adding tests to your active project will immediately upgrade your profile."
               : "Review your detailed skill matrix to inspect source evidence and verify your technical competencies."}
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "8px" }}>
           {gapReport ? (
             <Button
               variant="primary"
-              icon={<ArrowRight size={14} />}
+              size="sm"
+              icon={<ArrowRight size={13} />}
               onClick={() => onNavigate("gap_analysis")}
             >
               View Gap Analysis
@@ -105,13 +105,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           ) : (
             <Button
               variant="primary"
-              icon={<Upload size={14} />}
+              size="sm"
+              icon={<Upload size={13} />}
               onClick={() => onNavigate("jd_upload")}
             >
               Compare with Target JD
             </Button>
           )}
-          <Button variant="outline" onClick={() => onNavigate("resume_improvement")}>
+          <Button variant="outline" size="sm" onClick={() => onNavigate("resume_improvement")}>
             Resume Optimizer
           </Button>
         </div>
@@ -122,12 +123,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: "16px",
+          gap: "14px",
         }}
       >
         <div className="stat-card">
           <span className="stat-label">
-            <Binary size={14} /> Skills Tracked
+            <BarChart2 size={13} /> Skills Tracked
           </span>
           <span className="stat-value">{matrix.summary.totalSkills}</span>
           <span className="stat-subtext">
@@ -137,7 +138,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         <div className="stat-card">
           <span className="stat-label">
-            <TrendingUp size={14} /> Role Alignment
+            <TrendingUp size={13} /> Role Alignment
           </span>
           <span className="stat-value">
             {gapReport ? `${gapReport.summary.alignmentScore}%` : "Pending JD"}
@@ -151,7 +152,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         <div className="stat-card">
           <span className="stat-label">
-            <AlertTriangle size={14} /> Critical Gaps
+            <AlertTriangle size={13} /> Critical Gaps
           </span>
           <span className="stat-value" style={{ color: "var(--color-gap)" }}>
             {gapReport ? gapReport.summary.criticalGapCount : 0}
@@ -161,7 +162,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         <div className="stat-card">
           <span className="stat-label">
-            <ShieldCheck size={14} /> Evidence Confidence
+            <ShieldCheck size={13} /> Evidence Confidence
           </span>
           <span className="stat-value">{matrix.summary.averageConfidence}%</span>
           <span className="stat-subtext">Mean evidence weight across profile</span>
@@ -169,7 +170,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* 2-Column Detail Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "20px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "16px" }}>
         {/* Left: Top Demonstrated Skills */}
         <Card
           title="Demonstrated Technical Strengths"
@@ -180,7 +181,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </Button>
           }
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
             {topSkills.map((skill) => (
               <div
                 key={skill.canonicalName}
@@ -188,17 +189,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   display: "flex",
                   flexDirection: "column",
                   gap: "6px",
-                  paddingBottom: "12px",
+                  paddingBottom: "10px",
                   borderBottom: "1px solid var(--border-subtle)",
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <span style={{ fontWeight: 600, fontSize: "14px" }}>{skill.canonicalName}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontWeight: 600, fontSize: "13.5px", color: "var(--text-primary)" }}>{skill.canonicalName}</span>
                     <Badge variant="neutral">{skill.category}</Badge>
                     <Badge variant="match">Demonstrated</Badge>
                   </div>
-                  <span className="font-mono" style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                  <span className="font-mono" style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
                     {skill.confidence}% Confidence
                   </span>
                 </div>
@@ -222,22 +223,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           }
         >
           {gapReport ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <div
                 style={{
-                  padding: "12px",
-                  borderRadius: "8px",
-                  background: "var(--bg-elevated)",
+                  padding: "10px 12px",
+                  borderRadius: "var(--radius-md)",
+                  background: "var(--bg-subtle)",
                   border: "1px solid var(--border-subtle)",
-                  fontSize: "13px",
+                  fontSize: "12.5px",
                   color: "var(--text-secondary)",
+                  lineHeight: 1.45,
                 }}
               >
                 {gapReport.summary.alignmentExplanation}
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                <div style={{ fontSize: "12px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-secondary)", letterSpacing: "0.04em" }}>
                   Critical Gaps to Address ({gapReport.criticalGaps.length})
                 </div>
                 {gapReport.criticalGaps.map((gap) => (
@@ -247,17 +249,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      padding: "10px 12px",
-                      background: "rgba(239, 68, 68, 0.06)",
-                      border: "1px solid rgba(239, 68, 68, 0.2)",
-                      borderRadius: "6px",
+                      padding: "8px 12px",
+                      background: "var(--color-gap-bg)",
+                      border: "1px solid var(--color-gap-border)",
+                      borderRadius: "var(--radius-md)",
                     }}
                   >
                     <div>
-                      <span style={{ fontWeight: 600, fontSize: "13px", color: "#fca5a5" }}>
+                      <span style={{ fontWeight: 600, fontSize: "13px", color: "#991b1b" }}>
                         {gap.canonicalName}
                       </span>
-                      <p style={{ fontSize: "11.5px", color: "var(--text-muted)", marginTop: "2px" }}>
+                      <p style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "1px" }}>
                         Required: {gap.requiredProficiency} • Current: {gap.candidateProficiency}
                       </p>
                     </div>
@@ -271,7 +273,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 size="sm"
                 icon={<ArrowRight size={13} />}
                 onClick={() => onNavigate("gap_analysis")}
-                style={{ marginTop: "10px" }}
+                style={{ marginTop: "6px" }}
               >
                 Open Full Gap Analysis
               </Button>

@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, AlertTriangle, XCircle, ArrowRight, ShieldAlert, Sparkles } from "lucide-react";
+import { CheckCircle2, AlertTriangle, XCircle, ArrowRight, ShieldAlert, Target } from "lucide-react";
 import { Badge, type BadgeVariant } from "../common/Badge.js";
 import type { ComparisonItem, GapCategory } from "@skilltwin/contracts";
 
@@ -47,26 +47,27 @@ export const GapItemCard: React.FC<GapItemCardProps> = ({ item }) => {
   return (
     <div
       style={{
-        padding: "18px 20px",
-        background: "var(--bg-elevated)",
-        borderRadius: "10px",
+        padding: "16px 18px",
+        background: "var(--bg-canvas)",
+        borderRadius: "var(--radius-lg)",
         border: `1px solid ${
           item.status === "GAP"
-            ? "rgba(239, 68, 68, 0.3)"
+            ? "var(--color-gap-border)"
             : item.status === "MATCH"
-            ? "rgba(16, 185, 129, 0.3)"
+            ? "var(--color-match-border)"
             : "var(--border-subtle)"
         }`,
+        boxShadow: "var(--shadow-sm)",
         display: "flex",
         flexDirection: "column",
-        gap: "14px",
+        gap: "12px",
       }}
     >
       {/* Top Line */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "8px" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-            <span style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)" }}>
+            <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--color-deep-navy)" }}>
               {item.canonicalName}
             </span>
             <Badge variant="neutral">{item.category}</Badge>
@@ -74,10 +75,10 @@ export const GapItemCard: React.FC<GapItemCardProps> = ({ item }) => {
               {item.importance}
             </Badge>
           </div>
-          <p style={{ fontSize: "12.5px", color: "var(--text-muted)" }}>
+          <p style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
             Candidate Confidence:{" "}
             <strong style={{ color: "var(--text-primary)" }}>{item.candidateConfidence}%</strong> (
-            {item.evidenceCount} corroborating sources)
+            {item.evidenceCount} corroborating source{item.evidenceCount === 1 ? "" : "s"})
           </p>
         </div>
 
@@ -89,17 +90,17 @@ export const GapItemCard: React.FC<GapItemCardProps> = ({ item }) => {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "14px",
-          padding: "10px 14px",
-          background: "var(--bg-surface)",
-          borderRadius: "6px",
+          gap: "12px",
+          padding: "8px 12px",
+          background: "var(--bg-subtle)",
+          borderRadius: "var(--radius-md)",
           border: "1px solid var(--border-subtle)",
-          fontSize: "13px",
+          fontSize: "12.5px",
         }}
       >
         <div>
-          <span style={{ fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase" }}>
-            My Demonstrated Level
+          <span style={{ fontSize: "11px", color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 600 }}>
+            Demonstrated Level
           </span>
           <div
             style={{
@@ -112,29 +113,29 @@ export const GapItemCard: React.FC<GapItemCardProps> = ({ item }) => {
                   : "var(--text-primary)",
             }}
           >
-            {item.candidateProficiency}
+            {item.candidateProficiency === "Not Detected" ? "Not Demonstrated" : item.candidateProficiency}
           </div>
         </div>
 
-        <ArrowRight size={14} style={{ color: "var(--text-muted)" }} />
+        <ArrowRight size={13} style={{ color: "var(--text-muted)" }} />
 
         <div>
-          <span style={{ fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase" }}>
+          <span style={{ fontSize: "11px", color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 600 }}>
             Job Required Level
           </span>
-          <div style={{ fontWeight: 700, color: "var(--text-accent)" }}>{item.requiredProficiency}</div>
+          <div style={{ fontWeight: 700, color: "var(--color-primary-blue)" }}>{item.requiredProficiency}</div>
         </div>
       </div>
 
       {/* Evidence & Why it is a Gap */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px", lineHeight: "1.5" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "12.5px", lineHeight: "1.45" }}>
         <div>
           <strong style={{ color: "var(--text-primary)" }}>Current Evidence: </strong>
           <span style={{ color: "var(--text-secondary)" }}>{item.evidenceSummary}</span>
         </div>
 
         {item.gapRationale && (
-          <div style={{ padding: "8px 12px", background: "var(--bg-canvas)", borderRadius: "6px", border: "1px solid var(--border-subtle)" }}>
+          <div style={{ padding: "6px 10px", background: "var(--bg-subtle)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}>
             <strong style={{ color: "var(--text-primary)" }}>Why it is a gap: </strong>
             <span style={{ color: "var(--text-secondary)" }}>{item.gapRationale}</span>
           </div>
@@ -144,28 +145,28 @@ export const GapItemCard: React.FC<GapItemCardProps> = ({ item }) => {
       {/* Next Action Advice Box */}
       <div
         style={{
-          padding: "10px 14px",
-          borderRadius: "6px",
+          padding: "8px 12px",
+          borderRadius: "var(--radius-md)",
           background:
             item.status === "GAP"
-              ? "rgba(239, 68, 68, 0.08)"
+              ? "var(--color-gap-bg)"
               : item.status === "PARTIAL"
-              ? "rgba(245, 158, 11, 0.08)"
-              : "rgba(59, 130, 246, 0.08)",
+              ? "var(--color-partial-bg)"
+              : "var(--color-light-blue)",
           border: `1px solid ${
             item.status === "GAP"
-              ? "rgba(239, 68, 68, 0.2)"
+              ? "var(--color-gap-border)"
               : item.status === "PARTIAL"
-              ? "rgba(245, 158, 11, 0.2)"
-              : "rgba(59, 130, 246, 0.2)"
+              ? "var(--color-partial-border)"
+              : "#bfdbfe"
           }`,
-          fontSize: "12.5px",
+          fontSize: "12px",
           display: "flex",
           alignItems: "flex-start",
           gap: "8px",
         }}
       >
-        <Sparkles size={14} style={{ flexShrink: 0, marginTop: "2px", color: "var(--text-accent)" }} />
+        <Target size={13} style={{ flexShrink: 0, marginTop: "2px", color: "var(--color-primary-blue)" }} />
         <div>
           <strong style={{ color: "var(--text-primary)" }}>Next Action: </strong>
           <span style={{ color: "var(--text-secondary)" }}>{item.suggestedAction}</span>

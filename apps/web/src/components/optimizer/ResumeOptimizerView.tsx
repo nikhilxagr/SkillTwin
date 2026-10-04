@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import {
-  Wand2,
+  FileCheck2,
   ShieldCheck,
   AlertTriangle,
   FileCheck,
@@ -8,7 +8,6 @@ import {
   ArrowRight,
   RefreshCw,
   Layers,
-  Sparkles,
   Target,
   BookOpen,
   Briefcase,
@@ -60,7 +59,7 @@ export const ResumeOptimizerView: React.FC<ResumeOptimizerViewProps> = ({
   if (!optimization) {
     return (
       <EmptyState
-        icon={<Wand2 size={24} />}
+        icon={<FileCheck2 size={24} />}
         title="Optimization Report Not Generated"
         description="Run a gap analysis between your resume and a target job to produce evidence-grounded resume suggestions."
         actionText="Compare with Job"
@@ -124,8 +123,8 @@ export const ResumeOptimizerView: React.FC<ResumeOptimizerViewProps> = ({
       case "RECOMMENDED":
       default:
         return (
-          <Badge variant="info">
-            <Sparkles size={11} style={{ marginRight: "3px" }} /> RECOMMENDED
+          <Badge variant="primary">
+            <CheckCircle2 size={11} style={{ marginRight: "3px" }} /> RECOMMENDED
           </Badge>
         );
     }
@@ -173,15 +172,15 @@ export const ResumeOptimizerView: React.FC<ResumeOptimizerViewProps> = ({
       <div
         style={{
           padding: "16px 20px",
-          background: "linear-gradient(100deg, rgba(16, 185, 129, 0.08), rgba(6, 78, 59, 0.2))",
-          border: "1px solid rgba(16, 185, 129, 0.3)",
-          borderRadius: "10px",
+          background: "var(--color-match-bg)",
+          border: "1px solid var(--color-match-border)",
+          borderRadius: "var(--radius-md)",
           display: "flex",
           alignItems: "center",
           gap: "14px",
         }}
       >
-        <ShieldCheck size={28} style={{ color: "var(--color-match)", flexShrink: 0 }} />
+        <ShieldCheck size={26} style={{ color: "var(--color-match)", flexShrink: 0 }} />
         <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: "1.5" }}>
           <strong style={{ color: "var(--text-primary)" }}>Zero-Fabrication Guarantee: </strong>
           SkillTwin will never insert arbitrary performance numbers (e.g. <em>"improved API latency by 40%"</em>) or fictional technologies.
@@ -268,9 +267,9 @@ export const ResumeOptimizerView: React.FC<ResumeOptimizerViewProps> = ({
         <button
           onClick={() => setHighlightFilter("RECOMMENDED")}
           style={{
-            background: highlightFilter === "RECOMMENDED" ? "rgba(99, 102, 241, 0.15)" : "transparent",
-            border: highlightFilter === "RECOMMENDED" ? "1px solid var(--text-accent)" : "1px solid transparent",
-            color: "var(--text-accent)",
+            background: highlightFilter === "RECOMMENDED" ? "var(--color-light-blue)" : "transparent",
+            border: highlightFilter === "RECOMMENDED" ? "1px solid #bfdbfe" : "1px solid transparent",
+            color: "var(--color-primary-blue)",
             padding: "5px 12px",
             borderRadius: "6px",
             fontSize: "12.5px",

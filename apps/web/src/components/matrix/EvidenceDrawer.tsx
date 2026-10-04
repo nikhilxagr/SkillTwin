@@ -21,18 +21,18 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ skill, onClose }
         right: 0,
         bottom: 0,
         width: "min(520px, 100vw)",
-        background: "var(--bg-surface)",
-        borderLeft: "1px solid var(--border-strong)",
-        boxShadow: "-10px 0 30px rgba(0, 0, 0, 0.6)",
+        background: "var(--bg-canvas)",
+        borderLeft: "1px solid var(--border-subtle)",
+        boxShadow: "-4px 0 24px rgba(0, 0, 0, 0.08)",
         zIndex: 50,
         display: "flex",
         flexDirection: "column",
         overflowY: "auto",
-        padding: "28px 24px",
+        padding: "24px 20px",
       }}
     >
       {/* Drawer Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "18px" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
             <Badge variant="neutral">{skill.category}</Badge>
@@ -52,9 +52,9 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ skill, onClose }
                 : "Claimed Only"}
             </Badge>
           </div>
-          <h2 style={{ fontSize: "24px", fontWeight: 800 }}>{skill.canonicalName}</h2>
+          <h2 style={{ fontSize: "22px", fontWeight: 700, color: "var(--color-deep-navy)" }}>{skill.canonicalName}</h2>
           {skill.aliases.length > 0 && (
-            <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+            <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
               Aliases: {skill.aliases.join(", ")}
             </p>
           )}
@@ -63,88 +63,91 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ skill, onClose }
         <button
           onClick={onClose}
           style={{
-            background: "var(--bg-elevated)",
+            background: "var(--bg-subtle)",
             border: "1px solid var(--border-subtle)",
-            borderRadius: "6px",
+            borderRadius: "var(--radius-sm)",
             color: "var(--text-secondary)",
-            padding: "6px",
+            padding: "5px",
             cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          <X size={16} />
+          <X size={15} />
         </button>
       </div>
 
       {/* Confidence Score Panel */}
       <div
         style={{
-          padding: "16px",
-          background: "var(--bg-elevated)",
+          padding: "14px",
+          background: "var(--bg-subtle)",
           border: "1px solid var(--border-subtle)",
-          borderRadius: "8px",
-          marginBottom: "20px",
+          borderRadius: "var(--radius-md)",
+          marginBottom: "18px",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-          <span style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+          <span style={{ fontSize: "11px", color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.04em" }}>
             Confidence Assessment
           </span>
-          <span className="font-mono" style={{ fontSize: "18px", fontWeight: 800, color: "var(--text-accent)" }}>
+          <span className="font-mono" style={{ fontSize: "16px", fontWeight: 700, color: "var(--color-primary-blue)" }}>
             {skill.confidence}%
           </span>
         </div>
         <ProgressBar value={skill.confidence} />
-        <p style={{ fontSize: "12.5px", color: "var(--text-secondary)", marginTop: "8px" }}>
+        <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "6px" }}>
           Proficiency Grade: <strong style={{ color: "var(--text-primary)" }}>{skill.proficiency}</strong>
         </p>
       </div>
 
       {/* Rationale Explanation */}
-      <div style={{ marginBottom: "24px" }}>
-        <h4 style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "8px" }}>
+      <div style={{ marginBottom: "20px" }}>
+        <h4 style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>
           Assessment Rationale
         </h4>
-        <p style={{ fontSize: "13.5px", color: "var(--text-primary)", lineHeight: "1.6" }}>
+        <p style={{ fontSize: "13px", color: "var(--text-primary)", lineHeight: "1.55" }}>
           {skill.explanation}
         </p>
       </div>
 
       {/* Corroborating Evidence Chain */}
-      <div style={{ marginBottom: "24px" }}>
-        <h4 style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "10px" }}>
+      <div style={{ marginBottom: "20px" }}>
+        <h4 style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "8px" }}>
           Corroborating Evidence ({skill.evidence.length})
         </h4>
 
         {skill.evidence.length === 0 ? (
-          <div style={{ padding: "14px", background: "var(--bg-elevated)", borderRadius: "6px", fontSize: "12.5px", color: "var(--text-muted)" }}>
+          <div style={{ padding: "12px", background: "var(--bg-subtle)", borderRadius: "var(--radius-md)", fontSize: "12.5px", color: "var(--text-secondary)", border: "1px solid var(--border-subtle)" }}>
             No project or commercial evidence found. Skill is currently claimed without implementation backing.
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {skill.evidence.map((ev) => (
               <div
                 key={ev.id}
                 style={{
-                  padding: "12px",
-                  background: "var(--bg-elevated)",
-                  borderRadius: "6px",
+                  padding: "10px 12px",
+                  background: "var(--bg-subtle)",
+                  borderRadius: "var(--radius-md)",
                   border: "1px solid var(--border-subtle)",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                  <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--color-match)", display: "flex", alignItems: "center", gap: "4px" }}>
-                    <CheckCircle2 size={13} /> {ev.sourceType.replace("_", " ").toUpperCase()}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "3px" }}>
+                  <span style={{ fontSize: "11.5px", fontWeight: 600, color: "var(--color-match)", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <CheckCircle2 size={12} /> {ev.sourceType.replace("_", " ").toUpperCase()}
                   </span>
                   {ev.sourceTitle && (
-                    <span className="font-mono" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                    <span className="font-mono" style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
                       {ev.sourceTitle}
                     </span>
                   )}
                 </div>
-                <p style={{ fontSize: "12.5px", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                <p style={{ fontSize: "12.5px", color: "var(--text-primary)", lineHeight: "1.45" }}>
                   "{ev.context}"
                 </p>
-                <div style={{ fontSize: "10.5px", color: "var(--text-muted)", marginTop: "4px", textAlign: "right" }}>
+                <div style={{ fontSize: "10.5px", color: "var(--text-secondary)", marginTop: "3px", textAlign: "right" }}>
                   Evidence weight: +{ev.weight} pts
                 </div>
               </div>
@@ -154,11 +157,11 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ skill, onClose }
       </div>
 
       {/* Missing Evidence Checklist */}
-      <div style={{ marginBottom: "24px" }}>
-        <h4 style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "10px" }}>
+      <div style={{ marginBottom: "20px" }}>
+        <h4 style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "8px" }}>
           Missing Evidence Checklist
         </h4>
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           {skill.missingEvidence.map((item, idx) => (
             <div
               key={idx}
@@ -167,14 +170,14 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ skill, onClose }
                 alignItems: "center",
                 gap: "8px",
                 padding: "8px 12px",
-                background: "rgba(245, 158, 11, 0.06)",
-                border: "1px solid rgba(245, 158, 11, 0.2)",
-                borderRadius: "6px",
-                fontSize: "12.5px",
-                color: "#fde68a",
+                background: "var(--color-weak-bg)",
+                border: "1px solid var(--color-weak-border)",
+                borderRadius: "var(--radius-md)",
+                fontSize: "12px",
+                color: "#92400e",
               }}
             >
-              <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+              <AlertTriangle size={13} style={{ flexShrink: 0 }} />
               <span>{item}</span>
             </div>
           ))}
@@ -183,11 +186,11 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ skill, onClose }
 
       {/* Related Ecosystem Skills */}
       {skill.relatedSkills.length > 0 && (
-        <div style={{ marginTop: "auto", paddingTop: "16px", borderTop: "1px solid var(--border-subtle)" }}>
-          <h4 style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "8px" }}>
+        <div style={{ marginTop: "auto", paddingTop: "14px", borderTop: "1px solid var(--border-subtle)" }}>
+          <h4 style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>
             Detected Ecosystem Neighbors
           </h4>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
             {skill.relatedSkills.map((rel) => (
               <Badge key={rel} variant="neutral">
                 {rel}
