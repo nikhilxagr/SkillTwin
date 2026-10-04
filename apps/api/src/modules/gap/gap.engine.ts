@@ -10,14 +10,23 @@ import type {
   SkillProficiency,
   JobImportance,
   SkillCategory,
+  GapPriorityLevel,
+  PriorityFactorBreakdown,
+  ScoringModelExplanation,
 } from "@skilltwin/contracts";
 import { skillNormalizer, SkillNormalizer } from "../skills/skill-normalizer.js";
 import { skillRegistry, SkillRegistry } from "../skills/skill-registry.js";
+import { gapInterpreter, GapInterpreter } from "../../services/ai/index.js";
+
+export interface CompareEngineOptions {
+  useAiInterpretation?: boolean;
+}
 
 export class GapEngine {
   constructor(
     private readonly normalizer: SkillNormalizer = skillNormalizer,
     private readonly registry: SkillRegistry = skillRegistry,
+    private readonly interpreter: GapInterpreter = gapInterpreter,
   ) {}
 
   /**
@@ -43,10 +52,288 @@ export class GapEngine {
   }
 
   /**
+   * Detect technical ecosystem synergy between a target skill requirement
+   * and a candidate's existing demonstrated skills.
+   *
+   * Closing a gap that builds directly on already demonstrated technologies
+   * yields the highest ROI and interview qualification leverage.
+   */
+  private findEcosystemSynergies(
+    canonicalName: string,
+    category: SkillCategory,
+    candidateSkills: SkillMatrixItem[],
+  ): { score: number; related: string[]; explanation: string } {
+    const lowerTarget = canonicalName.toLowerCase();
+    const relatedNames: string[] = [];
+
+    // 1. Check Skill Registry explicit related skills / ecosystem partners
+    const def = this.registry.getSkill(canonicalName);
+    if (def && def.ecosystemPartners) {
+      for (const rel of def.ecosystemPartners) {
+        const match = candidateSkills.find(
+          (cs) =>
+            cs.canonicalName.toLowerCase() === rel.toLowerCase() ||
+            cs.aliases.some((a) => a.toLowerCase() === rel.toLowerCase()),
+        );
+        if (match && !relatedNames.includes(match.canonicalName)) {
+          relatedNames.push(match.canonicalName);
+        }
+      }
+    }
+
+    // 2. High-affinity technological pairings
+    const pairings: Record<string, string[]> = {
+      kubernetes: ["docker", "container", "linux", "cloud", "aws", "gcp"],
+      docker: ["linux", "ci/cd", "kubernetes", "backend"],
+      next: ["react", "typescript", "javascript", "frontend"],
+      react: ["javascript", "typescript", "html", "css", "next.js"],
+      typescript: ["javascript", "react", "node.js"],
+      graphql: ["typescript", "node.js", "rest", "api", "react"],
+      postgresql: ["sql", "database", "node.js", "python", "backend"],
+      mongodb: ["nosql", "node.js", "database", "backend"],
+      redis: ["cache", "backend", "postgresql", "node.js"],
+      aws: ["cloud", "docker", "devops", "linux", "terraform"],
+      fastapi: ["python", "backend", "rest", "api"],
+      django: ["python", "backend", "sql", "postgresql"],
+      express: ["node.js", "javascript", "typescript", "rest"],
+    };
+
+    for (const [key, relatedList] of Object.entries(pairings)) {
+      if (lowerTarget.includes(key)) {
+        for (const rel of relatedList) {
+          const found = candidateSkills.find((cs) =>
+            cs.canonicalName.toLowerCase().includes(rel),
+          );
+          if (found && !relatedNames.includes(found.canonicalName)) {
+            relatedNames.push(found.canonicalName);
+          }
+        }
+      }
+    }
+
+    // 3. Category affinity (e.g. candidate has other demonstrated Frontend or Database skills)
+    const sameCategorySkills = candidateSkills.filter(
+      (cs) => cs.category === category && cs.canonicalName.toLowerCase() !== lowerTarget,
+    );
+
+    let synergyScore = 0;
+    if (relatedNames.length >= 2) {
+      synergyScore = 15;
+    } else if (relatedNames.length === 1) {
+      synergyScore = 12;
+    } else if (sameCategorySkills.length >= 2) {
+      synergyScore = 10;
+      relatedNames.push(...sameCategorySkills.slice(0, 2).map((s) => s.canonicalName));
+    } else if (sameCategorySkills.length === 1) {
+      synergyScore = 6;
+      relatedNames.push(sameCategorySkills[0].canonicalName);
+    }
+
+    const explanation =
+      synergyScore > 0
+        ? `High ecosystem synergy (+${synergyScore} pts) with demonstrated competencies in ${relatedNames.join(", ")}.`
+        : "No direct ecosystem synergy with candidate's existing demonstrated skills (+0 pts).";
+
+    return {
+      score: synergyScore,
+      related: relatedNames,
+      explanation,
+    };
+  }
+
+  /**
+   * Deterministic Transparent Priority Engine.
+   *
+   * Formula:
+   * Priority Score = Requirement Urgency (40 pts)
+   *                + Proficiency Deficit (30 pts)
+   *                + Evidence Deficit (15 pts)
+   *                + Ecosystem Synergy (15 pts)
+   * Total: 0 to 100
+   *
+   * Thresholds:
+   * Critical: >= 80
+   * High: 60 - 79
+   * Medium: 40 - 59
+   * Low: < 40
+   */
+  private calculatePriority(
+    canonicalName: string,
+    category: SkillCategory,
+    status: GapCategory,
+    importance: JobImportance,
+    targetProficiency: SkillProficiency,
+    candidateProficiency: SkillProficiency | "Not Detected",
+    candidateSkill: SkillMatrixItem | undefined,
+    allCandidateSkills: SkillMatrixItem[],
+  ): {
+    priority: GapPriorityLevel;
+    priorityScore: number;
+    priorityRationale: string;
+    priorityFactors: PriorityFactorBreakdown;
+    relatedCandidateSkills: string[];
+  } {
+    // If status is MATCH, candidate fully meets requirement
+    if (status === "MATCH") {
+      const requirementWeight = importance === "Required" ? 25 : 10;
+      const priorityFactors: PriorityFactorBreakdown = {
+        requirementWeight,
+        proficiencyDeficit: 0,
+        evidenceDeficit: 0,
+        ecosystemSynergy: 0,
+        totalScore: requirementWeight,
+        explanation: `Requirement fully met with verified candidate evidence (${importance}).`,
+      };
+      return {
+        priority: "Low",
+        priorityScore: requirementWeight,
+        priorityRationale: `[Score: ${requirementWeight}/100 • Low Priority] Competency fully verified against ${importance} requirement. No remediation required.`,
+        priorityFactors,
+        relatedCandidateSkills: [],
+      };
+    }
+
+    // 1. Requirement Urgency (40 pts max)
+    const requirementWeight = importance === "Required" ? 40 : 15;
+
+    // 2. Proficiency Deficit (30 pts max)
+    const targetRank = this.proficiencyToRank(targetProficiency);
+    const candidateRank = this.proficiencyToRank(candidateProficiency);
+    let proficiencyDeficit = 0;
+    let profDeficitExplanation = "";
+
+    if (candidateRank === 0) {
+      proficiencyDeficit = 30;
+      profDeficitExplanation = `Zero demonstrated proficiency in ${canonicalName} (+30 pts)`;
+    } else {
+      const delta = targetRank - candidateRank;
+      if (delta >= 2) {
+        proficiencyDeficit = 25;
+        profDeficitExplanation = `Major proficiency gap (${candidateProficiency} vs required ${targetProficiency}, +25 pts)`;
+      } else if (delta === 1) {
+        proficiencyDeficit = 15;
+        profDeficitExplanation = `Moderate proficiency gap (${candidateProficiency} vs required ${targetProficiency}, +15 pts)`;
+      } else {
+        proficiencyDeficit = 5;
+        profDeficitExplanation = `Slight proficiency gap (+5 pts)`;
+      }
+    }
+
+    // 3. Evidence Deficit (15 pts max)
+    const evidenceCount = candidateSkill ? candidateSkill.evidence.length : 0;
+    let evidenceDeficit = 0;
+    let evidenceExplanation = "";
+
+    if (evidenceCount === 0) {
+      evidenceDeficit = 15;
+      evidenceExplanation = "Zero verifiable evidence or project artifacts (+15 pts)";
+    } else if (
+      candidateSkill?.evidenceLevel === "WeakEvidence" ||
+      candidateSkill?.evidenceLevel === "ClaimedOnly" ||
+      (candidateSkill?.confidence ?? 0) < 45 ||
+      evidenceCount === 1
+    ) {
+      evidenceDeficit = 10;
+      evidenceExplanation = `Single weak or uncorroborated evidence mention (+10 pts)`;
+    } else {
+      evidenceDeficit = 0;
+      evidenceExplanation = `Multiple verified evidence sources (+0 pts)`;
+    }
+
+    // 4. Ecosystem Synergy (15 pts max)
+    const synergy = this.findEcosystemSynergies(canonicalName, category, allCandidateSkills);
+    const ecosystemSynergy = synergy.score;
+
+    // Calculate Total Score (0 to 100)
+    const rawScore = requirementWeight + proficiencyDeficit + evidenceDeficit + ecosystemSynergy;
+    const totalScore = Math.min(100, Math.max(0, rawScore));
+
+    // Determine Priority Level Tier
+    let priority: GapPriorityLevel;
+    if (totalScore >= 80) {
+      priority = "Critical";
+    } else if (totalScore >= 60) {
+      priority = "High";
+    } else if (totalScore >= 40) {
+      priority = "Medium";
+    } else {
+      priority = "Low";
+    }
+
+    const priorityRationale = `[Score: ${totalScore}/100 • ${priority} Priority] ${
+      importance === "Required" ? "Mandatory role requirement (+40 pts)" : "Preferred role qualification (+15 pts)"
+    }, ${profDeficitExplanation}, ${evidenceExplanation}. ${synergy.explanation}`;
+
+    const priorityFactors: PriorityFactorBreakdown = {
+      requirementWeight,
+      proficiencyDeficit,
+      evidenceDeficit,
+      ecosystemSynergy,
+      totalScore,
+      explanation: priorityRationale,
+    };
+
+    return {
+      priority,
+      priorityScore: totalScore,
+      priorityRationale,
+      priorityFactors,
+      relatedCandidateSkills: synergy.related,
+    };
+  }
+
+  /**
+   * Transparent Scoring Model Metadata.
+   */
+  private getScoringModelExplanation(): ScoringModelExplanation {
+    return {
+      modelName: "SkillTwin Deterministic 4-Factor Priority Model",
+      formula:
+        "Priority Score = Requirement Urgency (40%) + Proficiency Deficit (30%) + Evidence Deficit (15%) + Ecosystem Synergy (15%)",
+      factors: [
+        {
+          factor: "Requirement Urgency",
+          weight: "40 pts max",
+          description:
+            "Required role qualifications receive 40 pts; preferred/nice-to-have qualifications receive 15 pts.",
+        },
+        {
+          factor: "Proficiency Deficit",
+          weight: "30 pts max",
+          description:
+            "Measures proficiency delta: Not Detected (30 pts), 2+ level gap (25 pts), 1 level gap (15 pts), meets/exceeds (0 pts).",
+        },
+        {
+          factor: "Evidence Deficit",
+          weight: "15 pts max",
+          description:
+            "0 evidence sources (15 pts), single weak/claimed keyword mention (10 pts), verified multi-source history (0 pts).",
+        },
+        {
+          factor: "Ecosystem Synergy",
+          weight: "15 pts max",
+          description:
+            "Synergy bonus awarded when candidate already demonstrates adjacent skills in the same tech stack, yielding maximum learning ROI.",
+        },
+      ],
+      priorityThresholds: {
+        critical: "Priority Score >= 80 (Immediate hiring blocker, mandatory requirement)",
+        high: "Priority Score 60 - 79 (Substantial gap with strong learning synergy)",
+        medium: "Priority Score 40 - 59 (Moderate gap or preferred qualification)",
+        low: "Priority Score < 40 (Secondary optional item or fully matched)",
+      },
+    };
+  }
+
+  /**
    * Perform deterministic comparison between a candidate's SkillMatrix
    * and a target JobExtraction requirements matrix.
    */
-  compare(matrix: SkillMatrix, job: JobExtraction): GapAnalysisReport {
+  compare(
+    matrix: SkillMatrix,
+    job: JobExtraction,
+    _options?: CompareEngineOptions,
+  ): GapAnalysisReport {
     // 1. Build canonical index of candidate skills
     const candidateMap = new Map<string, SkillMatrixItem>();
 
@@ -146,7 +433,24 @@ export class GapEngine {
       );
 
       // Generate Actionable Developer Next Step
-      const suggestedAction = this.generateSuggestedAction(canonicalName, category, status, req.minimumProficiency);
+      const suggestedAction = this.generateSuggestedAction(
+        canonicalName,
+        category,
+        status,
+        req.minimumProficiency,
+      );
+
+      // Calculate Priority via Deterministic Priority Engine
+      const priorityData = this.calculatePriority(
+        canonicalName,
+        category,
+        status,
+        importance,
+        req.minimumProficiency,
+        candidateProficiency,
+        candidateSkill,
+        matrix.items,
+      );
 
       comparisonItems.push({
         canonicalName,
@@ -160,6 +464,11 @@ export class GapEngine {
         evidenceSummary,
         gapRationale,
         suggestedAction,
+        priority: priorityData.priority,
+        priorityScore: priorityData.priorityScore,
+        priorityRationale: priorityData.priorityRationale,
+        priorityFactors: priorityData.priorityFactors,
+        relatedCandidateSkills: priorityData.relatedCandidateSkills,
       });
     };
 
@@ -173,13 +482,27 @@ export class GapEngine {
       evaluateRequirement(pref, "Preferred");
     }
 
-    // Partition items into standard report buckets
-    const criticalGaps = comparisonItems.filter((i) => i.status === "GAP" && i.importance === "Required");
-    const partialGaps = comparisonItems.filter((i) => i.status === "PARTIAL" && i.importance === "Required");
-    const weakEvidence = comparisonItems.filter((i) => i.status === "WEAK_EVIDENCE");
-    const strongMatches = comparisonItems.filter((i) => i.status === "MATCH");
-    const optionalGaps = comparisonItems.filter(
-      (i) => i.status === "OPTIONAL_GAP" || (i.importance === "Preferred" && i.status !== "MATCH"),
+    // Sort items by priorityScore descending (Highest Priority Gaps First!)
+    const sortByPriority = (items: ComparisonItem[]) =>
+      [...items].sort((a, b) => b.priorityScore - a.priorityScore);
+
+    // Partition items into standard report buckets, sorted highest priority first
+    const criticalGaps = sortByPriority(
+      comparisonItems.filter((i) => i.status === "GAP" && i.importance === "Required"),
+    );
+    const partialGaps = sortByPriority(
+      comparisonItems.filter((i) => i.status === "PARTIAL" && i.importance === "Required"),
+    );
+    const weakEvidence = sortByPriority(
+      comparisonItems.filter((i) => i.status === "WEAK_EVIDENCE"),
+    );
+    const strongMatches = sortByPriority(
+      comparisonItems.filter((i) => i.status === "MATCH"),
+    );
+    const optionalGaps = sortByPriority(
+      comparisonItems.filter(
+        (i) => i.status === "OPTIONAL_GAP" || (i.importance === "Preferred" && i.status !== "MATCH"),
+      ),
     );
 
     // Compute deterministic alignment score
@@ -203,17 +526,24 @@ export class GapEngine {
 
     let alignmentScore = 0;
     if (requiredItems.length > 0) {
-      const reqScore = (requiredItems.reduce((acc, item) => acc + getPoints(item.status), 0) / requiredItems.length) * 100;
+      const reqScore =
+        (requiredItems.reduce((acc, item) => acc + getPoints(item.status), 0) /
+          requiredItems.length) *
+        100;
       if (preferredItems.length > 0) {
         const prefScore =
-          (preferredItems.reduce((acc, item) => acc + getPoints(item.status), 0) / preferredItems.length) * 100;
+          (preferredItems.reduce((acc, item) => acc + getPoints(item.status), 0) /
+            preferredItems.length) *
+          100;
         alignmentScore = Math.round(reqScore * 0.8 + prefScore * 0.2);
       } else {
         alignmentScore = Math.round(reqScore);
       }
     } else if (comparisonItems.length > 0) {
       alignmentScore = Math.round(
-        (comparisonItems.reduce((acc, item) => acc + getPoints(item.status), 0) / comparisonItems.length) * 100,
+        (comparisonItems.reduce((acc, item) => acc + getPoints(item.status), 0) /
+          comparisonItems.length) *
+          100,
       );
     } else {
       alignmentScore = 100;
@@ -267,6 +597,7 @@ export class GapEngine {
         alignmentRating,
         alignmentScore,
         alignmentExplanation,
+        scoringModel: this.getScoringModelExplanation(),
       },
       criticalGaps,
       partialGaps,

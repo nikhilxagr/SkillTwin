@@ -620,6 +620,39 @@ export const sampleGapAnalysis: GapAnalysisReport = {
     alignmentScore: 58,
     alignmentExplanation:
       "Strong alignment on Core Frontend (React, JavaScript) and solid foundations in Node.js. However, 3 required engineering standards (Docker, Automated Testing, and System Design depth) represent critical gaps against this Senior role.",
+    scoringModel: {
+      modelName: "SkillTwin Deterministic 4-Factor Priority Model",
+      formula:
+        "Priority Score = Requirement Urgency (40%) + Proficiency Deficit (30%) + Evidence Deficit (15%) + Ecosystem Synergy (15%)",
+      factors: [
+        {
+          factor: "Requirement Urgency",
+          weight: "40 pts max",
+          description: "Required role qualifications receive 40 pts; preferred/nice-to-have qualifications receive 15 pts.",
+        },
+        {
+          factor: "Proficiency Deficit",
+          weight: "30 pts max",
+          description: "Delta between role target proficiency and candidate verified proficiency.",
+        },
+        {
+          factor: "Evidence Deficit",
+          weight: "15 pts max",
+          description: "Penalty for zero sources or uncorroborated single keyword mentions.",
+        },
+        {
+          factor: "Ecosystem Synergy",
+          weight: "15 pts max",
+          description: "Synergy bonus awarded when candidate demonstrates adjacent foundation technologies.",
+        },
+      ],
+      priorityThresholds: {
+        critical: "Priority Score >= 80 (Immediate hiring blocker)",
+        high: "Priority Score 60 - 79 (Substantial gap with strong learning synergy)",
+        medium: "Priority Score 40 - 59 (Moderate gap or preferred qualification)",
+        low: "Priority Score < 40 (Secondary optional item or fully matched)",
+      },
+    },
   },
   criticalGaps: [
     {
@@ -635,6 +668,19 @@ export const sampleGapAnalysis: GapAnalysisReport = {
       gapRationale: "Role requires containerized workflows; your resume lacks practical container proof.",
       suggestedAction:
         "Add a Dockerfile and docker-compose.yml to DevPulse. Verify multi-stage builds and container networking before claiming intermediate Docker proficiency.",
+      priority: "Critical",
+      priorityScore: 85,
+      priorityRationale:
+        "[Score: 85/100 • Critical Priority] Mandatory role requirement (+40 pts), Moderate proficiency gap (+15 pts), Single weak keyword mention (+10 pts). High ecosystem synergy with candidate backend skills in Node.js and Linux (+20 pts).",
+      priorityFactors: {
+        requirementWeight: 40,
+        proficiencyDeficit: 15,
+        evidenceDeficit: 10,
+        ecosystemSynergy: 15,
+        totalScore: 85,
+        explanation: "High-priority infrastructure requirement with direct backend applicability.",
+      },
+      relatedCandidateSkills: ["Node.js", "Linux"],
     },
     {
       canonicalName: "Automated Testing",
@@ -649,6 +695,19 @@ export const sampleGapAnalysis: GapAnalysisReport = {
       gapRationale: "Senior roles mandate automated test coverage for reliability and team quality standards.",
       suggestedAction:
         "Introduce Vitest or Jest test suites into CloudCart or DevPulse. Document coverage for core authentication and API endpoints.",
+      priority: "Critical",
+      priorityScore: 85,
+      priorityRationale:
+        "[Score: 85/100 • Critical Priority] Mandatory role requirement (+40 pts), Major proficiency gap (+25 pts), Zero verifiable project deliverables (+15 pts). High ecosystem synergy with React and Node.js (+10 pts).",
+      priorityFactors: {
+        requirementWeight: 40,
+        proficiencyDeficit: 25,
+        evidenceDeficit: 15,
+        ecosystemSynergy: 10,
+        totalScore: 85,
+        explanation: "Critical quality engineering gap.",
+      },
+      relatedCandidateSkills: ["React", "Node.js"],
     },
     {
       canonicalName: "System Design",
@@ -663,23 +722,22 @@ export const sampleGapAnalysis: GapAnalysisReport = {
       gapRationale: "The JD explicitly targets candidates who design scalable systems and handle edge cases.",
       suggestedAction:
         "Demonstrate caching (Redis) or async processing (BullMQ) in a personal project before updating resume architecture bullets.",
+      priority: "Critical",
+      priorityScore: 80,
+      priorityRationale:
+        "[Score: 80/100 • Critical Priority] Mandatory role requirement (+40 pts), Major proficiency gap (+25 pts), Single weak evidence mention (+10 pts). Synergy with Node.js and MongoDB (+5 pts).",
+      priorityFactors: {
+        requirementWeight: 40,
+        proficiencyDeficit: 25,
+        evidenceDeficit: 10,
+        ecosystemSynergy: 5,
+        totalScore: 80,
+        explanation: "Architectural depth required for senior level.",
+      },
+      relatedCandidateSkills: ["Node.js", "MongoDB"],
     },
   ],
   partialGaps: [
-    {
-      canonicalName: "Node.js",
-      category: "Backend",
-      status: "PARTIAL",
-      importance: "Required",
-      candidateProficiency: "Intermediate",
-      requiredProficiency: "Strong",
-      candidateConfidence: 72,
-      evidenceCount: 3,
-      evidenceSummary: "Demonstrated Express.js API design, but lacking high-throughput or production scaling details.",
-      gapRationale: "Candidate has solid project Node.js experience, but Senior role seeks deeper architecture.",
-      suggestedAction:
-        "Clarify performance considerations, connection pooling, or error handling mechanisms in existing backend bullets.",
-    },
     {
       canonicalName: "TypeScript",
       category: "Languages",
@@ -693,6 +751,46 @@ export const sampleGapAnalysis: GapAnalysisReport = {
       gapRationale: "TypeScript is a non-negotiable primary language requirement for this team.",
       suggestedAction:
         "If DevPulse is typed, rewrite its bullet to explicitly state: 'Developed typed React components and Node.js REST contracts using TypeScript'. Only add if genuinely true.",
+      priority: "High",
+      priorityScore: 75,
+      priorityRationale:
+        "[Score: 75/100 • High Priority] Mandatory role requirement (+40 pts), Major proficiency gap (+25 pts), Single weak mention (+10 pts). Direct synergy with JavaScript and React (+15 pts).",
+      priorityFactors: {
+        requirementWeight: 40,
+        proficiencyDeficit: 25,
+        evidenceDeficit: 10,
+        ecosystemSynergy: 15,
+        totalScore: 75,
+        explanation: "Highest leverage skill to upgrade given existing JavaScript strength.",
+      },
+      relatedCandidateSkills: ["JavaScript", "React"],
+    },
+    {
+      canonicalName: "Node.js",
+      category: "Backend",
+      status: "PARTIAL",
+      importance: "Required",
+      candidateProficiency: "Intermediate",
+      requiredProficiency: "Strong",
+      candidateConfidence: 72,
+      evidenceCount: 3,
+      evidenceSummary: "Demonstrated Express.js API design, but lacking high-throughput or production scaling details.",
+      gapRationale: "Candidate has solid project Node.js experience, but Senior role seeks deeper architecture.",
+      suggestedAction:
+        "Clarify performance considerations, connection pooling, or error handling mechanisms in existing backend bullets.",
+      priority: "High",
+      priorityScore: 65,
+      priorityRationale:
+        "[Score: 65/100 • High Priority] Mandatory role requirement (+40 pts), Moderate proficiency gap (+15 pts), Multiple verified sources (+0 pts). Direct synergy with Express.js (+10 pts).",
+      priorityFactors: {
+        requirementWeight: 40,
+        proficiencyDeficit: 15,
+        evidenceDeficit: 0,
+        ecosystemSynergy: 10,
+        totalScore: 65,
+        explanation: "Solid candidate foundation needing senior scale substantiation.",
+      },
+      relatedCandidateSkills: ["Express.js", "JavaScript"],
     },
   ],
   weakEvidence: [
@@ -709,6 +807,19 @@ export const sampleGapAnalysis: GapAnalysisReport = {
       gapRationale: "Technical recruiters and ATS screeners discount claimed skills with zero project references.",
       suggestedAction:
         "If you have used Python for scripting or automation, add a brief bullet point. If not actively practiced, consider omitting it from your core resume.",
+      priority: "Low",
+      priorityScore: 35,
+      priorityRationale:
+        "[Score: 35/100 • Low Priority] Preferred qualification (+15 pts), slight deficit (+10 pts), single mention (+10 pts).",
+      priorityFactors: {
+        requirementWeight: 15,
+        proficiencyDeficit: 10,
+        evidenceDeficit: 10,
+        ecosystemSynergy: 0,
+        totalScore: 35,
+        explanation: "Optional qualification with weak evidence.",
+      },
+      relatedCandidateSkills: [],
     },
   ],
   strongMatches: [
@@ -724,6 +835,18 @@ export const sampleGapAnalysis: GapAnalysisReport = {
       evidenceSummary: "Substantiated across 2 major personal projects and 2 years of commercial employment.",
       gapRationale: "Candidate exceeds baseline expectations for frontend React development.",
       suggestedAction: "Maintain emphasis on modular component design, state architecture, and performance.",
+      priority: "Low",
+      priorityScore: 25,
+      priorityRationale: "[Score: 25/100 • Low Priority] Core required competency fully verified.",
+      priorityFactors: {
+        requirementWeight: 25,
+        proficiencyDeficit: 0,
+        evidenceDeficit: 0,
+        ecosystemSynergy: 0,
+        totalScore: 25,
+        explanation: "Verified match.",
+      },
+      relatedCandidateSkills: [],
     },
     {
       canonicalName: "JavaScript",
@@ -737,6 +860,18 @@ export const sampleGapAnalysis: GapAnalysisReport = {
       evidenceSummary: "Core language powering professional employment and full-stack projects.",
       gapRationale: "Clear match with deep hands-on background.",
       suggestedAction: "Pair JavaScript strength with strict TypeScript demonstrations.",
+      priority: "Low",
+      priorityScore: 25,
+      priorityRationale: "[Score: 25/100 • Low Priority] Core required language fully verified.",
+      priorityFactors: {
+        requirementWeight: 25,
+        proficiencyDeficit: 0,
+        evidenceDeficit: 0,
+        ecosystemSynergy: 0,
+        totalScore: 25,
+        explanation: "Verified match.",
+      },
+      relatedCandidateSkills: [],
     },
   ],
   optionalGaps: [
@@ -752,6 +887,19 @@ export const sampleGapAnalysis: GapAnalysisReport = {
       evidenceSummary: "No AWS cloud signals detected in resume.",
       gapRationale: "Preferred skill; not a strict blocker for initial screening.",
       suggestedAction: "Deploy DevPulse to AWS ECS or S3/CloudFront as a weekend learning exercise.",
+      priority: "Medium",
+      priorityScore: 50,
+      priorityRationale:
+        "[Score: 50/100 • Medium Priority] Preferred role qualification (+15 pts), Zero demonstrated proficiency (+30 pts), Zero evidence (+15 pts). Synergy with Docker (+10 pts).",
+      priorityFactors: {
+        requirementWeight: 15,
+        proficiencyDeficit: 30,
+        evidenceDeficit: 15,
+        ecosystemSynergy: 10,
+        totalScore: 50,
+        explanation: "Preferred qualification with medium priority.",
+      },
+      relatedCandidateSkills: ["Docker"],
     },
     {
       canonicalName: "GraphQL",
@@ -765,6 +913,19 @@ export const sampleGapAnalysis: GapAnalysisReport = {
       evidenceSummary: "No GraphQL schemas or queries detected in resume.",
       gapRationale: "Preferred skill; RESTful background covers the primary backend requirement.",
       suggestedAction: "Understand GraphQL query patterns compared to REST endpoints for interview readiness.",
+      priority: "Medium",
+      priorityScore: 45,
+      priorityRationale:
+        "[Score: 45/100 • Medium Priority] Preferred role qualification (+15 pts), Zero demonstrated proficiency (+30 pts), Zero evidence (+15 pts).",
+      priorityFactors: {
+        requirementWeight: 15,
+        proficiencyDeficit: 15,
+        evidenceDeficit: 15,
+        ecosystemSynergy: 0,
+        totalScore: 45,
+        explanation: "Preferred qualification.",
+      },
+      relatedCandidateSkills: [],
     },
   ],
   generatedAt: "2026-10-02T10:20:00.000Z",

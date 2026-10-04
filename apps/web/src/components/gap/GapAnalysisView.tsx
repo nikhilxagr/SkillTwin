@@ -40,6 +40,8 @@ export const GapAnalysisView: React.FC<GapAnalysisViewProps> = ({
 }) => {
   const [selectedFilter, setSelectedFilter] = useState<"ALL" | GapCategory>("ALL");
 
+  const [showScoringModel, setShowScoringModel] = useState(false);
+
   if (!report) {
     return (
       <EmptyState
@@ -54,7 +56,7 @@ export const GapAnalysisView: React.FC<GapAnalysisViewProps> = ({
     );
   }
 
-  // Combine all items with deduplication by canonicalName
+  // Combine all items with deduplication by canonicalName and sort by highest priority first
   const allItemsMap = new Map();
   for (const item of [
     ...report.criticalGaps,
@@ -63,14 +65,20 @@ export const GapAnalysisView: React.FC<GapAnalysisViewProps> = ({
     ...report.strongMatches,
     ...report.optionalGaps,
   ]) {
-    allItemsMap.set(item.canonicalName.toLowerCase(), item);
+    if (!allItemsMap.has(item.canonicalName.toLowerCase())) {
+      allItemsMap.set(item.canonicalName.toLowerCase(), item);
+    }
   }
-  const allItems = Array.from(allItemsMap.values());
+  const allItems = Array.from(allItemsMap.values()).sort(
+    (a: any, b: any) => (b.priorityScore ?? 0) - (a.priorityScore ?? 0),
+  );
 
   const displayedItems =
     selectedFilter === "ALL"
       ? allItems
       : allItems.filter((item) => item.status === selectedFilter);
+
+  const scoringModel = report.summary.scoringModel;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
@@ -150,9 +158,88 @@ export const GapAnalysisView: React.FC<GapAnalysisViewProps> = ({
               lineHeight: "1.6",
             }}
           >
-            <p>{report.summary.alignmentExplanation}</p>
+            <p style={{ margin: 0 }}>{report.summary.alignmentExplanation}</p>
+
+            <div style={{ marginTop: "12px", display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                onClick={() => setShowScoringModel((prev) => !prev)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--color-primary-blue)",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: 0,
+                }}
+              >
+                <HelpCircle size={13} />
+                {showScoringModel ? "Hide Scoring Model" : "View Transparent Scoring Model"}
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Expandable Transparent Scoring Model */}
+        {showScoringModel && scoringModel && (
+          <div
+            style={{
+              marginTop: "20px",
+              paddingTop: "16px",
+              borderTop: "1px solid var(--border-subtle)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <ShieldCheck size={16} style={{ color: "var(--color-primary-blue)" }} />
+              <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>
+                {scoringModel.modelName}
+              </span>
+            </div>
+            <p style={{ fontSize: "12px", color: "var(--text-secondary)", margin: 0 }}>
+              <strong>Formula: </strong>
+              <code style={{ background: "var(--bg-subtle)", padding: "2px 6px", borderRadius: "4px" }}>
+                {scoringModel.formula}
+              </code>
+            </p>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                gap: "10px",
+                marginTop: "4px",
+              }}
+            >
+              {scoringModel.factors.map((f, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    padding: "10px",
+                    background: "var(--bg-subtle)",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border-subtle)",
+                    fontSize: "11.5px",
+                  }}
+                >
+                  <div style={{ fontWeight: 700, color: "var(--text-primary)", display: "flex", justifyContent: "space-between" }}>
+                    <span>{f.factor}</span>
+                    <span style={{ color: "var(--color-primary-blue)" }}>{f.weight}</span>
+                  </div>
+                  <p style={{ margin: "4px 0 0 0", color: "var(--text-secondary)", lineHeight: "1.35" }}>
+                    {f.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* 5-Bucket Metric Ribbon */}

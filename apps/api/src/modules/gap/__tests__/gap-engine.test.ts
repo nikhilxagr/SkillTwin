@@ -355,6 +355,236 @@ describe("Skill Gap Engine (Phase 5)", () => {
     expect(report.summary.optionalGapCount).toBe(1); // Kubernetes
   });
 
+  it("calculates transparent priority score and factors according to the 4-factor formula", () => {
+    const report = gapEngine.compare(mockMatrix, mockJob);
+
+    // Docker is a required missing skill
+    const dockerGap = report.criticalGaps.find((g) => g.canonicalName === "Docker");
+    expect(dockerGap).toBeDefined();
+    expect(dockerGap?.priority).toBe("Critical");
+    expect(dockerGap?.priorityScore).toBeGreaterThanOrEqual(80);
+    expect(dockerGap?.priorityFactors).toBeDefined();
+    expect(dockerGap?.priorityFactors?.requirementWeight).toBe(40); // Required
+    expect(dockerGap?.priorityFactors?.proficiencyDeficit).toBe(30); // Not Detected
+    expect(dockerGap?.priorityFactors?.evidenceDeficit).toBe(15); // 0 evidence
+    expect(dockerGap?.priorityRationale).toContain("Mandatory role requirement");
+  });
+
+  it("prioritizes gaps with adjacent ecosystem synergy (Rule: relationship to other skills)", () => {
+    // Candidate has React & TypeScript; Target role requires Next.js
+    const synergyJob: JobExtraction = {
+      ...mockJob,
+      requiredSkills: [
+        {
+          canonicalName: "Next.js",
+          category: "Frontend",
+          importance: "Required",
+          minimumProficiency: "Strong",
+        },
+      ],
+      preferredSkills: [],
+    };
+
+    const report = gapEngine.compare(mockMatrix, synergyJob);
+    const nextGap = report.criticalGaps.find((g) => g.canonicalName === "Next.js");
+    expect(nextGap).toBeDefined();
+    expect(nextGap?.priorityFactors?.ecosystemSynergy).toBeGreaterThan(0);
+    expect(nextGap?.relatedCandidateSkills).toEqual(
+      expect.arrayContaining(["React", "TypeScript"]),
+    );
+    expect(nextGap?.priorityRationale).toContain("ecosystem synergy");
+  });
+
+  it("orders gap lists with highest priority first (Rule: show highest priority gaps first)", () => {
+    const multiGapJob: JobExtraction = {
+      ...mockJob,
+      requiredSkills: [
+        {
+          canonicalName: "Docker",
+          category: "Cloud/DevOps",
+          importance: "Required",
+          minimumProficiency: "Intermediate",
+        },
+        {
+          canonicalName: "Rust",
+          category: "Languages",
+          importance: "Required",
+          minimumProficiency: "Strong",
+        },
+        {
+          canonicalName: "Next.js",
+          category: "Frontend",
+          importance: "Required",
+          minimumProficiency: "Strong",
+        },
+      ],
+    };
+
+    const report = gapEngine.compare(mockMatrix, multiGapJob);
+    expect(report.criticalGaps.length).toBe(3);
+
+    // Verify descending order by priorityScore
+    for (let i = 0; i < report.criticalGaps.length - 1; i++) {
+      expect(report.criticalGaps[i].priorityScore).toBeGreaterThanOrEqual(
+        report.criticalGaps[i + 1].priorityScore,
+      );
+    }
+  });
+
+  it("provides transparent scoring model explanation metadata in summary", () => {
+    const report = gapEngine.compare(mockMatrix, mockJob);
+    const scoring = report.summary.scoringModel;
+
+    expect(scoring).toBeDefined();
+    expect(scoring?.modelName).toContain("SkillTwin Deterministic 4-Factor Priority Model");
+    expect(scoring?.formula).toContain("Requirement Urgency (40%)");
+    expect(scoring?.factors.length).toBe(4);
+    expect(scoring?.priorityThresholds.critical).toContain(">= 80");
+  });
+
+  it("handles a 100% full match scenario with zero critical gaps", () => {
+    const perfectMatrix: SkillMatrix = {
+      ...mockMatrix,
+      items: [
+        ...mockMatrix.items,
+        {
+          canonicalName: "Docker",
+          category: "Cloud/DevOps",
+          aliases: [],
+          proficiency: "Strong",
+          confidence: 90,
+          evidenceLevel: "Demonstrated",
+          evidence: [
+            {
+              id: "p1",
+              sourceType: "project",
+              context: "Containerized multi-stage production deployment.",
+              weight: 90,
+              verified: true,
+            },
+          ],
+          explanation: "Production Docker usage.",
+          missingEvidence: [],
+          relatedSkills: [],
+          claimed: true,
+          demonstrated: true,
+        },
+        {
+          canonicalName: "Python",
+          category: "Languages",
+          aliases: [],
+          proficiency: "Strong",
+          confidence: 85,
+          evidenceLevel: "Demonstrated",
+          evidence: [
+            {
+              id: "p1",
+              sourceType: "project",
+              context: "Built Python microservices.",
+              weight: 85,
+              verified: true,
+            },
+          ],
+          explanation: "Production Python.",
+          missingEvidence: [],
+          relatedSkills: [],
+          claimed: true,
+          demonstrated: true,
+        },
+        {
+          canonicalName: "GraphQL",
+          category: "Backend",
+          aliases: [],
+          proficiency: "Strong",
+          confidence: 85,
+          evidenceLevel: "Demonstrated",
+          evidence: [
+            {
+              id: "p1",
+              sourceType: "project",
+              context: "Built Apollo GraphQL server.",
+              weight: 85,
+              verified: true,
+            },
+          ],
+          explanation: "Production GraphQL.",
+          missingEvidence: [],
+          relatedSkills: [],
+          claimed: true,
+          demonstrated: true,
+        },
+        {
+          canonicalName: "Kubernetes",
+          category: "Cloud/DevOps",
+          aliases: [],
+          proficiency: "Intermediate",
+          confidence: 80,
+          evidenceLevel: "Demonstrated",
+          evidence: [
+            {
+              id: "p1",
+              sourceType: "project",
+              context: "Configured K8s ingress and helm charts.",
+              weight: 80,
+              verified: true,
+            },
+          ],
+          explanation: "Production K8s.",
+          missingEvidence: [],
+          relatedSkills: [],
+          claimed: true,
+          demonstrated: true,
+        },
+      ],
+    };
+
+    const report = gapEngine.compare(perfectMatrix, mockJob);
+    expect(report.summary.alignmentScore).toBe(100);
+    expect(report.summary.alignmentRating).toBe("Strong");
+    expect(report.criticalGaps.length).toBe(0);
+    expect(report.partialGaps.length).toBe(0);
+    expect(report.weakEvidence.length).toBe(0);
+    expect(report.strongMatches.length).toBe(7); // All 5 required + 2 preferred match
+  });
+
+  it("handles a severe gap scenario where candidate is completely unaligned", () => {
+    const noviceMatrix: SkillMatrix = {
+      resumeId: "novice-1",
+      items: [
+        {
+          canonicalName: "HTML",
+          category: "Frontend",
+          aliases: [],
+          proficiency: "Beginner",
+          confidence: 40,
+          evidenceLevel: "Demonstrated",
+          evidence: [],
+          explanation: "Basic HTML markup.",
+          missingEvidence: [],
+          relatedSkills: [],
+          claimed: true,
+          demonstrated: true,
+        },
+      ],
+      summary: {
+        totalSkills: 1,
+        demonstratedCount: 1,
+        claimedOnlyCount: 0,
+        weakEvidenceCount: 0,
+        averageConfidence: 40,
+        topSkills: ["HTML"],
+      },
+      generatedAt: "2026-10-04T12:00:00Z",
+    };
+
+    const report = gapEngine.compare(noviceMatrix, mockJob);
+    expect(report.summary.alignmentRating).toBe("Low");
+    expect(report.summary.alignmentScore).toBe(0);
+    expect(report.criticalGaps.length).toBe(5); // All 5 required are missing
+    expect(report.optionalGaps.length).toBe(2); // All 2 preferred are optional gaps
+    expect(report.strongMatches.length).toBe(0);
+  });
+
   it("provides full HTTP API comparison flow via POST /api/v1/gap/compare", async () => {
     const response = await request(app)
       .post("/api/v1/gap/compare")
@@ -366,6 +596,7 @@ describe("Skill Gap Engine (Phase 5)", () => {
     expect(response.body.data.summary.totalRequired).toBe(5);
     expect(response.body.data.criticalGaps.length).toBe(1);
     expect(response.body.data.strongMatches.length).toBe(3);
+    expect(response.body.data.summary.scoringModel).toBeDefined();
 
     const reportId = response.body.data.id;
 
@@ -393,3 +624,4 @@ describe("Skill Gap Engine (Phase 5)", () => {
       .expect(404);
   });
 });
+

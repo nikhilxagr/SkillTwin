@@ -127,6 +127,80 @@ export const GapItemCard: React.FC<GapItemCardProps> = ({ item }) => {
         </div>
       </div>
 
+      {/* Priority Engine Assessment */}
+      <div
+        style={{
+          padding: "8px 12px",
+          background:
+            item.priority === "Critical"
+              ? "rgba(239, 68, 68, 0.06)"
+              : item.priority === "High"
+              ? "rgba(249, 115, 22, 0.06)"
+              : "var(--bg-subtle)",
+          borderRadius: "var(--radius-md)",
+          border: `1px solid ${
+            item.priority === "Critical"
+              ? "rgba(239, 68, 68, 0.2)"
+              : item.priority === "High"
+              ? "rgba(249, 115, 22, 0.2)"
+              : "var(--border-subtle)"
+          }`,
+          fontSize: "12px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "4px",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "6px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.03em",
+                color:
+                  item.priority === "Critical"
+                    ? "var(--color-gap)"
+                    : item.priority === "High"
+                    ? "#ea580c"
+                    : item.priority === "Medium"
+                    ? "var(--color-primary-blue)"
+                    : "var(--text-muted)",
+              }}
+            >
+              Priority: {item.priority}
+            </span>
+            <span
+              style={{
+                fontSize: "11px",
+                fontFamily: "monospace",
+                fontWeight: 700,
+                padding: "1px 6px",
+                borderRadius: "4px",
+                background: "var(--bg-canvas)",
+                border: "1px solid var(--border-subtle)",
+                color: "var(--text-primary)",
+              }}
+            >
+              {item.priorityScore}/100
+            </span>
+          </div>
+
+          {item.relatedCandidateSkills && item.relatedCandidateSkills.length > 0 && (
+            <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
+              Ecosystem synergy with: <strong>{item.relatedCandidateSkills.join(", ")}</strong>
+            </span>
+          )}
+        </div>
+
+        {item.priorityRationale && (
+          <p style={{ margin: 0, fontSize: "11.5px", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+            {item.priorityRationale}
+          </p>
+        )}
+      </div>
+
       {/* Evidence & Why it is a Gap */}
       <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "12.5px", lineHeight: "1.45" }}>
         <div>

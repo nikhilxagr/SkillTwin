@@ -11,6 +11,19 @@ export const gapCategorySchema = z.enum([
 ]);
 export type GapCategory = z.infer<typeof gapCategorySchema>;
 
+export const gapPriorityLevelSchema = z.enum(["Critical", "High", "Medium", "Low"]);
+export type GapPriorityLevel = z.infer<typeof gapPriorityLevelSchema>;
+
+export const priorityFactorBreakdownSchema = z.object({
+  requirementWeight: z.number().min(0).max(40),
+  proficiencyDeficit: z.number().min(0).max(30),
+  evidenceDeficit: z.number().min(0).max(15),
+  ecosystemSynergy: z.number().min(0).max(15),
+  totalScore: z.number().min(0).max(100),
+  explanation: z.string(),
+});
+export type PriorityFactorBreakdown = z.infer<typeof priorityFactorBreakdownSchema>;
+
 export const comparisonItemSchema = z.object({
   canonicalName: z.string().min(1),
   category: skillCategorySchema,
@@ -23,8 +36,34 @@ export const comparisonItemSchema = z.object({
   evidenceSummary: z.string(),
   gapRationale: z.string(),
   suggestedAction: z.string(),
+  // Phase 5: Transparent Priority Engine fields
+  priority: gapPriorityLevelSchema.default("Medium"),
+  priorityScore: z.number().min(0).max(100).default(50),
+  priorityRationale: z.string().default("Calculated by deterministic Priority Engine."),
+  priorityFactors: priorityFactorBreakdownSchema.optional(),
+  relatedCandidateSkills: z.array(z.string()).default([]),
 });
 export type ComparisonItem = z.infer<typeof comparisonItemSchema>;
+
+export const scoringModelFactorSchema = z.object({
+  factor: z.string(),
+  weight: z.string(),
+  description: z.string(),
+});
+export type ScoringModelFactor = z.infer<typeof scoringModelFactorSchema>;
+
+export const scoringModelExplanationSchema = z.object({
+  modelName: z.string(),
+  formula: z.string(),
+  factors: z.array(scoringModelFactorSchema),
+  priorityThresholds: z.object({
+    critical: z.string(),
+    high: z.string(),
+    medium: z.string(),
+    low: z.string(),
+  }),
+});
+export type ScoringModelExplanation = z.infer<typeof scoringModelExplanationSchema>;
 
 export const gapAnalysisSummarySchema = z.object({
   totalRequired: z.number().int().nonnegative(),
@@ -37,6 +76,7 @@ export const gapAnalysisSummarySchema = z.object({
   alignmentRating: z.enum(["Strong", "Moderate", "Developing", "Low"]),
   alignmentScore: z.number().min(0).max(100),
   alignmentExplanation: z.string().min(1),
+  scoringModel: scoringModelExplanationSchema.optional(),
 });
 export type GapAnalysisSummary = z.infer<typeof gapAnalysisSummarySchema>;
 
