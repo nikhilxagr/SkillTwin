@@ -28,18 +28,42 @@ export class DeterministicJobParser {
 
     let level: "Entry" | "Mid" | "Senior" | "Lead" | "NotSpecified" = "NotSpecified";
     const lowerText = text.toLowerCase();
-    if (lowerText.includes("senior") || (minYears !== undefined && minYears >= 5)) {
-      level = "Senior";
-    } else if (lowerText.includes("lead") || lowerText.includes("principal") || lowerText.includes("architect")) {
+    const lowerTitle = title.toLowerCase();
+
+    if (
+      lowerTitle.includes("lead") ||
+      lowerTitle.includes("principal") ||
+      lowerTitle.includes("architect") ||
+      lowerText.includes("lead engineer") ||
+      lowerText.includes("principal engineer") ||
+      lowerText.includes("chief architect")
+    ) {
       level = "Lead";
-    } else if (lowerText.includes("mid-level") || lowerText.includes("mid level") || (minYears !== undefined && minYears >= 3)) {
+    } else if (
+      lowerTitle.includes("senior") ||
+      lowerText.includes("senior") ||
+      (minYears !== undefined && minYears >= 5)
+    ) {
+      level = "Senior";
+    } else if (
+      lowerTitle.includes("mid") ||
+      lowerText.includes("mid-level") ||
+      lowerText.includes("mid level") ||
+      (minYears !== undefined && minYears >= 3)
+    ) {
       level = "Mid";
-    } else if (lowerText.includes("entry") || lowerText.includes("junior") || (minYears !== undefined && minYears <= 2)) {
+    } else if (
+      lowerTitle.includes("junior") ||
+      lowerTitle.includes("entry") ||
+      lowerText.includes("entry") ||
+      lowerText.includes("junior") ||
+      (minYears !== undefined && minYears <= 2)
+    ) {
       level = "Entry";
     }
 
     // 3. Education Requirements
-    const eduMatch = text.match(/\b(?:Bachelor(?:'s)?|Master(?:'s)?|B\.?S\b|M\.?S\b|Ph\.?D\b|(?:College|University)\s+Degree|Degree\s+in\s+[A-Za-z\s]+)[^\n.]*/i);
+    const eduMatch = text.match(/\b(?:Bachelor(?:'s)?\b|Master(?:'s)?\b|B\.?S\b|M\.?S\b|Ph\.?D\b|(?:College|University)\s+Degree|Degree\s+in\s+[A-Za-z\s]+)[^\n.]*/i);
     const education = eduMatch ? eduMatch[0].trim() : "Bachelor's degree in Computer Science or equivalent practical experience";
 
     // 4. Section Splitting: Required vs Preferred vs Responsibilities

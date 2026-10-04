@@ -131,16 +131,18 @@ export const JobAnalysisView: React.FC<JobAnalysisViewProps> = ({
             variant="primary"
             size="sm"
             icon={<ArrowRight size={13} />}
+            aria-label="Compare With My Skills • Compare Against My Skills"
             onClick={onRunGapAnalysis || (() => onNavigate("gap_analysis"))}
           >
-            Compare Against My Skills
+            Compare With My Skills
           </Button>
           <Button
             variant="secondary"
             size="sm"
+            aria-label="Analyze Another Job • Ingest Another JD"
             onClick={() => onNavigate("jd_upload")}
           >
-            Ingest Another JD
+            Analyze Another Job
           </Button>
           <Button
             variant="outline"

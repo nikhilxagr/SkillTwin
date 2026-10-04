@@ -8,7 +8,7 @@ import {
   type SkillCategory,
 } from "@skilltwin/contracts";
 import { documentService, type ExtractedDocument } from "../document/document.service.js";
-import { activeAIProvider } from "../../providers/ai-factory.js";
+import { jobAnalyzer } from "../../services/ai/jobAnalyzer.js";
 import { skillNormalizer, skillRegistry } from "../skills/index.js";
 import { jobRepository } from "./job.repository.js";
 
@@ -52,8 +52,8 @@ export class JobService {
     fallbackTitle?: string,
     fallbackCompany?: string
   ): Promise<JobProcessingResult> {
-    // 1. Run AI extraction with strict validation
-    const aiData = await activeAIProvider.extractJob(
+    // 1. Run AI extraction with strict validation using Gemini (with deterministic fallback)
+    const aiData = await jobAnalyzer.analyzeJob(
       doc.normalizedText,
       fallbackTitle,
       fallbackCompany
@@ -107,14 +107,26 @@ export class JobService {
     const requiredSkills = Array.from(requiredSkillsMap.values());
     const preferredSkills = Array.from(preferredSkillsMap.values());
 
-    // 4. Normalize Keywords per Category
+    // 4. Normalize Keywords per Category using the Skill Engine
     const normLanguages = skillNormalizer.normalizeSkillList(aiData.categorizedSkills.programmingLanguages).matches.map((m) => m.canonicalName);
     const normFrameworks = skillNormalizer.normalizeSkillList(aiData.categorizedSkills.frameworks).matches.map((m) => m.canonicalName);
     const normLibraries = skillNormalizer.normalizeSkillList(aiData.categorizedSkills.libraries).matches.map((m) => m.canonicalName);
     const normDatabases = skillNormalizer.normalizeSkillList(aiData.categorizedSkills.databases).matches.map((m) => m.canonicalName);
     const normTools = skillNormalizer.normalizeSkillList(aiData.categorizedSkills.tools).matches.map((m) => m.canonicalName);
-    const normCloud = skillNormalizer.normalizeSkillList(aiData.categorizedSkills.cloudDevOps).matches.map((m) => m.canonicalName);
-    const normSecurity = skillNormalizer.normalizeSkillList(aiData.categorizedSkills.cybersecurity).matches.map((m) => m.canonicalName);
+
+    const rawCloudDevOps = [
+      ...aiData.categorizedSkills.cloudDevOps,
+      ...(aiData.categorizedSkills.cloud || []),
+      ...(aiData.categorizedSkills.devops || []),
+    ];
+    const normCloud = skillNormalizer.normalizeSkillList(rawCloudDevOps).matches.map((m) => m.canonicalName);
+
+    const rawSecurity = [
+      ...aiData.categorizedSkills.cybersecurity,
+      ...(aiData.categorizedSkills.security || []),
+    ];
+    const normSecurity = skillNormalizer.normalizeSkillList(rawSecurity).matches.map((m) => m.canonicalName);
+    const normTesting = skillNormalizer.normalizeSkillList(aiData.categorizedSkills.testing || []).matches.map((m) => m.canonicalName);
 
     const keywords = {
       programmingLanguages: normLanguages.length > 0 ? normLanguages : ["TypeScript", "JavaScript"],
@@ -122,12 +134,15 @@ export class JobService {
       libraries: normLibraries,
       databases: normDatabases.length > 0 ? normDatabases : ["PostgreSQL"],
       tools: normTools.length > 0 ? normTools : ["Git"],
+      cloud: normCloud,
+      devops: normCloud,
       cloudDevOps: normCloud.length > 0 ? normCloud : ["Docker"],
+      testing: normTesting,
+      security: normSecurity,
       cybersecurity: normSecurity,
       softSkills: aiData.categorizedSkills.softSkills.length > 0 ? aiData.categorizedSkills.softSkills : ["Agile / Scrum", "Code Reviews"],
       generalKeywords: aiData.keywords,
       technicalSkills: Array.from(new Set([...normLanguages, ...normFrameworks, ...normDatabases])),
-      cloud: normCloud,
     };
 
     // 5. Build validated JobExtraction

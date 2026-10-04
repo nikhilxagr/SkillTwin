@@ -16,7 +16,7 @@ export type JobSkillRequirement = z.infer<typeof jobSkillRequirementSchema>;
 export const jobExperienceRequirementSchema = z.object({
   minYears: z.number().nonnegative().optional(),
   maxYears: z.number().nonnegative().optional(),
-  level: z.enum(["Entry", "Mid", "Senior", "Lead", "NotSpecified"]).default("NotSpecified"),
+  level: z.enum(["Entry", "Junior", "Mid", "Senior", "Lead", "Principal", "NotSpecified"]).default("NotSpecified"),
   description: z.string().optional(),
 });
 export type JobExperienceRequirement = z.infer<typeof jobExperienceRequirementSchema>;
@@ -27,13 +27,15 @@ export const jobKeywordsSchema = z.object({
   libraries: z.array(z.string()).default([]),
   databases: z.array(z.string()).default([]),
   tools: z.array(z.string()).default([]),
+  cloud: z.array(z.string()).optional(),
+  devops: z.array(z.string()).optional(),
   cloudDevOps: z.array(z.string()).default([]),
+  testing: z.array(z.string()).optional(),
+  security: z.array(z.string()).optional(),
   cybersecurity: z.array(z.string()).default([]),
   softSkills: z.array(z.string()).default([]),
   generalKeywords: z.array(z.string()).default([]),
-  // Backward compatibility fields
   technicalSkills: z.array(z.string()).default([]),
-  cloud: z.array(z.string()).default([]),
 });
 export type JobKeywords = z.infer<typeof jobKeywordsSchema>;
 
