@@ -23,6 +23,7 @@ import { readinessRouter } from "./modules/readiness/readiness.controller.js";
 import { simulatorRouter } from "./modules/simulator/simulator.controller.js";
 import { projectsRouter } from "./modules/projects/projects.controller.js";
 import { githubRouter } from "./modules/github/github.controller.js";
+import { latexRouter } from "./modules/latex/latex.controller.js";
 
 export const app = express();
 const logger = pino();
@@ -77,6 +78,9 @@ app.use("/api/v1/projects", projectsRouter);
 
 // Phase 11: GitHub Integration & Evidence Verification
 app.use("/api/v1/github", githubRouter);
+
+// LaTeX Resume Studio: Free Compile & ATS Generation
+app.use("/api/v1/latex", latexRouter);
 
 app.get("/health", (_request, response) => {
   response.json(

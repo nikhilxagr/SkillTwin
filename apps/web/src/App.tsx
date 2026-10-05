@@ -13,6 +13,7 @@ import { JobSpecificResumeView } from "./components/tailoring/JobSpecificResumeV
 import { InterviewSimulatorView } from "./components/simulator/InterviewSimulatorView.js";
 import { ProjectRecommendationsView } from "./components/projects/ProjectRecommendationsView.js";
 import { EvidencePageView } from "./components/evidence/EvidencePageView.js";
+import { LatexStudioView } from "./components/latex/LatexStudioView.js";
 import {
   sampleResume,
   sampleSkillMatrix,
@@ -28,6 +29,7 @@ import {
   sampleProjectBlueprint,
   sampleGithubEvidenceReport,
   sampleAnalyzedRepositories,
+  sampleLatexResumeCode,
 } from "./mock/sampleData.js";
 import {
   uploadResumeFile,
@@ -122,6 +124,10 @@ const parseHash = (hash: string): ActiveScreen => {
     case "github-evidence":
     case "github":
       return "evidence";
+    case "latex":
+    case "latex-studio":
+    case "latex_studio":
+      return "latex_studio";
     case "landing":
     case "home":
     case "":
@@ -163,6 +169,8 @@ const screenToHash = (screen: ActiveScreen): string => {
       return "#/projects";
     case "evidence":
       return "#/evidence";
+    case "latex_studio":
+      return "#/latex-studio";
     default:
       return "#/";
   }
@@ -1073,6 +1081,16 @@ export const App: React.FC = () => {
           onNavigate={handleNavigate}
           onLoadSample={handleLoadSample}
           isLoading={loading}
+        />
+      )}
+
+      {currentScreen === "latex_studio" && (
+        <LatexStudioView
+          resume={resume}
+          tailoredResume={tailoredResume}
+          initialTexSource={sampleLatexResumeCode}
+          onNavigate={handleNavigate}
+          onLoadSample={handleLoadSample}
         />
       )}
     </Shell>

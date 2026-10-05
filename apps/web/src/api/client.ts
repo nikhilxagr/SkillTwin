@@ -681,5 +681,66 @@ export async function syncGithub(params?: {
   return body;
 }
 
+/**
+ * LaTeX Studio: Free compilation of LaTeX source into PDF
+ */
+export async function compileLatex(
+  texSource: string,
+  engine: "pdflatex" | "xelatex" = "pdflatex"
+): Promise<{ pdfBase64: string; engineUsed: string; compileDurationMs: number }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/latex/compile`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ texSource, engine }),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    const errorMsg = body.message || "Failed to compile LaTeX document.";
+    const err = new ApiError(errorMsg, body.code, response.status);
+    (err as any).log = body.log;
+    throw err;
+  }
+
+  return body.data;
+}
+
+/**
+ * LaTeX Studio: Generate ATS-friendly Jake's Resume LaTeX source code
+ */
+export async function generateLatex(
+  resume: ResumeExtraction,
+  tailored?: any | null,
+  templateId = "jakes-resume"
+): Promise<{ texSource: string; templateId: string; atsFriendly: boolean }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/latex/generate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ resume, tailored, templateId }),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok || body.status === "error") {
+    throw new ApiError(body.message || "Failed to generate LaTeX document.", body.code, response.status);
+  }
+
+  return body.data;
+}
+
+/**
+ * LaTeX Studio: Check compiler engines status
+ */
+export async function getLatexStatus(): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/latex/status`);
+  return await response.json();
+}
+
+
 
 

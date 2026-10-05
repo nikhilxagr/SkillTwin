@@ -20,6 +20,7 @@ import {
   Terminal,
   Save,
   CheckCheck,
+  FileCode,
 } from "lucide-react";
 import { Badge } from "../common/Badge.js";
 import { Card } from "../common/Card.js";
@@ -395,6 +396,15 @@ export const JobSpecificResumeView: React.FC<JobSpecificResumeViewProps> = ({
             onClick={() => onNavigate("resume_improvement")}
           >
             All Recommendations
+          </Button>
+
+          <Button
+            variant="primary"
+            size="sm"
+            icon={<FileCode size={13} />}
+            onClick={() => onNavigate("latex_studio")}
+          >
+            LaTeX Studio (ATS PDF)
           </Button>
         </div>
       </div>
@@ -1445,6 +1455,14 @@ export const JobSpecificResumeView: React.FC<JobSpecificResumeViewProps> = ({
                   onClick={handleDownloadMarkdown}
                 >
                   Download .md
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={<FileCode size={12} />}
+                  onClick={() => onNavigate("latex_studio")}
+                >
+                  Compile in LaTeX Studio
                 </Button>
               </div>
             </div>

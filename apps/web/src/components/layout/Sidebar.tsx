@@ -11,6 +11,7 @@ import {
   Layers,
   MessageSquare,
   Code2,
+  FileCode,
   X,
 } from "lucide-react";
 import type { ActiveScreen } from "../../types/navigation.js";
@@ -58,6 +59,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         return currentScreen === "project_recommendations";
       case "evidence":
         return currentScreen === "evidence";
+      case "latex_studio":
+        return currentScreen === "latex_studio";
       default:
         return false;
     }
@@ -250,6 +253,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <ShieldCheck size={16} />
             <span>Evidence</span>
+          </button>
+
+          {/* 11. LaTeX Resume Studio (Overleaf Style) */}
+          <button
+            data-testid="nav-latex-studio"
+            className={`nav-button ${isScreenActive("latex_studio") ? "active" : ""}`}
+            onClick={() => handleNavClick("latex_studio")}
+          >
+            <FileCode size={16} />
+            <span>LaTeX Studio</span>
+            <span
+              className="nav-badge"
+              style={{
+                background: "var(--color-primary-blue)",
+                color: "white",
+              }}
+            >
+              ATS
+            </span>
           </button>
         </div>
       </div>

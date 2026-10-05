@@ -14,3 +14,4 @@ export * from "./project-recommendations.js";
 export * from "./project-recommendations-engine.js";
 export * from "./github-evidence.js";
 export * from "./github-evidence-engine.js";
+export * from "./latex-resume.js";

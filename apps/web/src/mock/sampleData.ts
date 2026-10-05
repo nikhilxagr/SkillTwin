@@ -4,6 +4,7 @@ import {
   generateProjectRecommendations,
   generateProjectBlueprint,
   compareGithubEvidence,
+  generateLatexFromResume,
   type ResumeExtraction,
   type SkillMatrix,
   type JobExtraction,
@@ -1822,6 +1823,12 @@ export const sampleGithubEvidenceReport: GithubEvidenceReport = compareGithubEvi
   resume: sampleResume,
   matrix: sampleSkillMatrix,
 });
+
+export const sampleLatexResumeCode: string = generateLatexFromResume(sampleResume, {
+  tailored: sampleJobSpecificTailoredResume,
+  templateId: "jakes-resume",
+});
+
 
 
 

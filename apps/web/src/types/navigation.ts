@@ -15,7 +15,8 @@ export type ActiveScreen =
   | "tailored_resume"
   | "interview_simulator"
   | "project_recommendations"
-  | "evidence";
+  | "evidence"
+  | "latex_studio";
 
 export interface NavigationItem {
   id: ActiveScreen;

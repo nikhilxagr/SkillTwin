@@ -644,6 +644,72 @@ describe("SkillTwin Web Application Shell & UI Views", () => {
     const demoBtn = screen.getByTestId("load-demo-profile-btn");
     fireEvent.click(demoBtn);
   });
+
+  it("LaTeX Resume Studio: navigates to Overleaf-style editor, displays ATS standards, and supports code editing and profile sync", async () => {
+    render(<App />);
+
+    // Load sample profile
+    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
+    });
+
+    // Navigate to LaTeX Studio via sidebar button
+    const navLatexBtn = screen.getByTestId("nav-latex-studio");
+    expect(navLatexBtn).toBeDefined();
+    fireEvent.click(navLatexBtn);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("latex-studio-view")).toBeDefined();
+      expect(screen.getByText(/LaTeX Resume Studio & Compiler/i)).toBeDefined();
+      expect(screen.getByText(/100% Free Compiler/i)).toBeDefined();
+      expect(screen.getByText(/Jake's Resume ATS Standard/i)).toBeDefined();
+    });
+
+    // Verify ATS checklist highlights
+    expect(screen.getByText(/Single-column ATS format/i)).toBeDefined();
+    expect(screen.getByText(/glyphtounicode Unicode mapping/i)).toBeDefined();
+    expect(screen.getByText(/No tables\/graphics breaking OCR/i)).toBeDefined();
+    expect(screen.getByText(/Overleaf & TeX Live compatible/i)).toBeDefined();
+
+    // Verify LaTeX editor textarea and controls
+    const editorTextarea = screen.getByTestId("latex-editor-textarea") as HTMLTextAreaElement;
+    expect(editorTextarea).toBeDefined();
+    expect(editorTextarea.value).toContain("\\documentclass");
+    expect(editorTextarea.value).toContain("Alex Rivera");
+
+    // Verify action buttons
+    expect(screen.getByTestId("sync-profile-btn")).toBeDefined();
+    expect(screen.getByTestId("compile-latex-btn")).toBeDefined();
+    expect(screen.getByTestId("download-tex-btn")).toBeDefined();
+
+    // Simulate typing in the editor
+    fireEvent.change(editorTextarea, {
+      target: { value: editorTextarea.value + "\n% Custom note added by user" },
+    });
+    expect(editorTextarea.value).toContain("% Custom note added by user");
+
+    // Click Sync from Profile to refresh from master resume
+    fireEvent.click(screen.getByTestId("sync-profile-btn"));
+    await waitFor(() => {
+      expect((screen.getByTestId("latex-editor-textarea") as HTMLTextAreaElement).value).toContain("Alex Rivera");
+    });
+
+    // Navigate to Tailored Resume and verify the "LaTeX Studio (ATS PDF)" quick jump button
+    fireEvent.click(screen.getByTestId("nav-tailored-resume"));
+    await waitFor(() => {
+      expect(screen.getByText(/Job-Specific Resume Workflow/i)).toBeDefined();
+    });
+
+    const latexJumpBtn = screen.getByRole("button", { name: /LaTeX Studio \(ATS PDF\)/i });
+    expect(latexJumpBtn).toBeDefined();
+    fireEvent.click(latexJumpBtn);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("latex-studio-view")).toBeDefined();
+    });
+  });
 });
 
 
