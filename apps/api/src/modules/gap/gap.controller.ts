@@ -1,7 +1,10 @@
 import { Router, type Request, type Response } from "express";
 import { gapService } from "./gap.service.js";
+import { optionalAuth } from "../auth/auth.middleware.js";
 
 export const gapRouter = Router();
+
+gapRouter.use(optionalAuth);
 
 /**
  * POST /api/v1/gap/compare
@@ -29,7 +32,7 @@ gapRouter.post("/compare", async (req: Request, res: Response) => {
       return;
     }
 
-    const report = await gapService.compare({ matrix, job, resumeId, jobId });
+    const report = await gapService.compare({ matrix, job, resumeId, jobId }, req.userId);
 
     res.status(200).json({
       status: "success",

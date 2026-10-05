@@ -24,6 +24,8 @@ import { simulatorRouter } from "./modules/simulator/simulator.controller.js";
 import { projectsRouter } from "./modules/projects/projects.controller.js";
 import { githubRouter } from "./modules/github/github.controller.js";
 import { latexRouter } from "./modules/latex/latex.controller.js";
+import cookieParser from "cookie-parser";
+import { authRouter, profileRouter } from "./modules/auth/auth.controller.js";
 
 export const app = express();
 const logger = pino();
@@ -48,12 +50,19 @@ app.use(
     credentials: true,
   })
 );
+app.use(cookieParser(config.COOKIE_SECRET));
 app.use(express.json({ limit: "5mb" }));
 app.use(rateLimit({ windowMs: 60_000, limit: 120 }));
 app.use((request, _response, next) => {
   logger.info({ method: request.method, path: request.path }, "request");
   next();
 });
+
+// Phase 13: Secure Multi-User Authentication & Profile
+app.use("/api/v1/auth", authRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/v1/profile", profileRouter);
+app.use("/api/profile", profileRouter);
 
 // Phase 2: Resume Intelligence pipeline
 app.use("/api/v1/resumes", resumeRouter);

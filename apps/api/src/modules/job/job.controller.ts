@@ -2,6 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from "express"
 import multer from "multer";
 import { jobService } from "./job.service.js";
 import { DocumentProcessingError } from "../document/document.service.js";
+import { optionalAuth, requireAuth } from "../auth/auth.middleware.js";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -9,6 +10,21 @@ const upload = multer({
 });
 
 export const jobRouter = Router();
+
+jobRouter.use(optionalAuth);
+
+/**
+ * GET /api/v1/jobs
+ * List all job descriptions for the authenticated user
+ */
+jobRouter.get("/", (req: Request, res: Response): void => {
+  const userId = req.userId || "default-user";
+  const jobs = jobService.listJobs(userId);
+  res.json({
+    status: "success",
+    data: jobs,
+  });
+});
 
 /**
  * POST /api/v1/jobs/upload
@@ -28,6 +44,7 @@ jobRouter.post(
 
     const fallbackTitle = typeof req.body?.title === "string" ? req.body.title : undefined;
     const fallbackCompany = typeof req.body?.company === "string" ? req.body.company : undefined;
+    const userId = req.userId || "default-user";
 
     try {
       const result = await jobService.processJobFile(
@@ -35,7 +52,8 @@ jobRouter.post(
         req.file.buffer,
         req.file.mimetype,
         fallbackTitle,
-        fallbackCompany
+        fallbackCompany,
+        userId
       );
 
       res.status(201).json({
@@ -66,6 +84,7 @@ jobRouter.post(
     const text = typeof req.body?.text === "string" ? req.body.text : "";
     const title = typeof req.body?.title === "string" ? req.body.title : "Target Role";
     const company = typeof req.body?.company === "string" ? req.body.company : "";
+    const userId = req.userId || "default-user";
 
     if (!text.trim()) {
       res.status(400).json({
@@ -76,7 +95,7 @@ jobRouter.post(
     }
 
     try {
-      const result = await jobService.processJobText(title, company, text);
+      const result = await jobService.processJobText(title, company, text, userId);
       res.status(201).json({
         status: "success",
         data: result,
@@ -98,22 +117,23 @@ jobRouter.post(
 /**
  * GET /api/v1/jobs/latest
  */
-jobRouter.get("/latest", (_req: Request, res: Response): void => {
-  const latest = jobService.getLatestJob();
+jobRouter.get("/latest", (req: Request, res: Response): void => {
+  const latest = jobService.getLatestJob(req.userId);
   if (!latest) {
     res.status(404).json({ status: "error", message: "No job description has been analyzed yet." });
     return;
   }
-  const analysis = jobService.getAnalysis(latest.id);
+  const analysis = jobService.getAnalysis(latest.id, req.userId);
   res.json({ status: "success", data: { job: latest, analysis } });
 });
 
 /**
  * GET /api/v1/jobs/:id
+ * Strictly checks user ownership
  */
 jobRouter.get("/:id", (req: Request, res: Response): void => {
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const job = jobService.getJob(String(id));
+  const job = jobService.getJob(String(id), req.userId);
   if (!job) {
     res.status(404).json({ status: "error", message: "Job description not found." });
     return;
@@ -122,11 +142,24 @@ jobRouter.get("/:id", (req: Request, res: Response): void => {
 });
 
 /**
+ * DELETE /api/v1/jobs/:id
+ */
+jobRouter.delete("/:id", requireAuth, (req: Request, res: Response): void => {
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const deleted = jobService.deleteJob(String(id), req.userId!);
+  if (!deleted) {
+    res.status(404).json({ status: "error", message: "Job description not found or not authorized to delete." });
+    return;
+  }
+  res.json({ status: "success", message: "Job description deleted successfully." });
+});
+
+/**
  * GET /api/v1/jobs/:id/analysis
  */
 jobRouter.get("/:id/analysis", (req: Request, res: Response): void => {
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const analysis = jobService.getAnalysis(String(id));
+  const analysis = jobService.getAnalysis(String(id), req.userId);
   if (!analysis) {
     res.status(404).json({ status: "error", message: "Job analysis not found." });
     return;

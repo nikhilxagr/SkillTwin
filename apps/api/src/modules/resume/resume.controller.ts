@@ -2,6 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from "express"
 import multer from "multer";
 import { resumeService } from "./resume.service.js";
 import { DocumentProcessingError } from "../document/document.service.js";
+import { optionalAuth, requireAuth } from "../auth/auth.middleware.js";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -9,6 +10,22 @@ const upload = multer({
 });
 
 export const resumeRouter = Router();
+
+// Apply optionalAuth so req.userId is automatically identified if token/cookie is present
+resumeRouter.use(optionalAuth);
+
+/**
+ * GET /api/v1/resumes
+ * List all resumes for the authenticated user
+ */
+resumeRouter.get("/", (req: Request, res: Response): void => {
+  const userId = req.userId || "default-user";
+  const resumes = resumeService.listResumes(userId);
+  res.json({
+    status: "success",
+    data: resumes,
+  });
+});
 
 /**
  * POST /api/v1/resumes/upload
@@ -27,10 +44,12 @@ resumeRouter.post(
     }
 
     try {
+      const userId = req.userId || "default-user";
       const result = await resumeService.processResumeFile(
         req.file.originalname,
         req.file.buffer,
-        req.file.mimetype
+        req.file.mimetype,
+        userId
       );
 
       res.status(201).json({
@@ -70,7 +89,8 @@ resumeRouter.post(
     }
 
     try {
-      const result = await resumeService.processResumeText(fileName, text);
+      const userId = req.userId || "default-user";
+      const result = await resumeService.processResumeText(fileName, text, userId);
       res.status(201).json({
         status: "success",
         data: result,
@@ -92,8 +112,8 @@ resumeRouter.post(
 /**
  * GET /api/v1/resumes/latest
  */
-resumeRouter.get("/latest", (_req: Request, res: Response): void => {
-  const latest = resumeService.getLatestResume();
+resumeRouter.get("/latest", (req: Request, res: Response): void => {
+  const latest = resumeService.getLatestResume(req.userId);
   if (!latest) {
     res.status(404).json({ status: "error", message: "No resume has been uploaded yet." });
     return;
@@ -103,10 +123,11 @@ resumeRouter.get("/latest", (_req: Request, res: Response): void => {
 
 /**
  * GET /api/v1/resumes/:id
+ * Strict ownership check: Prevents User B from accessing User A's resume
  */
 resumeRouter.get("/:id", (req: Request, res: Response): void => {
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const resume = resumeService.getResume(String(id));
+  const resume = resumeService.getResume(String(id), req.userId);
   if (!resume) {
     res.status(404).json({ status: "error", message: "Resume not found." });
     return;
@@ -115,11 +136,25 @@ resumeRouter.get("/:id", (req: Request, res: Response): void => {
 });
 
 /**
+ * DELETE /api/v1/resumes/:id
+ * Delete resume belonging to the authenticated user
+ */
+resumeRouter.delete("/:id", requireAuth, (req: Request, res: Response): void => {
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const deleted = resumeService.deleteResume(String(id), req.userId!);
+  if (!deleted) {
+    res.status(404).json({ status: "error", message: "Resume not found or not authorized to delete." });
+    return;
+  }
+  res.json({ status: "success", message: "Resume deleted successfully." });
+});
+
+/**
  * GET /api/v1/resumes/:id/matrix
  */
 resumeRouter.get("/:id/matrix", (req: Request, res: Response): void => {
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const matrix = resumeService.getMatrix(String(id));
+  const matrix = resumeService.getMatrix(String(id), req.userId);
   if (!matrix) {
     res.status(404).json({ status: "error", message: "Skill matrix not found for this resume." });
     return;
@@ -132,7 +167,7 @@ resumeRouter.get("/:id/matrix", (req: Request, res: Response): void => {
  */
 resumeRouter.get("/:id/analysis", (req: Request, res: Response): void => {
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const analysis = resumeService.getAnalysis(String(id));
+  const analysis = resumeService.getAnalysis(String(id), req.userId);
   if (!analysis) {
     res.status(404).json({ status: "error", message: "Resume analysis not found for this resume." });
     return;

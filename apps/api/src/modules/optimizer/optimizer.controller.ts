@@ -1,7 +1,10 @@
 import { Router, type Request, type Response } from "express";
 import { optimizerService } from "./optimizer.service.js";
+import { optionalAuth } from "../auth/auth.middleware.js";
 
 export const optimizerRouter = Router();
+
+optimizerRouter.use(optionalAuth);
 
 /**
  * POST /api/v1/optimizer/optimize
@@ -11,14 +14,17 @@ optimizerRouter.post("/optimize", async (req: Request, res: Response) => {
   try {
     const { resume, matrix, job, gapReport, resumeId, jobId } = req.body;
 
-    const report = await optimizerService.optimize({
-      resume,
-      matrix,
-      job,
-      gapReport,
-      resumeId,
-      jobId,
-    });
+    const report = await optimizerService.optimize(
+      {
+        resume,
+        matrix,
+        job,
+        gapReport,
+        resumeId,
+        jobId,
+      },
+      req.userId
+    );
 
     res.status(200).json({
       status: "success",
@@ -85,14 +91,17 @@ optimizerRouter.post("/tailor", async (req: Request, res: Response) => {
   try {
     const { resume, matrix, job, gapReport, resumeId, jobId } = req.body;
 
-    const tailored = await optimizerService.tailor({
-      resume,
-      matrix,
-      job,
-      gapReport,
-      resumeId,
-      jobId,
-    });
+    const tailored = await optimizerService.tailor(
+      {
+        resume,
+        matrix,
+        job,
+        gapReport,
+        resumeId,
+        jobId,
+      },
+      req.userId
+    );
 
     res.status(200).json({
       status: "success",

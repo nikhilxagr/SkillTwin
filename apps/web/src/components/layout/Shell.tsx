@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Sidebar } from "./Sidebar.js";
 import { Header } from "./Header.js";
 import { LayoutDashboard, FileText, BarChart2, Briefcase, GitCompare, FileCheck2 } from "lucide-react";
+import type { SafeUser } from "@skilltwin/contracts";
 import type { ActiveScreen } from "../../types/navigation.js";
 
 interface ShellProps {
@@ -16,6 +17,8 @@ interface ShellProps {
   skillCount: number;
   criticalGapCount: number;
   candidateName: string;
+  currentUser?: SafeUser | null;
+  onLogout?: () => void;
   children: React.ReactNode;
 }
 
@@ -31,6 +34,8 @@ export const Shell: React.FC<ShellProps> = ({
   skillCount,
   criticalGapCount,
   candidateName,
+  currentUser,
+  onLogout,
   children,
 }) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -86,6 +91,9 @@ export const Shell: React.FC<ShellProps> = ({
           onReset={onReset}
           isSampleLoaded={isSampleLoaded}
           onToggleMobileMenu={() => setIsMobileOpen((prev) => !prev)}
+          currentUser={currentUser}
+          onLogout={onLogout}
+          onNavigate={onNavigate}
         />
         <main className="content-container flex-1 p-4 md:p-7 max-w-7xl w-full mx-auto">
           {children}

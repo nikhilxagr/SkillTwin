@@ -27,21 +27,21 @@ export class GapService {
    * Run comparison either by supplying matrix & job objects directly,
    * or by providing existing resumeId & jobId.
    */
-  async compare(options: CompareOptions): Promise<GapAnalysisReport> {
+  async compare(options: CompareOptions, userId?: string): Promise<GapAnalysisReport> {
     let matrix = options.matrix;
     let job = options.job;
 
-    // If resumeId provided, fetch matrix
+    // If resumeId provided, fetch matrix with ownership check
     if (!matrix && options.resumeId) {
-      matrix = this.resumes.getMatrix(options.resumeId);
+      matrix = this.resumes.getMatrix(options.resumeId, userId);
       if (!matrix) {
         throw new Error(`Skill matrix for resume '${options.resumeId}' not found.`);
       }
     }
 
-    // If jobId provided, fetch job
+    // If jobId provided, fetch job with ownership check
     if (!job && options.jobId) {
-      job = this.jobs.getJob(options.jobId);
+      job = this.jobs.getJob(options.jobId, userId);
       if (!job) {
         throw new Error(`Job description with ID '${options.jobId}' not found.`);
       }

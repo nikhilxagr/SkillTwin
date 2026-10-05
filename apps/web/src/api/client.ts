@@ -9,6 +9,11 @@ import type {
   GithubEvidenceReport,
   AnalyzedRepository,
   SkillEvidenceComparison,
+  SafeUser,
+  SignupRequest,
+  LoginRequest,
+  ResetPasswordRequest,
+  UpdateProfileRequest,
 } from "@skilltwin/contracts";
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:4000";
@@ -739,6 +744,143 @@ export async function generateLatex(
 export async function getLatexStatus(): Promise<any> {
   const response = await fetch(`${API_BASE_URL}/api/v1/latex/status`);
   return await response.json();
+}
+
+/**
+ * PHASE 13: Authentication & Profile APIs
+ */
+
+export async function signupUser(data: SignupRequest): Promise<{ success: boolean; message: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/signup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok || body.success === false) {
+    throw new ApiError(body.message || "Failed to register account.", undefined, response.status);
+  }
+  return body;
+}
+
+export async function loginUser(data: LoginRequest): Promise<{ success: boolean; message: string; user: SafeUser; token: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok || body.success === false) {
+    const err = new ApiError(body.message || "Invalid email or password.", undefined, response.status);
+    (err as any).requiresVerification = body.requiresVerification;
+    throw err;
+  }
+  return body;
+}
+
+export async function logoutUser(): Promise<{ success: boolean; message: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+  const body = await response.json();
+  return body;
+}
+
+export async function getCurrentUser(): Promise<SafeUser | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+      method: "GET",
+      credentials: "include",
+    });
+    if (!response.ok) return null;
+    const body = await response.json();
+    return body.user || null;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function verifyEmailToken(token: string): Promise<{ success: boolean; message: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/verify-email?token=${encodeURIComponent(token)}`, {
+    method: "GET",
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok || body.success === false) {
+    throw new ApiError(body.message || "Email verification failed.", undefined, response.status);
+  }
+  return body;
+}
+
+export async function resendVerificationEmail(email: string): Promise<{ success: boolean; message: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/resend-verification`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok || body.success === false) {
+    throw new ApiError(body.message || "Failed to resend verification email.", undefined, response.status);
+  }
+  return body;
+}
+
+export async function forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok || body.success === false) {
+    throw new ApiError(body.message || "Failed to process forgot password request.", undefined, response.status);
+  }
+  return body;
+}
+
+export async function resetPassword(data: ResetPasswordRequest): Promise<{ success: boolean; message: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok || body.success === false) {
+    throw new ApiError(body.message || "Failed to reset password.", undefined, response.status);
+  }
+  return body;
+}
+
+export async function getUserProfile(): Promise<SafeUser> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/profile`, {
+    method: "GET",
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok || body.success === false) {
+    throw new ApiError(body.message || "Failed to load user profile.", undefined, response.status);
+  }
+  return body.user;
+}
+
+export async function updateUserProfile(data: UpdateProfileRequest): Promise<SafeUser> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/profile`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok || body.success === false) {
+    throw new ApiError(body.message || "Failed to update profile.", undefined, response.status);
+  }
+  return body.user;
 }
 
 

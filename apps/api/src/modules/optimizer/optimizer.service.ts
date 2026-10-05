@@ -34,7 +34,7 @@ export class OptimizerService {
     private readonly gapEng: GapEngine = gapEngine,
   ) {}
 
-  async optimize(options: OptimizeOptions): Promise<ResumeOptimizationReport> {
+  async optimize(options: OptimizeOptions, userId?: string): Promise<ResumeOptimizationReport> {
     let resume = options.resume;
     let matrix = options.matrix;
     let job = options.job;
@@ -42,13 +42,13 @@ export class OptimizerService {
 
     // 1. Resolve resume & matrix
     if (!resume && options.resumeId) {
-      resume = this.resumes.getResume(options.resumeId);
+      resume = this.resumes.getResume(options.resumeId, userId);
       if (!resume) {
         throw new Error(`Resume with ID '${options.resumeId}' not found.`);
       }
     }
     if (!matrix && options.resumeId) {
-      matrix = this.resumes.getMatrix(options.resumeId);
+      matrix = this.resumes.getMatrix(options.resumeId, userId);
       if (!matrix) {
         throw new Error(`Skill matrix for resume '${options.resumeId}' not found.`);
       }
@@ -56,7 +56,7 @@ export class OptimizerService {
 
     // 2. Resolve job
     if (!job && options.jobId) {
-      job = this.jobs.getJob(options.jobId);
+      job = this.jobs.getJob(options.jobId, userId);
       if (!job) {
         throw new Error(`Job description with ID '${options.jobId}' not found.`);
       }
@@ -64,10 +64,10 @@ export class OptimizerService {
 
     // Fallbacks if not provided directly
     if (!resume) {
-      resume = this.resumes.getLatestResume();
+      resume = this.resumes.getLatestResume(userId);
     }
     if (!job) {
-      job = this.jobs.getLatestJob();
+      job = this.jobs.getLatestJob(userId);
     }
 
     if (!resume) {
@@ -78,7 +78,7 @@ export class OptimizerService {
     }
 
     if (!matrix) {
-      matrix = this.resumes.getMatrix(resume.id);
+      matrix = this.resumes.getMatrix(resume.id, userId);
       if (!matrix) {
         throw new Error(`Skill matrix for resume '${resume.id}' not found.`);
       }
@@ -120,7 +120,7 @@ export class OptimizerService {
     return this.repository.getReportByResumeAndJob(resumeId, jobId);
   }
 
-  async tailor(options: OptimizeOptions): Promise<JobSpecificTailoredResume> {
+  async tailor(options: OptimizeOptions, userId?: string): Promise<JobSpecificTailoredResume> {
     let resume = options.resume;
     let matrix = options.matrix;
     let job = options.job;
@@ -128,13 +128,13 @@ export class OptimizerService {
 
     // 1. Resolve resume & matrix
     if (!resume && options.resumeId) {
-      resume = this.resumes.getResume(options.resumeId);
+      resume = this.resumes.getResume(options.resumeId, userId);
       if (!resume) {
         throw new Error(`Resume with ID '${options.resumeId}' not found.`);
       }
     }
     if (!matrix && options.resumeId) {
-      matrix = this.resumes.getMatrix(options.resumeId);
+      matrix = this.resumes.getMatrix(options.resumeId, userId);
       if (!matrix) {
         throw new Error(`Skill matrix for resume '${options.resumeId}' not found.`);
       }
@@ -142,7 +142,7 @@ export class OptimizerService {
 
     // 2. Resolve job
     if (!job && options.jobId) {
-      job = this.jobs.getJob(options.jobId);
+      job = this.jobs.getJob(options.jobId, userId);
       if (!job) {
         throw new Error(`Job description with ID '${options.jobId}' not found.`);
       }
@@ -150,10 +150,10 @@ export class OptimizerService {
 
     // Fallbacks if not provided directly
     if (!resume) {
-      resume = this.resumes.getLatestResume();
+      resume = this.resumes.getLatestResume(userId);
     }
     if (!job) {
-      job = this.jobs.getLatestJob();
+      job = this.jobs.getLatestJob(userId);
     }
 
     if (!resume) {
@@ -164,7 +164,7 @@ export class OptimizerService {
     }
 
     if (!matrix) {
-      matrix = this.resumes.getMatrix(resume.id);
+      matrix = this.resumes.getMatrix(resume.id, userId);
       if (!matrix) {
         throw new Error(`Skill matrix for resume '${resume.id}' not found.`);
       }

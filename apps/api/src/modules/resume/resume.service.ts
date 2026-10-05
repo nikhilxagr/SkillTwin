@@ -23,21 +23,29 @@ export class ResumeService {
   async processResumeFile(
     fileName: string,
     buffer: Buffer,
-    mimeType?: string
+    mimeType?: string,
+    userId = "default-user"
   ): Promise<ResumeProcessingResult> {
     const doc = await documentService.processFile(fileName, buffer, mimeType);
-    return this.executePipeline(doc);
+    return this.executePipeline(doc, userId);
   }
 
   /**
    * Complete pipeline: Raw text -> Validation -> Normalize -> Gemini AI parsing -> Skill Matrix -> Persist
    */
-  async processResumeText(fileName: string, text: string): Promise<ResumeProcessingResult> {
+  async processResumeText(
+    fileName: string,
+    text: string,
+    userId = "default-user"
+  ): Promise<ResumeProcessingResult> {
     const doc = documentService.processText(fileName, text);
-    return this.executePipeline(doc);
+    return this.executePipeline(doc, userId);
   }
 
-  private async executePipeline(doc: ExtractedDocument): Promise<ResumeProcessingResult> {
+  private async executePipeline(
+    doc: ExtractedDocument,
+    userId = "default-user"
+  ): Promise<ResumeProcessingResult> {
     // 1. Send structured content to Gemini with strict schema validation
     const geminiAnalysis = await resumeAnalyzer.analyzeResume(doc.normalizedText);
     const aiData = resumeAnalyzer.toAIResumeExtraction(geminiAnalysis);
@@ -90,10 +98,10 @@ export class ResumeService {
     // 4. Generate Skill Matrix with granular evidence
     const matrix = skillMatrixService.generateMatrix(resumeId, aiData, claimedSkills);
 
-    // 5. Store in repository
-    resumeRepository.saveResume(validatedResume);
-    resumeRepository.saveMatrix(matrix);
-    resumeRepository.saveAnalysis(resumeId, geminiAnalysis);
+    // 5. Store in repository scoped to authenticated user
+    await resumeRepository.saveResume(validatedResume, userId, doc.rawText);
+    await resumeRepository.saveMatrix(matrix, userId);
+    resumeRepository.saveAnalysis(resumeId, geminiAnalysis, userId);
 
     return {
       resume: validatedResume,
@@ -102,20 +110,28 @@ export class ResumeService {
     };
   }
 
-  getResume(id: string): ResumeExtraction | undefined {
-    return resumeRepository.getResume(id);
+  getResume(id: string, userId?: string): ResumeExtraction | undefined {
+    return resumeRepository.getResume(id, userId);
   }
 
-  getLatestResume(): ResumeExtraction | undefined {
-    return resumeRepository.getLatestResume();
+  getLatestResume(userId?: string): ResumeExtraction | undefined {
+    return resumeRepository.getLatestResume(userId);
   }
 
-  getMatrix(resumeId: string): SkillMatrix | undefined {
-    return resumeRepository.getMatrix(resumeId);
+  listResumes(userId: string): ResumeExtraction[] {
+    return resumeRepository.listResumes(userId);
   }
 
-  getAnalysis(resumeId: string): GeminiResumeAnalysis | undefined {
-    return resumeRepository.getAnalysis(resumeId);
+  deleteResume(id: string, userId: string): boolean {
+    return resumeRepository.deleteResume(id, userId);
+  }
+
+  getMatrix(resumeId: string, userId?: string): SkillMatrix | undefined {
+    return resumeRepository.getMatrix(resumeId, userId);
+  }
+
+  getAnalysis(resumeId: string, userId?: string): GeminiResumeAnalysis | undefined {
+    return resumeRepository.getAnalysis(resumeId, userId);
   }
 }
 

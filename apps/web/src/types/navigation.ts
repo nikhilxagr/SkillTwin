@@ -1,5 +1,12 @@
 export type ActiveScreen =
   | "landing"
+  | "login"
+  | "signup"
+  | "verify_email"
+  | "forgot_password"
+  | "reset_password"
+  | "profile"
+  | "settings"
   | "dashboard"
   | "resume"
   | "resume_upload"

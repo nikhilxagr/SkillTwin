@@ -1,7 +1,14 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { App } from "../App.js";
+import { SignupView } from "../components/auth/SignupView.js";
+import { LoginView } from "../components/auth/LoginView.js";
+import { VerifyEmailView } from "../components/auth/VerifyEmailView.js";
+import { ForgotPasswordView } from "../components/auth/ForgotPasswordView.js";
+import { ResetPasswordView } from "../components/auth/ResetPasswordView.js";
+import { ProfileView } from "../components/profile/ProfileView.js";
+import type { SafeUser } from "@skilltwin/contracts";
 import { sampleCareerReadinessReport } from "../mock/sampleData.js";
 
 describe("SkillTwin Web Application Shell & UI Views", () => {
@@ -708,6 +715,136 @@ describe("SkillTwin Web Application Shell & UI Views", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("latex-studio-view")).toBeDefined();
+    });
+  });
+
+  describe("PHASE 13: Secure Authentication and User Profiles", () => {
+    const mockUser: SafeUser = {
+      id: "user-test-456",
+      name: "Nikhil Agrahari",
+      email: "nikhil@skilltwin.dev",
+      emailVerified: true,
+      emailVerifiedAt: new Date().toISOString(),
+      profile: {
+        headline: "BCA Student | Full Stack Developer",
+        targetRole: "Full Stack Developer",
+        bio: "Specializing in React, Node.js, and TypeScript architectures.",
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    it("renders Signup View with validation and password requirement enforcement", async () => {
+      const handleNavigate = vi.fn();
+      render(<SignupView onNavigate={handleNavigate} />);
+
+      expect(screen.getByText(/Create your developer profile/i)).toBeDefined();
+      expect(screen.getByLabelText(/Full name/i)).toBeDefined();
+      expect(screen.getByLabelText(/Email address/i)).toBeDefined();
+      expect(screen.getByLabelText(/^Password/i)).toBeDefined();
+      expect(screen.getByLabelText(/Confirm password/i)).toBeDefined();
+
+      const nameInput = screen.getByLabelText(/Full name/i);
+      const emailInput = screen.getByLabelText(/Email address/i);
+      const passwordInput = screen.getByLabelText(/^Password/i);
+      const confirmInput = screen.getByLabelText(/Confirm password/i);
+      const submitBtn = screen.getByRole("button", { name: /Create account/i });
+
+      // Password mismatch check
+      fireEvent.change(nameInput, { target: { value: "Test User" } });
+      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      fireEvent.change(passwordInput, { target: { value: "Password123" } });
+      fireEvent.change(confirmInput, { target: { value: "Mismatch123" } });
+      fireEvent.click(submitBtn);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Passwords do not match/i)).toBeDefined();
+      });
+
+      // Navigation to login
+      const signinLink = screen.getByRole("button", { name: /Sign in/i });
+      fireEvent.click(signinLink);
+      expect(handleNavigate).toHaveBeenCalledWith("login");
+    });
+
+    it("renders Login View, displays verification notice if unverified, and allows navigation", async () => {
+      const handleNavigate = vi.fn();
+      const handleLoginSuccess = vi.fn();
+      render(<LoginView onNavigate={handleNavigate} onLoginSuccess={handleLoginSuccess} />);
+
+      expect(screen.getByText(/Welcome back/i)).toBeDefined();
+      expect(screen.getByLabelText(/Email address/i)).toBeDefined();
+      expect(screen.getByLabelText(/Password/i)).toBeDefined();
+      expect(screen.getByRole("button", { name: /Sign in/i })).toBeDefined();
+
+      // Navigation to forgot password
+      const forgotBtn = screen.getByRole("button", { name: /Forgot password\?/i });
+      fireEvent.click(forgotBtn);
+      expect(handleNavigate).toHaveBeenCalledWith("forgot_password");
+
+      // Navigation to signup
+      const createAccountBtn = screen.getByRole("button", { name: /Create one/i });
+      fireEvent.click(createAccountBtn);
+      expect(handleNavigate).toHaveBeenCalledWith("signup");
+    });
+
+    it("renders Verify Email View and displays verification status and instructions", () => {
+      const handleNavigate = vi.fn();
+      render(<VerifyEmailView initialEmail="test@example.com" onNavigate={handleNavigate} />);
+
+      expect(screen.getByText(/Check your email/i)).toBeDefined();
+      expect(screen.getByText(/Confirm your email address to activate your SkillTwin account/i)).toBeDefined();
+      expect(screen.getByRole("button", { name: /Resend verification email/i })).toBeDefined();
+      expect(screen.getByRole("button", { name: /Back to sign in/i })).toBeDefined();
+    });
+
+    it("renders Forgot Password View and Reset Password View with secure input handling", () => {
+      const handleNavigate = vi.fn();
+      const { unmount } = render(<ForgotPasswordView onNavigate={handleNavigate} />);
+
+      expect(screen.getByText(/Reset your password/i)).toBeDefined();
+      expect(screen.getByLabelText(/Email address/i)).toBeDefined();
+      expect(screen.getByRole("button", { name: /Send password reset link/i })).toBeDefined();
+
+      unmount();
+
+      render(<ResetPasswordView initialToken="mock-token-xyz" onNavigate={handleNavigate} />);
+      expect(screen.getByText(/Set new password/i)).toBeDefined();
+      expect(screen.getByLabelText(/^New password/i)).toBeDefined();
+      expect(screen.getByLabelText(/Confirm new password/i)).toBeDefined();
+      expect(screen.getByRole("button", { name: /Reset password/i })).toBeDefined();
+    });
+
+    it("renders Profile View, displays verified identity, and enables editing profile info", async () => {
+      const handleUpdate = vi.fn();
+      const handleNavigate = vi.fn();
+
+      render(<ProfileView currentUser={mockUser} onUpdateUser={handleUpdate} onNavigate={handleNavigate} />);
+
+      expect(screen.getByText("Nikhil Agrahari")).toBeDefined();
+      expect(screen.getByText("nikhil@skilltwin.dev")).toBeDefined();
+      expect(screen.getByText("Verified")).toBeDefined();
+      expect(screen.getByText("BCA Student | Full Stack Developer")).toBeDefined();
+
+      // Click Edit Profile
+      const editBtn = screen.getByRole("button", { name: /Edit Profile/i });
+      fireEvent.click(editBtn);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/Full Name/i)).toBeDefined();
+        expect(screen.getByLabelText(/Target Engineering Role/i)).toBeDefined();
+        expect(screen.getByLabelText(/Professional Headline/i)).toBeDefined();
+        expect(screen.getByLabelText(/Biography/i)).toBeDefined();
+      });
+
+      // Modify headline
+      const headlineInput = screen.getByLabelText(/Professional Headline/i);
+      fireEvent.change(headlineInput, { target: { value: "Full Stack Engineer & System Architect" } });
+
+      // Save changes
+      const saveBtn = screen.getByTestId("save-profile-btn");
+      expect(saveBtn).toBeDefined();
+      expect(saveBtn.textContent).toContain("Save Changes");
     });
   });
 });

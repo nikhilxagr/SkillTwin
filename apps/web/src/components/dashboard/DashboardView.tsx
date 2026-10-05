@@ -35,10 +35,12 @@ import {
   type NextBestAction,
   type ReadinessAreaItem,
   type TopJobGapItem,
+  type SafeUser,
 } from "@skilltwin/contracts";
 import type { ActiveScreen } from "../../types/navigation.js";
 
 interface DashboardViewProps {
+  currentUser?: SafeUser | null;
   resume: ResumeExtraction | null;
   matrix: SkillMatrix | null;
   job?: JobExtraction | null;
@@ -50,6 +52,7 @@ interface DashboardViewProps {
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
+  currentUser,
   resume,
   matrix,
   job,
@@ -63,8 +66,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     return (
       <EmptyState
         icon={<Upload size={24} />}
-        title="No Career Evidence Ingested"
-        description="Upload your PDF resume to generate your evidence-based skill matrix, or inspect a pre-loaded developer profile."
+        title="Your developer profile is ready to build."
+        description="Upload your resume to generate your evidence-based skill matrix, gap analyses, and target job readiness."
         actionText="Upload Resume"
         onAction={() => onNavigate("resume_upload")}
         secondaryActionText="Load Sample Profile"
@@ -156,6 +159,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-col gap-1 max-w-2xl">
           <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-bold text-slate-800">
+              Hello, {currentUser?.name?.split(" ")[0] || candidateName.split(" ")[0]}
+            </span>
+            <span className="text-slate-300">•</span>
             <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 inline-flex items-center gap-1">
               <Target size={12} /> Target Benchmark
             </span>

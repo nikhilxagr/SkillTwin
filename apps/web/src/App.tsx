@@ -14,6 +14,12 @@ import { InterviewSimulatorView } from "./components/simulator/InterviewSimulato
 import { ProjectRecommendationsView } from "./components/projects/ProjectRecommendationsView.js";
 import { EvidencePageView } from "./components/evidence/EvidencePageView.js";
 import { LatexStudioView } from "./components/latex/LatexStudioView.js";
+import { SignupView } from "./components/auth/SignupView.js";
+import { LoginView } from "./components/auth/LoginView.js";
+import { VerifyEmailView } from "./components/auth/VerifyEmailView.js";
+import { ForgotPasswordView } from "./components/auth/ForgotPasswordView.js";
+import { ResetPasswordView } from "./components/auth/ResetPasswordView.js";
+import { ProfileView } from "./components/profile/ProfileView.js";
 import {
   sampleResume,
   sampleSkillMatrix,
@@ -51,6 +57,8 @@ import {
   getLatestGithubReport,
   getGithubRepositories,
   getGithubStatus,
+  getCurrentUser,
+  logoutUser,
   ApiError,
 } from "./api/client.js";
 import type { ActiveScreen } from "./types/navigation.js";
@@ -77,11 +85,31 @@ import {
   type ProjectBlueprint,
   type GithubEvidenceReport,
   type AnalyzedRepository,
+  type SafeUser,
 } from "@skilltwin/contracts";
 
 const parseHash = (hash: string): ActiveScreen => {
-  const clean = hash.replace(/^#\/?/, "").toLowerCase().trim();
+  const clean = hash.replace(/^#\/?/, "").split("?")[0].toLowerCase().trim();
   switch (clean) {
+    case "login":
+      return "login";
+    case "signup":
+    case "register":
+      return "signup";
+    case "verify-email":
+    case "verify_email":
+    case "verify":
+      return "verify_email";
+    case "forgot-password":
+    case "forgot_password":
+      return "forgot_password";
+    case "reset-password":
+    case "reset_password":
+      return "reset_password";
+    case "profile":
+      return "profile";
+    case "settings":
+      return "settings";
     case "dashboard":
       return "dashboard";
     case "resume":
@@ -141,6 +169,20 @@ const screenToHash = (screen: ActiveScreen): string => {
   switch (screen) {
     case "landing":
       return "#/";
+    case "login":
+      return "#/login";
+    case "signup":
+      return "#/signup";
+    case "verify_email":
+      return "#/verify-email";
+    case "forgot_password":
+      return "#/forgot-password";
+    case "reset_password":
+      return "#/reset-password";
+    case "profile":
+      return "#/profile";
+    case "settings":
+      return "#/settings";
     case "dashboard":
       return "#/dashboard";
     case "resume":
@@ -171,12 +213,12 @@ const screenToHash = (screen: ActiveScreen): string => {
       return "#/evidence";
     case "latex_studio":
       return "#/latex-studio";
-    default:
-      return "#/";
   }
 };
 
 export const App: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [currentScreen, setCurrentScreen] = useState<ActiveScreen>("landing");
   const [resume, setResume] = useState<ResumeExtraction | null>(null);
   const [matrix, setMatrix] = useState<SkillMatrix | null>(null);
@@ -197,6 +239,58 @@ export const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isSampleLoaded, setIsSampleLoaded] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // Load authenticated session on startup
+  useEffect(() => {
+    getCurrentUser()
+      .then((res) => {
+        if (res && res.user) {
+          setCurrentUser(res.user);
+        }
+      })
+      .catch(() => {
+        setCurrentUser(null);
+      })
+      .finally(() => {
+        setAuthLoading(false);
+      });
+  }, []);
+
+  const isPublicScreen = (screen: ActiveScreen): boolean => {
+    return [
+      "landing",
+      "login",
+      "signup",
+      "verify_email",
+      "forgot_password",
+      "reset_password",
+    ].includes(screen);
+  };
+
+  // Route protection
+  useEffect(() => {
+    if (authLoading) return;
+
+    if (!currentUser && !isSampleLoaded && !isPublicScreen(currentScreen)) {
+      setCurrentScreen("login");
+      if (typeof window !== "undefined") {
+        try {
+          window.location.hash = "#/login";
+        } catch {
+          // Ignore
+        }
+      }
+    } else if (currentUser && (currentScreen === "login" || currentScreen === "signup")) {
+      setCurrentScreen("dashboard");
+      if (typeof window !== "undefined") {
+        try {
+          window.location.hash = "#/dashboard";
+        } catch {
+          // Ignore
+        }
+      }
+    }
+  }, [currentUser, currentScreen, authLoading, isSampleLoaded]);
 
   // Hash-based client routing synchronization
   useEffect(() => {
@@ -333,6 +427,17 @@ export const App: React.FC = () => {
         // Ignore
       }
     }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+    setCurrentUser(null);
+    handleReset();
+    handleNavigate("login");
   };
 
   const handleUploadResumeFile = async (file: File) => {
@@ -920,17 +1025,76 @@ export const App: React.FC = () => {
     }
   };
 
-  // If on landing screen, show standalone LandingPage
+  // Standalone auth loading fallback
+  if (authLoading && !isPublicScreen(currentScreen)) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-medium text-slate-600">Verifying session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Standalone public & auth views
   if (currentScreen === "landing") {
     return (
       <LandingPage
-        onEnterApp={() => setCurrentScreen("dashboard")}
+        onEnterApp={() => handleNavigate(currentUser ? "dashboard" : "login")}
         onLoadSample={handleLoadSample}
       />
     );
   }
 
-  // Shell for all application screens
+  if (currentScreen === "login") {
+    return (
+      <LoginView
+        onNavigate={(screen) => handleNavigate(screen as ActiveScreen)}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          handleNavigate("dashboard");
+        }}
+      />
+    );
+  }
+
+  if (currentScreen === "signup") {
+    return (
+      <SignupView
+        onNavigate={(screen) => handleNavigate(screen as ActiveScreen)}
+        onSignupSuccess={() => {
+          handleNavigate("verify_email");
+        }}
+      />
+    );
+  }
+
+  if (currentScreen === "verify_email") {
+    return (
+      <VerifyEmailView
+        onNavigate={(screen) => handleNavigate(screen as ActiveScreen)}
+      />
+    );
+  }
+
+  if (currentScreen === "forgot_password") {
+    return (
+      <ForgotPasswordView
+        onNavigate={(screen) => handleNavigate(screen as ActiveScreen)}
+      />
+    );
+  }
+
+  if (currentScreen === "reset_password") {
+    return (
+      <ResetPasswordView
+        onNavigate={(screen) => handleNavigate(screen as ActiveScreen)}
+      />
+    );
+  }
+
+  // Shell for all authenticated application screens
   return (
     <Shell
       currentScreen={currentScreen}
@@ -943,10 +1107,13 @@ export const App: React.FC = () => {
       isSampleLoaded={isSampleLoaded}
       skillCount={matrix?.items.length || 0}
       criticalGapCount={gapReport?.summary.criticalGapCount || 0}
-      candidateName={resume?.profile.name || "Developer Twin"}
+      candidateName={currentUser?.name || resume?.profile.name || "Developer Twin"}
+      currentUser={currentUser}
+      onLogout={handleLogout}
     >
       {currentScreen === "dashboard" && (
         <DashboardView
+          currentUser={currentUser}
           resume={resume}
           matrix={matrix}
           job={job}
@@ -1091,6 +1258,14 @@ export const App: React.FC = () => {
           initialTexSource={sampleLatexResumeCode}
           onNavigate={handleNavigate}
           onLoadSample={handleLoadSample}
+        />
+      )}
+
+      {(currentScreen === "profile" || currentScreen === "settings") && (
+        <ProfileView
+          currentUser={currentUser}
+          onUpdateUser={(updated) => setCurrentUser(updated)}
+          onNavigate={(screen) => handleNavigate(screen as ActiveScreen)}
         />
       )}
     </Shell>

@@ -26,10 +26,11 @@ export class JobService {
     buffer: Buffer,
     mimeType?: string,
     fallbackTitle?: string,
-    fallbackCompany?: string
+    fallbackCompany?: string,
+    userId = "default-user"
   ): Promise<JobProcessingResult> {
     const doc = await documentService.processFile(fileName, buffer, mimeType);
-    return this.executePipeline(doc, fallbackTitle, fallbackCompany);
+    return this.executePipeline(doc, fallbackTitle, fallbackCompany, userId);
   }
 
   /**
@@ -38,19 +39,21 @@ export class JobService {
   async processJobText(
     title: string,
     company: string,
-    text: string
+    text: string,
+    userId = "default-user"
   ): Promise<JobProcessingResult> {
     const doc = documentService.processText(
       title ? `${title.replace(/\s+/g, "_")}_JD.txt` : "Target_JD.txt",
       text
     );
-    return this.executePipeline(doc, title, company);
+    return this.executePipeline(doc, title, company, userId);
   }
 
   private async executePipeline(
     doc: ExtractedDocument,
     fallbackTitle?: string,
-    fallbackCompany?: string
+    fallbackCompany?: string,
+    userId = "default-user"
   ): Promise<JobProcessingResult> {
     // 1. Run AI extraction with strict validation using Gemini (with deterministic fallback)
     const aiData = await jobAnalyzer.analyzeJob(
@@ -198,8 +201,8 @@ export class JobService {
     const validatedAnalysis = jobAnalysisSchema.parse(analysisData);
 
     // 7. Persist in repository
-    jobRepository.saveJob(validatedJob);
-    jobRepository.saveAnalysis(validatedAnalysis);
+    await jobRepository.saveJob(validatedJob, userId);
+    await jobRepository.saveAnalysis(validatedAnalysis, userId);
 
     return {
       job: validatedJob,
@@ -207,16 +210,24 @@ export class JobService {
     };
   }
 
-  getJob(id: string): JobExtraction | undefined {
-    return jobRepository.getJob(id);
+  getJob(id: string, userId?: string): JobExtraction | undefined {
+    return jobRepository.getJob(id, userId);
   }
 
-  getAnalysis(id: string): JobAnalysis | undefined {
-    return jobRepository.getAnalysis(id);
+  getAnalysis(id: string, userId?: string): JobAnalysis | undefined {
+    return jobRepository.getAnalysis(id, userId);
   }
 
-  getLatestJob(): JobExtraction | undefined {
-    return jobRepository.getLatestJob();
+  getLatestJob(userId?: string): JobExtraction | undefined {
+    return jobRepository.getLatestJob(userId);
+  }
+
+  listJobs(userId?: string): JobExtraction[] {
+    return jobRepository.listJobs(userId);
+  }
+
+  deleteJob(id: string, userId: string): boolean {
+    return jobRepository.deleteJob(id, userId);
   }
 }
 

@@ -12,6 +12,8 @@ import {
   MessageSquare,
   Code2,
   FileCode,
+  User,
+  Settings,
   X,
 } from "lucide-react";
 import type { ActiveScreen } from "../../types/navigation.js";
@@ -36,7 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onMobileClose,
 }) => {
   const isScreenActive = (
-    target: "dashboard" | "resume" | "skills" | "job_analysis" | "gap_analysis" | "recommendations" | "tailored_resume" | "interview_simulator" | "project_recommendations" | "evidence"
+    target: "dashboard" | "resume" | "skills" | "job_analysis" | "gap_analysis" | "recommendations" | "tailored_resume" | "interview_simulator" | "project_recommendations" | "evidence" | "latex_studio" | "profile" | "settings"
   ) => {
     switch (target) {
       case "dashboard":
@@ -61,6 +63,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         return currentScreen === "evidence";
       case "latex_studio":
         return currentScreen === "latex_studio";
+      case "profile":
+      case "settings":
+        return currentScreen === "profile" || currentScreen === "settings";
       default:
         return false;
     }
@@ -273,11 +278,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ATS
             </span>
           </button>
+
+          {/* 12. Developer Profile (Phase 13) */}
+          <button
+            data-testid="nav-profile"
+            className={`nav-button ${isScreenActive("profile") ? "active" : ""}`}
+            onClick={() => handleNavClick("profile")}
+          >
+            <User size={16} />
+            <span>Profile</span>
+          </button>
         </div>
       </div>
 
       <div className="sidebar-footer">
-        <div className="active-profile-card">
+        <div
+          className="active-profile-card"
+          onClick={() => handleNavClick("profile")}
+          style={{ cursor: "pointer" }}
+          title="View & Edit Developer Profile"
+          data-testid="footer-profile-btn"
+        >
           <div className="avatar-badge">
             {candidateName
               .split(" ")
