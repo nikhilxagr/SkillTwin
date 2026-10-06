@@ -11,7 +11,14 @@ export interface GeminiGenerateOptions<T> {
 }
 
 export class GeminiService {
-  private readonly defaultModel = "gemini-2.5-flash";
+  private readonly candidateModels = [
+    "gemini-flash-lite-latest",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-latest",
+    "gemini-3.8-flash",
+  ];
 
   /**
    * Returns whether a valid Gemini API key is configured in the backend environment.
@@ -38,71 +45,79 @@ export class GeminiService {
       throw new Error("GEMINI_API_KEY is not configured on the server.");
     }
 
-    const model = options.model || this.defaultModel;
+    const modelsToTry = options.model ? [options.model] : this.candidateModels;
     const temperature = options.temperature ?? 0.1;
     const timeoutMs = options.timeoutMs ?? 30000;
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    let lastError: any = null;
 
-    const controller = new AbortController();
-    const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
+    for (const model of modelsToTry) {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const controller = new AbortController();
+      const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
 
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        signal: controller.signal,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: options.systemPrompt }],
-          },
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: options.userPrompt }],
-            },
-          ],
-          generationConfig: {
-            temperature,
-            responseMimeType: "application/json",
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Gemini API request failed with HTTP ${response.status}: ${errorText}`
-        );
-      }
-
-      const responseJson: any = await response.json();
-      const rawText = responseJson?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!rawText) {
-        throw new Error("Gemini API returned an empty or malformed candidate part.");
-      }
-
-      // Parse JSON from model
-      let parsedJson: any;
       try {
-        parsedJson = JSON.parse(rawText);
-      } catch (parseErr: any) {
-        throw new Error(`Failed to parse Gemini output as JSON: ${parseErr.message}\nRaw Output: ${rawText.slice(0, 300)}`);
-      }
+        const response = await fetch(endpoint, {
+          method: "POST",
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: options.systemPrompt }],
+            },
+            contents: [
+              {
+                role: "user",
+                parts: [{ text: options.userPrompt }],
+              },
+            ],
+            generationConfig: {
+              temperature,
+              responseMimeType: "application/json",
+            },
+          }),
+        });
 
-      // Strictly validate with Zod schema
-      return options.schema.parse(parsedJson);
-    } catch (err: any) {
-      if (err.name === "AbortError") {
-        throw new Error(`Gemini API request timed out after ${timeoutMs}ms.`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.warn(`[GeminiService] Model ${model} returned HTTP ${response.status}: ${errorText.slice(0, 150)}`);
+          lastError = new Error(`Gemini API request failed with HTTP ${response.status}: ${errorText}`);
+          continue; // try next candidate model
+        }
+
+        const responseJson: any = await response.json();
+        const rawText = responseJson?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!rawText) {
+          lastError = new Error(`Gemini API model ${model} returned empty content.`);
+          continue;
+        }
+
+        // Parse JSON from model
+        let parsedJson: any;
+        try {
+          parsedJson = JSON.parse(rawText);
+        } catch (parseErr: any) {
+          lastError = new Error(`Failed to parse Gemini output as JSON: ${parseErr.message}`);
+          continue;
+        }
+
+        // Strictly validate with Zod schema
+        return options.schema.parse(parsedJson);
+      } catch (err: any) {
+        if (err.name === "AbortError") {
+          lastError = new Error(`Gemini API request timed out after ${timeoutMs}ms.`);
+        } else {
+          lastError = err;
+        }
+      } finally {
+        clearTimeout(timeoutHandle);
       }
-      throw err;
-    } finally {
-      clearTimeout(timeoutHandle);
     }
+
+    throw lastError || new Error("All Gemini candidate models failed to generate valid output.");
   }
 }
 

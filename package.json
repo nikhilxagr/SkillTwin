@@ -6,6 +6,9 @@
   "packageManager": "pnpm@9.15.4",
   "scripts": {
     "build": "npx --yes pnpm@9.15.4 --filter @skilltwin/contracts build && npx --yes pnpm@9.15.4 --filter @skilltwin/api build && npx --yes pnpm@9.15.4 --filter @skilltwin/web build",
+    "build:api": "npx --yes pnpm@9.15.4 --filter @skilltwin/contracts build && npx --yes pnpm@9.15.4 --filter @skilltwin/api build",
+    "build:web": "npx --yes pnpm@9.15.4 --filter @skilltwin/contracts build && npx --yes pnpm@9.15.4 --filter @skilltwin/web build",
+    "start:api": "node apps/api/dist/server.js",
     "dev": "npx --yes pnpm@9.15.4 --parallel --filter @skilltwin/api --filter @skilltwin/web dev",
     "lint": "npx --yes pnpm@9.15.4 --filter @skilltwin/contracts build && npx --yes pnpm@9.15.4 --recursive lint",
     "typecheck": "npx --yes pnpm@9.15.4 --filter @skilltwin/contracts build && npx --yes pnpm@9.15.4 --recursive typecheck",

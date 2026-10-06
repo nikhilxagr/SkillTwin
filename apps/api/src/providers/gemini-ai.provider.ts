@@ -15,49 +15,62 @@ export class GeminiAIProvider implements IAIProvider {
       return deterministicAIProvider.extractResume(normalizedText);
     }
 
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey}`;
-      const userPrompt = createResumeExtractionPrompt(normalizedText);
+    const candidateModels = [
+      "gemini-flash-lite-latest",
+      "gemini-3.6-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-3.1-flash-lite",
+      "gemini-flash-latest",
+      "gemini-3.8-flash",
+    ];
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: RESUME_EXTRACTION_SYSTEM_PROMPT }],
-          },
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: userPrompt }],
+    for (const model of candidateModels) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.apiKey}`;
+        const userPrompt = createResumeExtractionPrompt(normalizedText);
+
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: RESUME_EXTRACTION_SYSTEM_PROMPT }],
             },
-          ],
-          generationConfig: {
-            temperature: 0.1,
-            responseMimeType: "application/json",
-          },
-        }),
-      });
+            contents: [
+              {
+                role: "user",
+                parts: [{ text: userPrompt }],
+              },
+            ],
+            generationConfig: {
+              temperature: 0.1,
+              responseMimeType: "application/json",
+            },
+          }),
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.warn(`[GeminiAIProvider] API request failed (${response.status}): ${errorText}. Falling back to deterministic engine.`);
-        return deterministicAIProvider.extractResume(normalizedText);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.warn(`[GeminiAIProvider] Model ${model} failed (${response.status}): ${errorText.slice(0, 150)}.`);
+          continue;
+        }
+
+        const responseJson = await response.json();
+        const rawTextOutput = responseJson?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!rawTextOutput) {
+          continue;
+        }
+
+        const parsedJson = JSON.parse(rawTextOutput);
+        return aiResumeExtractionSchema.parse(parsedJson);
+      } catch (err: any) {
+        console.warn(`[GeminiAIProvider] Model ${model} error: ${err.message}.`);
       }
-
-      const responseJson = await response.json();
-      const rawTextOutput = responseJson?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!rawTextOutput) {
-        return deterministicAIProvider.extractResume(normalizedText);
-      }
-
-      const parsedJson = JSON.parse(rawTextOutput);
-      return aiResumeExtractionSchema.parse(parsedJson);
-    } catch (err: any) {
-      console.warn(`[GeminiAIProvider] Extraction error: ${err.message}. Falling back to deterministic engine.`);
-      return deterministicAIProvider.extractResume(normalizedText);
     }
+
+    console.warn(`[GeminiAIProvider] All candidate models failed. Falling back to deterministic engine.`);
+    return deterministicAIProvider.extractResume(normalizedText);
   }
 
   async extractJob(normalizedText: string, fallbackTitle?: string, fallbackCompany?: string): Promise<AIJobExtraction> {

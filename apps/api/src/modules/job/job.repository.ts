@@ -26,7 +26,7 @@ export class JobRepository {
         userId,
         company: analysis.job.company || "",
         role: analysis.job.title || "",
-        requirements: analysis.requirements,
+        requirements: ((analysis as any).requirements || analysis.job) as any,
         jobData: analysis.job,
         analysis,
         createdAt: new Date(),

@@ -123,6 +123,8 @@ export const authResponseSchema = z.object({
   message: z.string(),
   user: safeUserSchema.optional(),
   requiresVerification: z.boolean().optional(),
+  verificationToken: z.string().optional(),
+  verificationUrl: z.string().optional(),
 });
 
 export type AuthResponse = z.infer<typeof authResponseSchema>;

@@ -16,7 +16,30 @@ import type {
   UpdateProfileRequest,
 } from "@skilltwin/contracts";
 
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:4000";
+const RAW_API_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:4000";
+export const API_BASE_URL = String(RAW_API_URL).replace(/\/+$/, "");
+
+export const TOKEN_STORAGE_KEY = "skilltwin_token";
+
+export function getStoredToken(): string | null {
+  if (typeof localStorage === "undefined") return null;
+  return localStorage.getItem(TOKEN_STORAGE_KEY);
+}
+
+export function setStoredToken(token: string): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(TOKEN_STORAGE_KEY, token);
+}
+
+export function clearStoredToken(): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+}
+
+export function getAuthHeaders(): Record<string, string> {
+  const token = getStoredToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 export interface ApiSuccessResponse<T> {
   status: "success";
@@ -750,7 +773,7 @@ export async function getLatexStatus(): Promise<any> {
  * PHASE 13: Authentication & Profile APIs
  */
 
-export async function signupUser(data: SignupRequest): Promise<{ success: boolean; message: string }> {
+export async function signupUser(data: SignupRequest): Promise<{ success: boolean; message: string; verificationToken?: string; verificationUrl?: string }> {
   const response = await fetch(`${API_BASE_URL}/api/v1/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -777,25 +800,39 @@ export async function loginUser(data: LoginRequest): Promise<{ success: boolean;
     (err as any).requiresVerification = body.requiresVerification;
     throw err;
   }
+  if (body.token) {
+    setStoredToken(body.token);
+  }
   return body;
 }
 
 export async function logoutUser(): Promise<{ success: boolean; message: string }> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
-    method: "POST",
-    credentials: "include",
-  });
-  const body = await response.json();
-  return body;
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
+      method: "POST",
+      headers: { ...getAuthHeaders() },
+      credentials: "include",
+    });
+    const body = await response.json();
+    return body;
+  } finally {
+    clearStoredToken();
+  }
 }
 
 export async function getCurrentUser(): Promise<SafeUser | null> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
       method: "GET",
+      headers: { ...getAuthHeaders() },
       credentials: "include",
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      if (response.status === 401) {
+        clearStoredToken();
+      }
+      return null;
+    }
     const body = await response.json();
     return body.user || null;
   } catch (err) {
@@ -815,7 +852,7 @@ export async function verifyEmailToken(token: string): Promise<{ success: boolea
   return body;
 }
 
-export async function resendVerificationEmail(email: string): Promise<{ success: boolean; message: string }> {
+export async function resendVerificationEmail(email: string): Promise<{ success: boolean; message: string; verificationToken?: string; verificationUrl?: string }> {
   const response = await fetch(`${API_BASE_URL}/api/v1/auth/resend-verification`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -860,6 +897,7 @@ export async function resetPassword(data: ResetPasswordRequest): Promise<{ succe
 export async function getUserProfile(): Promise<SafeUser> {
   const response = await fetch(`${API_BASE_URL}/api/v1/profile`, {
     method: "GET",
+    headers: { ...getAuthHeaders() },
     credentials: "include",
   });
   const body = await response.json();
@@ -872,7 +910,10 @@ export async function getUserProfile(): Promise<SafeUser> {
 export async function updateUserProfile(data: UpdateProfileRequest): Promise<SafeUser> {
   const response = await fetch(`${API_BASE_URL}/api/v1/profile`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
     body: JSON.stringify(data),
     credentials: "include",
   });

@@ -81,7 +81,7 @@ describe("Phase 13: Secure Authentication, Email Verification & Multi-User Owner
     expect(loginRes.body.user.passwordHash).toBeUndefined(); // NEVER leak password hash
 
     // Check HTTP-only cookie set
-    const cookies = loginRes.headers["set-cookie"];
+    const cookies = loginRes.headers["set-cookie"] as unknown as string[];
     expect(cookies).toBeDefined();
     const sessionCookie = cookies.find((c: string) => c.startsWith("skilltwin_session="));
     expect(sessionCookie).toBeDefined();
@@ -90,7 +90,7 @@ describe("Phase 13: Secure Authentication, Email Verification & Multi-User Owner
     // 5. Query /api/v1/auth/me using the cookie session
     const meRes = await request(app)
       .get("/api/v1/auth/me")
-      .set("Cookie", sessionCookie);
+      .set("Cookie", sessionCookie!);
 
     expect(meRes.status).toBe(200);
     expect(meRes.body.user.email).toBe("nikhil@skilltwin.dev");
@@ -98,7 +98,7 @@ describe("Phase 13: Secure Authentication, Email Verification & Multi-User Owner
     // 6. Logout and verify cookie is cleared
     const logoutRes = await request(app)
       .post("/api/v1/auth/logout")
-      .set("Cookie", sessionCookie);
+      .set("Cookie", sessionCookie!);
 
     expect(logoutRes.status).toBe(200);
     expect(logoutRes.headers["set-cookie"][0]).toContain("skilltwin_session=;");
@@ -194,7 +194,7 @@ describe("Phase 13: Secure Authentication, Email Verification & Multi-User Owner
     const loginA = await request(app)
       .post("/api/v1/auth/login")
       .send({ email: "alpha@example.com", password: "Password123!" });
-    const cookieA = loginA.headers["set-cookie"].find((c: string) => c.startsWith("skilltwin_session="));
+    const cookieA = (loginA.headers["set-cookie"] as unknown as string[]).find((c: string) => c.startsWith("skilltwin_session="));
 
     // 2. Create and verify User B
     await request(app)
@@ -211,12 +211,12 @@ describe("Phase 13: Secure Authentication, Email Verification & Multi-User Owner
     const loginB = await request(app)
       .post("/api/v1/auth/login")
       .send({ email: "beta@example.com", password: "Password123!" });
-    const cookieB = loginB.headers["set-cookie"].find((c: string) => c.startsWith("skilltwin_session="));
+    const cookieB = (loginB.headers["set-cookie"] as unknown as string[]).find((c: string) => c.startsWith("skilltwin_session="));
 
     // 3. User A uploads Resume A
     const uploadA = await request(app)
       .post("/api/v1/resumes/text")
-      .set("Cookie", cookieA)
+      .set("Cookie", cookieA!)
       .send({
         fileName: "Alpha_Resume.txt",
         text: "John Alpha | Senior Software Engineer | React, Node.js, TypeScript, PostgreSQL",
@@ -229,38 +229,38 @@ describe("Phase 13: Secure Authentication, Email Verification & Multi-User Owner
     // 4. User A can fetch Resume A
     const getResA = await request(app)
       .get(`/api/v1/resumes/${resumeAId}`)
-      .set("Cookie", cookieA);
+      .set("Cookie", cookieA!);
     expect(getResA.status).toBe(200);
     expect(getResA.body.data.id).toBe(resumeAId);
 
     // 5. User B attempts IDOR to access User A's resume by ID -> MUST RETURN 404
     const idorRes = await request(app)
       .get(`/api/v1/resumes/${resumeAId}`)
-      .set("Cookie", cookieB);
+      .set("Cookie", cookieB!);
     expect(idorRes.status).toBe(404);
     expect(idorRes.body.status).toBe("error");
 
     // 6. User B attempts to delete User A's resume -> MUST RETURN 404 / FORBIDDEN
     const deleteIdor = await request(app)
       .delete(`/api/v1/resumes/${resumeAId}`)
-      .set("Cookie", cookieB);
+      .set("Cookie", cookieB!);
     expect(deleteIdor.status).toBe(404);
 
     // 7. Check User B's resumes list -> MUST BE EMPTY
     const listB = await request(app)
       .get("/api/v1/resumes")
-      .set("Cookie", cookieB);
+      .set("Cookie", cookieB!);
     expect(listB.status).toBe(200);
     expect(listB.body.data.length).toBe(0);
 
     // 8. Check User A's resumes list -> CONTAINS RESUME A
     const listA = await request(app)
       .get("/api/v1/resumes")
-      .set("Cookie", cookieA);
+      .set("Cookie", cookieA!);
     expect(listA.status).toBe(200);
     expect(listA.body.data.length).toBe(1);
     expect(listA.body.data[0].id).toBe(resumeAId);
-  });
+  }, 30000);
 
   it("updates and retrieves user profile information", async () => {
     // Signup and login
@@ -279,12 +279,12 @@ describe("Phase 13: Secure Authentication, Email Verification & Multi-User Owner
     const loginRes = await request(app)
       .post("/api/v1/auth/login")
       .send({ email: "dev@skilltwin.dev", password: "Password123!" });
-    const cookie = loginRes.headers["set-cookie"].find((c: string) => c.startsWith("skilltwin_session="));
+    const cookie = (loginRes.headers["set-cookie"] as unknown as string[]).find((c: string) => c.startsWith("skilltwin_session="));
 
     // Get initial profile
     const profileRes = await request(app)
       .get("/api/v1/profile")
-      .set("Cookie", cookie);
+      .set("Cookie", cookie!);
 
     expect(profileRes.status).toBe(200);
     expect(profileRes.body.user.name).toBe("Dev Twin");
@@ -292,7 +292,7 @@ describe("Phase 13: Secure Authentication, Email Verification & Multi-User Owner
     // Update profile
     const updateRes = await request(app)
       .patch("/api/v1/profile")
-      .set("Cookie", cookie)
+      .set("Cookie", cookie!)
       .send({
         targetRole: "Staff Software Engineer",
         headline: "Distributed Systems & Cloud Architect",

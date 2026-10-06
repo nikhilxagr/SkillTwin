@@ -214,11 +214,13 @@ export class DatabaseService {
 
     try {
       this.client = new MongoClient(config.MONGODB_URI, {
-        serverSelectionTimeoutMS: 3000,
+        serverSelectionTimeoutMS: 5000,
       });
       await this.client.connect();
-      this.db = this.client.db();
+      const dbName = this.client.options.dbName || "skilltwin";
+      this.db = this.client.db(dbName);
       this.isConnected = true;
+      console.log(`[DatabaseService] Successfully connected to MongoDB Atlas (${dbName})`);
 
       // Wrap collections with MongoDB collections
       this.users = new MongoCollectionWrapper<UserDoc>(this.db, "users");
@@ -230,8 +232,8 @@ export class DatabaseService {
 
       // Ensure indexes
       await this.ensureIndexes();
-    } catch (err) {
-      // Fallback silently to high-performance in-memory persistence
+    } catch (err: any) {
+      console.warn(`[DatabaseService] MongoDB Atlas connection notice: ${err?.message || err}. Operating in-memory mode.`);
       this.isConnected = false;
     }
   }

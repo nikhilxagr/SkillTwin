@@ -215,6 +215,29 @@ export const InterviewSimulatorView: React.FC<InterviewSimulatorViewProps> = ({
         </div>
       )}
 
+      {/* NO ACTIVE SESSION EMPTY STATE */}
+      {!session && (
+        <div className="bg-white border border-slate-200 rounded-lg p-10 text-center shadow-sm" data-testid="interview-empty-state">
+          <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full mx-auto flex items-center justify-center mb-4 border border-blue-100">
+            <Target size={24} />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 mb-1">Ready for your AI Technical Interview?</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto mb-6">
+            Practice realistic, role-specific questions grounded in your resume experience, target job description, and identified skill gaps.
+          </p>
+          <button
+            type="button"
+            data-testid="btn-start-first-interview"
+            disabled={isLoading || isSubmitting}
+            onClick={() => onStartNewInterview({ customCount: 5 })}
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50"
+          >
+            <RotateCcw size={14} />
+            <span>Start Technical Interview</span>
+          </button>
+        </div>
+      )}
+
       {/* ACTIVE FLOW: Question -> Answer -> Feedback -> Next Question */}
       {!isCompleted && currentQuestion && (
         <div className="space-y-6">

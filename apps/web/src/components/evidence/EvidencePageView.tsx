@@ -53,9 +53,8 @@ export const EvidencePageView: React.FC<EvidencePageViewProps> = ({
   onConnect,
   onNavigate,
   onLoadSample,
-  isLoading = false,
 }) => {
-  const [usernameInput, setUsernameInput] = useState(initialUsername || "alexrivera-dev");
+  const [usernameInput, setUsernameInput] = useState(initialUsername || "");
   const [tokenInput, setTokenInput] = useState(initialToken);
   const [showTokenInput, setShowTokenInput] = useState(false);
   const [filterTab, setFilterTab] = useState<FilterTab>("all");

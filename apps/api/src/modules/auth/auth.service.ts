@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { config } from "../../config.js";
 import { dbService } from "../database/database.service.js";
 import type { UserDoc } from "../database/database.types.js";
 import {
@@ -16,6 +17,7 @@ import type {
   ResetPasswordRequest,
   UpdateProfileRequest,
   SafeUser,
+  AuthResponse,
 } from "@skilltwin/contracts";
 
 export interface LoginResult {
@@ -30,7 +32,7 @@ export class AuthService {
   /**
    * Register a new user with unverified email and send verification link
    */
-  async signup(data: SignupRequest): Promise<{ success: boolean; message: string }> {
+  async signup(data: SignupRequest): Promise<AuthResponse> {
     const normalizedEmail = data.email.trim().toLowerCase();
 
     // Check for existing user
@@ -78,6 +80,8 @@ export class AuthService {
     return {
       success: true,
       message: "Account created. Check your email to verify your account.",
+      verificationToken: rawToken,
+      verificationUrl: `${config.WEB_ORIGIN}/#/verify-email?token=${rawToken}`,
     };
   }
 
@@ -126,7 +130,7 @@ export class AuthService {
   /**
    * Resend email verification token
    */
-  async resendVerification(email: string): Promise<{ success: boolean; message: string }> {
+  async resendVerification(email: string): Promise<AuthResponse> {
     const normalizedEmail = email.trim().toLowerCase();
     const user = await dbService.users.findOne({ email: normalizedEmail });
 
@@ -154,6 +158,8 @@ export class AuthService {
     return {
       success: true,
       message: "If an unverified account exists for this email, a verification link has been sent.",
+      verificationToken: rawToken,
+      verificationUrl: `${config.WEB_ORIGIN}/#/verify-email?token=${rawToken}`,
     };
   }
 

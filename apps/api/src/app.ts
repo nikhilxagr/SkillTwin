@@ -37,15 +37,26 @@ const upload = multer({
 
 const allowedOrigins = Array.from(new Set([config.WEB_ORIGIN, "http://localhost:5173", "http://localhost:5174"]));
 
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin) || config.NODE_ENV !== "production") {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+        return callback(null, true);
       }
+      try {
+        const originUrl = new URL(origin);
+        if (originUrl.hostname.endsWith(".vercel.app") || origin.replace(/\/+$/, "") === config.WEB_ORIGIN) {
+          return callback(null, true);
+        }
+      } catch {
+        // Ignore URL parse error
+      }
+      callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })

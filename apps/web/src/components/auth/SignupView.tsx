@@ -26,6 +26,8 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate }) => {
   const [verificationSent, setVerificationSent] = useState(false);
   const [resending, setResending] = useState(false);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
+  const [verificationUrl, setVerificationUrl] = useState<string | null>(null);
+  const [verificationToken, setVerificationToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,12 +56,14 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate }) => {
 
     setLoading(true);
     try {
-      await signupUser({
+      const res = await signupUser({
         name: name.trim(),
         email: email.trim().toLowerCase(),
         password,
         confirmPassword,
       });
+      if (res.verificationUrl) setVerificationUrl(res.verificationUrl);
+      if (res.verificationToken) setVerificationToken(res.verificationToken);
       setVerificationSent(true);
     } catch (err: any) {
       setError(err.message || "Failed to create account. Please try again.");
@@ -74,6 +78,8 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate }) => {
     setResendStatus(null);
     try {
       const res = await resendVerificationEmail(email.trim().toLowerCase());
+      if (res.verificationUrl) setVerificationUrl(res.verificationUrl);
+      if (res.verificationToken) setVerificationToken(res.verificationToken);
       setResendStatus(res.message || "Verification email resent.");
     } catch (err: any) {
       setResendStatus(err.message || "Failed to resend. Please try again later.");
@@ -84,6 +90,8 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate }) => {
 
   // Verification Pending Screen
   if (verificationSent) {
+    const activeVerifyLink = verificationUrl || (verificationToken ? `/#/verify-email?token=${verificationToken}` : null);
+
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-12" data-testid="verification-pending-view">
         <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-8 shadow-sm text-center animate-fade-in">
@@ -105,6 +113,17 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate }) => {
           )}
 
           <div className="space-y-3">
+            {activeVerifyLink && (
+              <a
+                href={activeVerifyLink}
+                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
+                data-testid="instant-verify-btn"
+              >
+                <CheckCircle2 size={16} />
+                <span>Verify & Activate Account Now</span>
+              </a>
+            )}
+
             <button
               onClick={handleResend}
               disabled={resending}

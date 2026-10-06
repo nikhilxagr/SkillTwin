@@ -228,13 +228,13 @@ export const App: React.FC = () => {
   const [optimization, setOptimization] = useState<ResumeOptimizationReport | null>(null);
   const [tailoredResume, setTailoredResume] = useState<JobSpecificTailoredResume | null>(null);
   const [readinessReport, setReadinessReport] = useState<CareerReadinessReport | null>(null);
-  const [interviewSession, setInterviewSession] = useState<InterviewSessionState | null>(sampleInterviewSession);
-  const [interviewHistory, setInterviewHistory] = useState<InterviewHistoryItem[]>(sampleInterviewHistory);
-  const [projectRecommendations, setProjectRecommendations] = useState<ProjectRecommendationReport | null>(sampleProjectRecommendations);
-  const [activeBlueprint, setActiveBlueprint] = useState<ProjectBlueprint | null>(sampleProjectBlueprint);
-  const [githubReport, setGithubReport] = useState<GithubEvidenceReport | null>(sampleGithubEvidenceReport);
-  const [analyzedRepositories, setAnalyzedRepositories] = useState<AnalyzedRepository[]>(sampleAnalyzedRepositories);
-  const [githubUsername, setGithubUsername] = useState<string>("alexrivera-dev");
+  const [interviewSession, setInterviewSession] = useState<InterviewSessionState | null>(null);
+  const [interviewHistory, setInterviewHistory] = useState<InterviewHistoryItem[]>([]);
+  const [projectRecommendations, setProjectRecommendations] = useState<ProjectRecommendationReport | null>(null);
+  const [activeBlueprint, setActiveBlueprint] = useState<ProjectBlueprint | null>(null);
+  const [githubReport, setGithubReport] = useState<GithubEvidenceReport | null>(null);
+  const [analyzedRepositories, setAnalyzedRepositories] = useState<AnalyzedRepository[]>([]);
+  const [githubUsername, setGithubUsername] = useState<string>("");
   const [githubToken, setGithubToken] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [isSampleLoaded, setIsSampleLoaded] = useState(false);
@@ -243,9 +243,9 @@ export const App: React.FC = () => {
   // Load authenticated session on startup
   useEffect(() => {
     getCurrentUser()
-      .then((res) => {
-        if (res && res.user) {
-          setCurrentUser(res.user);
+      .then((user) => {
+        if (user) {
+          setCurrentUser(user);
         }
       })
       .catch(() => {
@@ -338,17 +338,6 @@ export const App: React.FC = () => {
       handleRunJobTailoring();
       return;
     }
-    if (resolved === "interview_simulator" && !interviewSession) {
-      setInterviewSession(sampleInterviewSession);
-    }
-    if (resolved === "project_recommendations" && !projectRecommendations) {
-      setProjectRecommendations(sampleProjectRecommendations);
-    }
-    if (resolved === "evidence" && !githubReport) {
-      setGithubReport(sampleGithubEvidenceReport);
-      setAnalyzedRepositories(sampleAnalyzedRepositories);
-    }
-
     setCurrentScreen(resolved);
 
     if (typeof window !== "undefined") {
@@ -410,12 +399,12 @@ export const App: React.FC = () => {
     setTailoredResume(null);
     setReadinessReport(null);
     setInterviewSession(null);
-    setInterviewHistory(sampleInterviewHistory);
+    setInterviewHistory([]);
     setProjectRecommendations(null);
     setActiveBlueprint(null);
     setGithubReport(null);
     setAnalyzedRepositories([]);
-    setGithubUsername("alexrivera-dev");
+    setGithubUsername("");
     setGithubToken("");
     setIsSampleLoaded(false);
     setApiError(null);
@@ -1256,7 +1245,7 @@ export const App: React.FC = () => {
           resume={resume}
           tailoredResume={tailoredResume}
           initialTexSource={sampleLatexResumeCode}
-          onNavigate={handleNavigate}
+          onNavigate={(screen) => handleNavigate(screen as ActiveScreen)}
           onLoadSample={handleLoadSample}
         />
       )}
