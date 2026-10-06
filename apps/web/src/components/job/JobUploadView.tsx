@@ -15,13 +15,11 @@ import { Card } from "../common/Card.js";
 import { Badge } from "../common/Badge.js";
 import type { JobExtraction } from "@skilltwin/contracts";
 import type { ActiveScreen } from "../../types/navigation.js";
-import { sampleJobDescription } from "../../mock/sampleData.js";
 
 interface JobUploadViewProps {
   currentJob: JobExtraction | null;
   onUploadFile?: (file: File, fallbackTitle?: string, fallbackCompany?: string) => void;
   onUploadJob: (title: string, company: string, text: string) => void;
-  onLoadSample: () => void;
   onNavigate: (screen: ActiveScreen) => void;
   loading: boolean;
   errorMessage?: string | null;
@@ -33,7 +31,6 @@ export const JobUploadView: React.FC<JobUploadViewProps> = ({
   currentJob,
   onUploadFile,
   onUploadJob,
-  onLoadSample,
   onNavigate,
   loading,
   errorMessage,
@@ -41,18 +38,11 @@ export const JobUploadView: React.FC<JobUploadViewProps> = ({
   onRunGapAnalysis,
 }) => {
   const [activeTab, setActiveTab] = useState<"upload" | "paste">("paste");
-  const [jobTitle, setJobTitle] = useState("Senior Full Stack Engineer");
-  const [company, setCompany] = useState("Linear Systems Inc.");
+  const [jobTitle, setJobTitle] = useState("");
+  const [company, setCompany] = useState("");
   const [jdText, setJdText] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  const handleUsePreset = (presetText: string, title: string, comp: string) => {
-    setJobTitle(title);
-    setCompany(comp);
-    setJdText(presetText);
-    setActiveTab("paste");
-  };
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -149,15 +139,6 @@ export const JobUploadView: React.FC<JobUploadViewProps> = ({
             competencies, experience criteria, and keywords normalized via the Skill Engine.
           </p>
         </div>
-
-        <Button
-          variant="secondary"
-          size="sm"
-          icon={<Layers size={13} />}
-          onClick={onLoadSample}
-        >
-          Load Verified Senior JD
-        </Button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: currentJob ? "1.2fr 1fr" : "1fr", gap: "20px" }}>
@@ -181,54 +162,6 @@ export const JobUploadView: React.FC<JobUploadViewProps> = ({
           }
         >
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {/* Quick Fill Presets */}
-            <div>
-              <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
-                Quick Presets (Click to Load):
-              </span>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    handleUsePreset(
-                      sampleJobDescription.rawText,
-                      "Senior Full Stack Engineer",
-                      "Linear Systems Inc."
-                    )
-                  }
-                >
-                  Senior Full Stack (Linear)
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    handleUsePreset(
-                      `Frontend React Specialist\nCompany: Modern UI Labs\n\nAbout the Role:\nWe are seeking an experienced Frontend Developer to lead client architecture.\n\nRequired Qualifications:\n• Strong JavaScript & TypeScript foundations\n• React 18, Next.js, and CSS Architecture\n• Component testing with Vitest and Cypress\n• RESTful API integration and state management\n• 3+ years experience with production web apps\n• Bachelor's Degree in Computer Science or related field\n\nNice to Have:\n• Experience with GraphQL and Apollo Client\n• Docker and CI/CD pipelines\n• Tailwind CSS design systems`,
-                      "Frontend React Specialist",
-                      "Modern UI Labs"
-                    )
-                  }
-                >
-                  Frontend Specialist (React)
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    handleUsePreset(
-                      `Senior Cloud & DevOps Engineer\nCompany: ScaleCloud Platform\n\nRequirements:\n• 5+ years of software and infrastructure engineering experience\n• Mandatory: Go (Golang) and Python development\n• Mandatory: Kubernetes (K8s), Docker, and Terraform\n• Mandatory: AWS (Amazon Web Services) architecture\n• Preferred: PostgreSQL, Redis, Kafka\n• Preferred: Prometheus and Grafana monitoring\n• B.S. or M.S. in Computer Science`,
-                      "Senior Cloud & DevOps Engineer",
-                      "ScaleCloud Platform"
-                    )
-                  }
-                >
-                  Cloud & DevOps (Go/K8s)
-                </Button>
-              </div>
-            </div>
-
             {/* Role Title and Company Inputs */}
             <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "12px" }}>
               <div>
@@ -237,9 +170,9 @@ export const JobUploadView: React.FC<JobUploadViewProps> = ({
                 </label>
                 <input
                   type="text"
+                  placeholder="e.g. Senior Full Stack Engineer"
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
-                  placeholder="e.g. Senior Full Stack Engineer"
                   style={{
                     width: "100%",
                     padding: "8px 12px",

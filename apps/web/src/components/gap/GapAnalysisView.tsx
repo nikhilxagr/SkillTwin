@@ -25,7 +25,6 @@ import type { ActiveScreen } from "../../types/navigation.js";
 interface GapAnalysisViewProps {
   report: GapAnalysisReport | null;
   onNavigate: (screen: ActiveScreen) => void;
-  onLoadSample: () => void;
   onRecomputeGap?: () => void;
   onRunOptimization?: () => void;
   loading?: boolean;
@@ -34,7 +33,6 @@ interface GapAnalysisViewProps {
 export const GapAnalysisView: React.FC<GapAnalysisViewProps> = ({
   report,
   onNavigate,
-  onLoadSample,
   onRecomputeGap,
   onRunOptimization,
   loading = false,
@@ -51,8 +49,6 @@ export const GapAnalysisView: React.FC<GapAnalysisViewProps> = ({
         description="Upload both your resume and a target job description to compute your deterministic 5-tier gap analysis."
         actionText={onRecomputeGap ? "Compute Gap Analysis Now" : "Upload Job Description"}
         onAction={onRecomputeGap ? onRecomputeGap : () => onNavigate("jd_upload")}
-        secondaryActionText="Load Sample Analysis"
-        onSecondaryAction={onLoadSample}
       />
     );
   }

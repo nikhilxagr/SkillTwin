@@ -38,7 +38,6 @@ interface ResumeOptimizerViewProps {
   optimization: ResumeOptimizationReport | null;
   resume?: ResumeExtraction | null;
   onNavigate: (screen: ActiveScreen) => void;
-  onLoadSample: () => void;
   onRecomputeOptimization?: () => void;
 }
 
@@ -58,7 +57,6 @@ export const ResumeOptimizerView: React.FC<ResumeOptimizerViewProps> = ({
   optimization,
   resume,
   onNavigate,
-  onLoadSample,
   onRecomputeOptimization,
 }) => {
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("workspace");
@@ -85,8 +83,6 @@ export const ResumeOptimizerView: React.FC<ResumeOptimizerViewProps> = ({
         description="Run a gap analysis between your resume and a target job to produce evidence-grounded resume suggestions."
         actionText="Compare with Job"
         onAction={() => onNavigate("jd_upload")}
-        secondaryActionText="Load Sample Report"
-        onSecondaryAction={onLoadSample}
       />
     );
   }

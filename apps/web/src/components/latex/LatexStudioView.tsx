@@ -32,7 +32,6 @@ interface LatexStudioViewProps {
   tailoredResume?: JobSpecificTailoredResume | null;
   initialTexSource?: string;
   onNavigate?: (screen: string) => void;
-  onLoadSample?: () => void;
 }
 
 export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
@@ -40,7 +39,6 @@ export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
   tailoredResume,
   initialTexSource,
   onNavigate,
-  onLoadSample,
 }) => {
   const defaultTex = initialTexSource || (resume ? generateLatexFromResume(resume, { tailored: tailoredResume }) : "");
   const [texCode, setTexCode] = useState<string>(defaultTex);
@@ -118,7 +116,7 @@ export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
 
   const handleSyncFromProfile = () => {
     if (!resume) {
-      if (onLoadSample) onLoadSample();
+      if (onNavigate) onNavigate("resume_upload");
       return;
     }
     const fresh = generateLatexFromResume(resume, { tailored: tailoredResume, templateId });

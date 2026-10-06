@@ -47,7 +47,6 @@ interface DashboardViewProps {
   gapReport: GapAnalysisReport | null;
   readinessReport?: CareerReadinessReport | null;
   onNavigate: (screen: ActiveScreen) => void;
-  onLoadSample: () => void;
   onRefreshReadiness?: () => void;
 }
 
@@ -59,7 +58,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   gapReport,
   readinessReport: externalReport,
   onNavigate,
-  onLoadSample,
   onRefreshReadiness,
 }) => {
   if (!matrix) {
@@ -70,8 +68,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         description="Upload your resume to generate your evidence-based skill matrix, gap analyses, and target job readiness."
         actionText="Upload Resume"
         onAction={() => onNavigate("resume_upload")}
-        secondaryActionText="Load Sample Profile"
-        onSecondaryAction={onLoadSample}
       />
     );
   }
@@ -87,9 +83,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     });
   }, [externalReport, matrix, resume, job, gapReport]);
 
-  const targetRole = report.targetRole || job?.title || "Senior Full Stack Engineer";
-  const targetCompany = report.targetCompany || job?.company || "Linear Systems Inc.";
-  const candidateName = report.candidateName || resume?.profile?.name || "Candidate";
+  const targetRole = report.targetRole || job?.title || currentUser?.profile?.targetRole || "Target Role Not Set";
+  const targetCompany = report.targetCompany || job?.company || "Not Specified";
+  const candidateName = report.candidateName || currentUser?.name || resume?.profile?.name || "Developer Twin";
 
   const getRatingBadgeVariant = (rating: string): "match" | "partial" | "gap" | "neutral" => {
     switch (rating) {

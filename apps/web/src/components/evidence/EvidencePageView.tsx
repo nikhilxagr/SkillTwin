@@ -38,7 +38,6 @@ interface EvidencePageViewProps {
   token?: string;
   onConnect: (username: string, token?: string) => Promise<void>;
   onNavigate: (screen: ActiveScreen) => void;
-  onLoadSample: () => void;
   isLoading?: boolean;
 }
 
@@ -52,7 +51,7 @@ export const EvidencePageView: React.FC<EvidencePageViewProps> = ({
   token: initialToken = "",
   onConnect,
   onNavigate,
-  onLoadSample,
+  isLoading = false,
 }) => {
   const [usernameInput, setUsernameInput] = useState(initialUsername || "");
   const [tokenInput, setTokenInput] = useState(initialToken);
@@ -65,12 +64,6 @@ export const EvidencePageView: React.FC<EvidencePageViewProps> = ({
     e.preventDefault();
     if (!usernameInput.trim()) return;
     onConnect(usernameInput.trim(), tokenInput.trim() || undefined);
-  };
-
-  const handleLoadDemo = () => {
-    setUsernameInput("alexrivera-dev");
-    setTokenInput("");
-    onConnect("alexrivera-dev");
   };
 
   // Filter comparisons
@@ -143,7 +136,7 @@ export const EvidencePageView: React.FC<EvidencePageViewProps> = ({
                   type="text"
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
-                  placeholder="e.g. alexrivera-dev"
+                  placeholder="Enter GitHub username..."
                   className="w-full pl-9 pr-3 py-2 text-sm border border-border-subtle rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue bg-white"
                   data-testid="github-username-input"
                 />
@@ -195,15 +188,6 @@ export const EvidencePageView: React.FC<EvidencePageViewProps> = ({
                 title="Configure authorized token for private repositories"
               >
                 {showTokenInput ? "Hide PAT" : "Add Token"}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleLoadDemo}
-                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-content-primary text-sm font-medium rounded-lg transition-colors"
-                data-testid="load-demo-profile-btn"
-              >
-                Demo Profile
               </button>
             </div>
           </div>

@@ -44,7 +44,6 @@ interface ProjectRecommendationsViewProps {
   onGenerateBlueprint: (projectId: string) => Promise<ProjectBlueprint | null>;
   onRefreshRecommendations?: () => void;
   onNavigate: (screen: ActiveScreen) => void;
-  onLoadSample: () => void;
   isLoading?: boolean;
 }
 
@@ -57,7 +56,6 @@ export const ProjectRecommendationsView: React.FC<ProjectRecommendationsViewProp
   onGenerateBlueprint,
   onRefreshRecommendations,
   onNavigate,
-  onLoadSample,
   isLoading = false,
 }) => {
   const [activeBlueprintProject, setActiveBlueprintProject] = useState<ProjectBlueprint | null>(
@@ -128,8 +126,8 @@ ${bp.resumeBulletPoints.map((b) => `- ${b}`).join("\n")}
           icon={<Code2 size={36} />}
           title="No Project Recommendations Available"
           description="Project recommendations are generated from your Target Job Description, verified Skill Matrix, and identified Gaps to specifically address missing skills."
-          actionText="Load Sample Profile & Projects"
-          onAction={onLoadSample}
+          actionText="Upload Job Description"
+          onAction={() => onNavigate("jd_upload")}
         />
       </div>
     );

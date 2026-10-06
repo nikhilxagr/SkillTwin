@@ -11,9 +11,7 @@ interface ShellProps {
   activeRole: string;
   hasResume: boolean;
   hasJob: boolean;
-  onLoadSample: () => void;
-  onReset: () => void;
-  isSampleLoaded: boolean;
+  onReset?: () => void;
   skillCount: number;
   criticalGapCount: number;
   candidateName: string;
@@ -28,9 +26,7 @@ export const Shell: React.FC<ShellProps> = ({
   activeRole,
   hasResume,
   hasJob,
-  onLoadSample,
   onReset,
-  isSampleLoaded,
   skillCount,
   criticalGapCount,
   candidateName,
@@ -87,9 +83,7 @@ export const Shell: React.FC<ShellProps> = ({
           activeRole={activeRole}
           hasResume={hasResume}
           hasJob={hasJob}
-          onLoadSample={onLoadSample}
           onReset={onReset}
-          isSampleLoaded={isSampleLoaded}
           onToggleMobileMenu={() => setIsMobileOpen((prev) => !prev)}
           currentUser={currentUser}
           onLogout={onLogout}

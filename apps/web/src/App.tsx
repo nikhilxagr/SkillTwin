@@ -21,27 +21,14 @@ import { ForgotPasswordView } from "./components/auth/ForgotPasswordView.js";
 import { ResetPasswordView } from "./components/auth/ResetPasswordView.js";
 import { ProfileView } from "./components/profile/ProfileView.js";
 import {
-  sampleResume,
-  sampleSkillMatrix,
-  sampleJobDescription,
-  sampleJobAnalysis,
-  sampleGapAnalysis,
-  sampleResumeOptimization,
-  sampleJobSpecificTailoredResume,
-  sampleCareerReadinessReport,
-  sampleInterviewSession,
-  sampleInterviewHistory,
-  sampleProjectRecommendations,
-  sampleProjectBlueprint,
-  sampleGithubEvidenceReport,
-  sampleAnalyzedRepositories,
-  sampleLatexResumeCode,
-} from "./mock/sampleData.js";
-import {
   uploadResumeFile,
   uploadResumeText,
   uploadJobFile,
   uploadJobText,
+  getLatestResume,
+  getResumeMatrix,
+  getLatestJob,
+  getLatestGapReport,
   compareGap,
   optimizeResume,
   tailorResume,
@@ -237,8 +224,31 @@ export const App: React.FC = () => {
   const [githubUsername, setGithubUsername] = useState<string>("");
   const [githubToken, setGithubToken] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [isSampleLoaded, setIsSampleLoaded] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  const loadUserData = async () => {
+    try {
+      const latestResume = await getLatestResume();
+      if (latestResume) {
+        setResume(latestResume);
+        const matrixData = await getResumeMatrix(latestResume.id);
+        if (matrixData) setMatrix(matrixData);
+      }
+      const latestJobData = await getLatestJob();
+      if (latestJobData) {
+        setJob(latestJobData.job);
+        setJobAnalysis(latestJobData.analysis);
+      }
+      try {
+        const latestGap = await getLatestGapReport();
+        if (latestGap) setGapReport(latestGap);
+      } catch {
+        // no gap report yet
+      }
+    } catch {
+      // quiet fallback
+    }
+  };
 
   // Load authenticated session on startup
   useEffect(() => {
@@ -246,6 +256,7 @@ export const App: React.FC = () => {
       .then((user) => {
         if (user) {
           setCurrentUser(user);
+          loadUserData();
         }
       })
       .catch(() => {
@@ -271,7 +282,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (authLoading) return;
 
-    if (!currentUser && !isSampleLoaded && !isPublicScreen(currentScreen)) {
+    if (!currentUser && !isPublicScreen(currentScreen)) {
       setCurrentScreen("login");
       if (typeof window !== "undefined") {
         try {
@@ -290,7 +301,7 @@ export const App: React.FC = () => {
         }
       }
     }
-  }, [currentUser, currentScreen, authLoading, isSampleLoaded]);
+  }, [currentUser, currentScreen, authLoading]);
 
   // Hash-based client routing synchronization
   useEffect(() => {
@@ -359,36 +370,6 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleLoadSample = () => {
-    setResume(sampleResume);
-    setMatrix(sampleSkillMatrix);
-    setJob(sampleJobDescription);
-    setJobAnalysis(sampleJobAnalysis);
-    setGapReport(sampleGapAnalysis);
-    setOptimization(sampleResumeOptimization);
-    setTailoredResume(sampleJobSpecificTailoredResume);
-    setReadinessReport(sampleCareerReadinessReport);
-    setInterviewSession(sampleInterviewSession);
-    setInterviewHistory(sampleInterviewHistory);
-    setProjectRecommendations(sampleProjectRecommendations);
-    setActiveBlueprint(sampleProjectBlueprint);
-    setGithubReport(sampleGithubEvidenceReport);
-    setAnalyzedRepositories(sampleAnalyzedRepositories);
-    setGithubUsername("alexrivera-dev");
-    setGithubToken("");
-    setIsSampleLoaded(true);
-    setLoading(false);
-    setApiError(null);
-    setCurrentScreen("dashboard");
-    if (typeof window !== "undefined") {
-      try {
-        window.location.hash = "#/dashboard";
-      } catch {
-        // Ignore
-      }
-    }
-  };
-
   const handleReset = () => {
     setResume(null);
     setMatrix(null);
@@ -406,14 +387,15 @@ export const App: React.FC = () => {
     setAnalyzedRepositories([]);
     setGithubUsername("");
     setGithubToken("");
-    setIsSampleLoaded(false);
     setApiError(null);
-    setCurrentScreen("landing");
-    if (typeof window !== "undefined") {
-      try {
-        window.location.hash = "#/";
-      } catch {
-        // Ignore
+    if (!currentUser) {
+      setCurrentScreen("landing");
+      if (typeof window !== "undefined") {
+        try {
+          window.location.hash = "#/";
+        } catch {
+          // Ignore
+        }
       }
     }
   };
@@ -437,7 +419,6 @@ export const App: React.FC = () => {
       const result = await uploadResumeFile(file);
       setResume(result.resume);
       setMatrix(result.matrix);
-      setIsSampleLoaded(false);
       setLoading(false);
       setCurrentScreen("resume_upload");
     } catch (err: any) {
@@ -454,63 +435,11 @@ export const App: React.FC = () => {
       const result = await uploadResumeText(fileName, text);
       setResume(result.resume);
       setMatrix(result.matrix);
-      setIsSampleLoaded(false);
       setLoading(false);
       setCurrentScreen("resume_upload");
     } catch (err: any) {
-      // If live API is unreachable or errored, display error and fall back gracefully
-      setApiError(err.message || "Failed to analyze resume text. Using offline parser.");
-
-      const newResume: ResumeExtraction = {
-        id: `resume_${Date.now()}`,
-        fileName,
-        fileType: fileName.endsWith(".pdf") ? "pdf" : "txt",
-        fileSizeBytes: text.length,
-        rawText: text,
-        profile: {
-          name: "Candidate Profile",
-          summary: text.slice(0, 180) + "...",
-        },
-        skillsClaimed: ["JavaScript", "React", "Node.js", "TypeScript", "REST APIs"],
-        projects: [
-          {
-            name: "Ingested Application",
-            role: "Developer",
-            description: "Extracted from uploaded resume document",
-            technologies: ["JavaScript", "React", "Node.js"],
-            bullets: [
-              "Built interactive web client using React components.",
-              "Implemented backend endpoints for application data retrieval.",
-            ],
-          },
-        ],
-        experience: [
-          {
-            company: "Engineering Organization",
-            role: "Software Developer",
-            startDate: "2023",
-            endDate: "Present",
-            current: true,
-            technologies: ["JavaScript", "React"],
-            bullets: ["Collaborated on full-stack web feature implementations."],
-          },
-        ],
-        education: [
-          {
-            institution: "Computer Science Faculty",
-            degree: "B.S. in Computer Science",
-          },
-        ],
-        certifications: [],
-        achievements: [],
-        parsedAt: new Date().toISOString(),
-      };
-
-      setResume(newResume);
-      setMatrix(sampleSkillMatrix);
-      setIsSampleLoaded(false);
+      setApiError(err.message || "Failed to analyze resume text. Please ensure backend is running.");
       setLoading(false);
-      setCurrentScreen("resume_upload");
     }
   };
 
@@ -522,7 +451,6 @@ export const App: React.FC = () => {
       const result = await uploadJobFile(file, title, company);
       setJob(result.job);
       setJobAnalysis(result.analysis);
-      setIsSampleLoaded(false);
       setLoading(false);
       setCurrentScreen("jd_analysis");
     } catch (err: any) {
@@ -539,91 +467,11 @@ export const App: React.FC = () => {
       const result = await uploadJobText(title, company, text);
       setJob(result.job);
       setJobAnalysis(result.analysis);
-      setIsSampleLoaded(false);
       setLoading(false);
       setCurrentScreen("jd_analysis");
     } catch (err: any) {
-      setApiError(err.message || "Failed to analyze job description text. Using offline parser.");
-
-      const newJob: JobExtraction = {
-        id: `jd_${Date.now()}`,
-        title: title || "Target Role",
-        company: company || "Target Company",
-        rawText: text,
-        experience: {
-          minYears: 3,
-          level: "Mid",
-          description: "3+ years technical experience required",
-        },
-        requiredSkills: [
-          {
-            canonicalName: "JavaScript",
-            category: "Languages",
-            importance: "Required",
-            minimumProficiency: "Strong",
-            contextSentence: "Strong JavaScript proficiency required.",
-          },
-          {
-            canonicalName: "React",
-            category: "Frontend",
-            importance: "Required",
-            minimumProficiency: "Strong",
-            contextSentence: "Deep React experience.",
-          },
-          {
-            canonicalName: "Docker",
-            category: "Cloud/DevOps",
-            importance: "Required",
-            minimumProficiency: "Intermediate",
-            contextSentence: "Hands-on containerization experience.",
-          },
-        ],
-        preferredSkills: [
-          {
-            canonicalName: "AWS",
-            category: "Cloud/DevOps",
-            importance: "Preferred",
-            minimumProficiency: "Intermediate",
-          },
-        ],
-        responsibilities: ["Develop scalable features", "Maintain clean code standards"],
-        qualifications: ["Relevant professional experience"],
-        keywords: {
-          programmingLanguages: ["JavaScript", "TypeScript"],
-          frameworks: ["React", "Express"],
-          libraries: [],
-          databases: ["MongoDB"],
-          tools: ["Docker", "Git"],
-          cloudDevOps: ["AWS"],
-          cybersecurity: [],
-          softSkills: ["Collaboration"],
-          generalKeywords: ["System Design"],
-          technicalSkills: ["JavaScript", "React", "Docker"],
-          cloud: ["AWS"],
-        },
-        parsedAt: new Date().toISOString(),
-      };
-
-      const newAnalysis: JobAnalysis = {
-        id: `analysis_${Date.now()}`,
-        job: newJob,
-        summary: {
-          roleTitle: newJob.title,
-          company: newJob.company,
-          totalRequiredSkills: 3,
-          totalPreferredSkills: 1,
-          experienceLevel: "Mid",
-          minYearsExperience: 3,
-          topCategories: ["Languages", "Frontend", "Cloud/DevOps"],
-        },
-        analyzedAt: new Date().toISOString(),
-      };
-
-      setJob(newJob);
-      setJobAnalysis(newAnalysis);
-      setIsSampleLoaded(false);
+      setApiError(err.message || "Failed to analyze job description text. Please ensure backend is running.");
       setLoading(false);
-      setCurrentScreen("jd_analysis");
     }
   };
 
@@ -643,91 +491,84 @@ export const App: React.FC = () => {
       setLoading(false);
       setCurrentScreen("gap_analysis");
     } catch (err: any) {
-      setApiError(err.message || "Failed to execute live gap comparison. Using sample fallback.");
-      setGapReport(sampleGapAnalysis);
+      setApiError(err.message || "Failed to execute gap comparison.");
       setLoading(false);
-      setCurrentScreen("gap_analysis");
     }
   };
 
   const handleRunResumeOptimization = async () => {
+    if (!resume || !matrix || !job) {
+      setApiError("Please ensure both your resume and target job description are ingested before optimizing.");
+      return;
+    }
+
     setLoading(true);
     setApiError(null);
 
-    const effectiveResume = resume || sampleResume;
-    const effectiveMatrix = matrix || sampleSkillMatrix;
-    const effectiveJob = job || sampleJobDescription;
-    const effectiveGap = gapReport || sampleGapAnalysis;
-
     try {
       const report = await optimizeResume(
-        effectiveResume,
-        effectiveMatrix,
-        effectiveJob,
-        effectiveGap,
-        effectiveResume.id,
-        effectiveJob.id
+        resume,
+        matrix,
+        job,
+        gapReport || undefined,
+        resume.id,
+        job.id
       );
       setOptimization(report);
       setLoading(false);
       setCurrentScreen("resume_improvement");
     } catch (err: any) {
-      console.warn("Live resume optimization failed, falling back to sample report:", err);
-      setOptimization(sampleResumeOptimization);
+      setApiError(err.message || "Resume optimization failed.");
       setLoading(false);
-      setCurrentScreen("resume_improvement");
     }
   };
 
   const handleRunJobTailoring = async () => {
+    if (!resume || !matrix || !job) {
+      setApiError("Please ensure both your resume and target job description are ingested before tailoring.");
+      return;
+    }
+
     setLoading(true);
     setApiError(null);
 
-    const effectiveResume = resume || sampleResume;
-    const effectiveMatrix = matrix || sampleSkillMatrix;
-    const effectiveJob = job || sampleJobDescription;
-    const effectiveGap = gapReport || sampleGapAnalysis;
-
     try {
       const result = await tailorResume(
-        effectiveResume,
-        effectiveMatrix,
-        effectiveJob,
-        effectiveGap,
-        effectiveResume.id,
-        effectiveJob.id
+        resume,
+        matrix,
+        job,
+        gapReport || undefined,
+        resume.id,
+        job.id
       );
       setTailoredResume(result);
       setLoading(false);
       setCurrentScreen("tailored_resume");
     } catch (err: any) {
-      console.warn("Live tailoring failed, falling back to sample tailored resume:", err);
-      setTailoredResume(sampleJobSpecificTailoredResume);
+      setApiError(err.message || "Resume tailoring failed.");
       setLoading(false);
-      setCurrentScreen("tailored_resume");
     }
   };
 
   const handleEvaluateReadiness = async () => {
-    const effectiveMatrix = matrix || sampleSkillMatrix;
-    const effectiveResume = resume || sampleResume;
-    const effectiveJob = job || sampleJobDescription;
-    const effectiveGap = gapReport || sampleGapAnalysis;
+    if (!matrix || !resume || !job) {
+      return;
+    }
 
     setLoading(true);
     setApiError(null);
 
     try {
-      const rep = await evaluateReadiness(effectiveMatrix, effectiveResume, effectiveJob, effectiveGap);
+      const rep = await evaluateReadiness(matrix, resume, job, gapReport || undefined);
       setReadinessReport(rep);
       setLoading(false);
     } catch (err: any) {
-      console.warn("Live readiness evaluation failed, falling back to deterministic local evaluation:", err);
+      console.warn("Live readiness evaluation failed, calculating locally:", err);
       const rep = computeCareerReadiness({
-        matrix: effectiveMatrix,
-        resume: effectiveResume,
-        job: effectiveJob,
-        gapReport: effectiveGap,
+        matrix,
+        resume,
+        job,
+        gapReport,
       });
       setReadinessReport(rep);
       setLoading(false);
@@ -735,18 +576,18 @@ export const App: React.FC = () => {
   };
 
   const handleStartNewInterview = async (options?: { customCount?: number }) => {
-    const effectiveResume = resume || sampleResume;
-    const effectiveMatrix = matrix || sampleSkillMatrix;
-    const effectiveJob = job || sampleJobDescription;
-    const effectiveGap = gapReport || sampleGapAnalysis;
+    if (!resume || !job || !matrix) {
+      setApiError("Please upload your resume and a target job before launching an interview session.");
+      return;
+    }
 
     setLoading(true);
     setApiError(null);
 
     try {
       const newSession = await startInterviewSession({
-        resumeId: effectiveResume.id,
-        jobId: effectiveJob.id,
+        resumeId: resume.id,
+        jobId: job.id,
         customQuestionsCount: options?.customCount || 5,
       });
       setInterviewSession(newSession);
@@ -764,19 +605,19 @@ export const App: React.FC = () => {
     } catch (err: any) {
       console.warn("Live interview start failed, falling back to local deterministic generation:", err);
       const questions = generateInterviewQuestions({
-        resume: effectiveResume,
-        matrix: effectiveMatrix,
-        job: effectiveJob,
-        gapReport: effectiveGap,
+        resume,
+        matrix,
+        job,
+        gapReport: gapReport || undefined,
         customCount: options?.customCount || 5,
       });
 
       const fallbackSession: InterviewSessionState = {
         id: `sim-${Date.now()}`,
-        resumeId: effectiveResume.id,
-        jobId: effectiveJob.id,
-        jobTitle: effectiveJob.title,
-        company: effectiveJob.company || "Target Company",
+        resumeId: resume.id,
+        jobId: job.id,
+        jobTitle: job.title,
+        company: job.company || "Target Company",
         status: "in_progress",
         currentStepIndex: 0,
         totalSteps: questions.length,
@@ -816,16 +657,16 @@ export const App: React.FC = () => {
       setLoading(false);
     } catch (err: any) {
       console.warn("Live answer evaluation failed, falling back to local evaluation:", err);
-      if (interviewSession && interviewSession.currentQuestion) {
+      if (interviewSession && interviewSession.currentQuestion && resume && matrix && job) {
         const q = interviewSession.currentQuestion;
         const evaluation = evaluateInterviewAnswer({
           question: q,
           answer: params.answer,
           previousExchanges: interviewSession.exchanges,
-          resume: resume || sampleResume,
-          matrix: matrix || sampleSkillMatrix,
-          job: job || sampleJobDescription,
-          gapReport: gapReport || sampleGapAnalysis,
+          resume,
+          matrix,
+          job,
+          gapReport: gapReport || undefined,
         });
 
         const exchange: SimulatorExchange = {
@@ -883,10 +724,8 @@ export const App: React.FC = () => {
     try {
       const fetched = await getInterviewSession(sessionId);
       setInterviewSession(fetched);
-    } catch {
-      if (sessionId === sampleInterviewSession.id) {
-        setInterviewSession(sampleInterviewSession);
-      }
+    } catch (err) {
+      console.warn("Could not fetch interview session:", err);
     }
     setCurrentScreen("interview_simulator");
   };
@@ -909,22 +748,26 @@ export const App: React.FC = () => {
   };
 
   const handleRefreshProjectRecommendations = async () => {
+    if (!job || !matrix) {
+      setApiError("Please upload a resume and target job description before generating recommendations.");
+      return;
+    }
     setLoading(true);
     setApiError(null);
     try {
       const result = await getProjectRecommendations({
-        job: job || sampleJobDescription,
-        matrix: matrix || sampleSkillMatrix,
-        gapReport: gapReport || sampleGapAnalysis,
+        job,
+        matrix,
+        gapReport: gapReport || undefined,
       });
       setProjectRecommendations(result);
       setLoading(false);
     } catch (err: any) {
       console.warn("API project recommendations failed, falling back to local engine:", err);
       const fallback = localGenerateProjectRecommendations({
-        job: job || sampleJobDescription,
-        matrix: matrix || sampleSkillMatrix,
-        gapReport: gapReport || sampleGapAnalysis,
+        job,
+        matrix,
+        gapReport: gapReport || undefined,
       });
       setProjectRecommendations(fallback);
       setLoading(false);
@@ -932,6 +775,10 @@ export const App: React.FC = () => {
   };
 
   const handleConnectGithub = async (username: string, token?: string) => {
+    if (!username || !username.trim()) {
+      setApiError("Please specify a valid GitHub username.");
+      return;
+    }
     setLoading(true);
     setApiError(null);
     setGithubUsername(username);
@@ -943,72 +790,13 @@ export const App: React.FC = () => {
       const report = await connectGithub({
         username,
         token: token || undefined,
-        resume: resume || sampleResume,
-        matrix: matrix || sampleSkillMatrix,
+        resume: resume || undefined,
+        matrix: matrix || undefined,
       });
       setGithubReport(report);
       setAnalyzedRepositories(report.analyzedRepositories);
     } catch (err: any) {
-      console.warn("GitHub API connection failed, falling back to deterministic engine:", err);
-      const repos =
-        username === "alexrivera-dev"
-          ? sampleAnalyzedRepositories
-          : [
-              {
-                name: `${username}-service`,
-                fullName: `${username}/${username}-service`,
-                description: "Full-stack application repository",
-                htmlUrl: `https://github.com/${username}/${username}-service`,
-                defaultBranch: "main",
-                isPrivate: false,
-                starsCount: 3,
-                forksCount: 0,
-                openIssuesCount: 0,
-                pushedAt: new Date().toISOString(),
-                languages: [{ name: "TypeScript", percentage: 100, byteCount: 45000 }],
-                primaryLanguage: "TypeScript",
-                technologies: ["TypeScript", "Node.js", "Docker", "Jest"],
-                activityLevel: "Active" as const,
-                structure: {
-                  hasSrc: true,
-                  hasTests: true,
-                  hasDocs: false,
-                  keyDirectories: ["src", "tests"],
-                },
-                dependencies: [
-                  { name: "typescript", version: "^5.4.0", category: "tool" as const },
-                  { name: "jest", version: "^29.7.0", category: "testing" as const },
-                ],
-                readmeSummary: "Application codebase with Docker configuration and Jest test suite.",
-                testing: {
-                  detected: true,
-                  frameworks: ["Jest"],
-                  testFileCount: 6,
-                  testDirectories: ["tests"],
-                },
-                docker: {
-                  detected: true,
-                  hasDockerfile: true,
-                  hasDockerCompose: false,
-                  dockerFiles: ["Dockerfile"],
-                },
-                deployment: {
-                  detected: true,
-                  providers: ["GitHub Actions"],
-                  configFiles: [".github/workflows/ci.yml"],
-                },
-              },
-            ];
-
-      const localReport = localCompareGithubEvidence({
-        username,
-        repositories: repos,
-        resume: resume || sampleResume,
-        matrix: matrix || sampleSkillMatrix,
-      });
-
-      setGithubReport(localReport);
-      setAnalyzedRepositories(repos);
+      setApiError(err.message || "Failed to analyze GitHub repositories.");
     } finally {
       setLoading(false);
     }
@@ -1031,7 +819,6 @@ export const App: React.FC = () => {
     return (
       <LandingPage
         onEnterApp={() => handleNavigate(currentUser ? "dashboard" : "login")}
-        onLoadSample={handleLoadSample}
       />
     );
   }
@@ -1042,6 +829,7 @@ export const App: React.FC = () => {
         onNavigate={(screen) => handleNavigate(screen as ActiveScreen)}
         onLoginSuccess={(user) => {
           setCurrentUser(user);
+          loadUserData();
           handleNavigate("dashboard");
         }}
       />
@@ -1088,12 +876,10 @@ export const App: React.FC = () => {
     <Shell
       currentScreen={currentScreen}
       onNavigate={handleNavigate}
-      activeRole={job?.title || "Full Stack Developer"}
+      activeRole={job?.title || currentUser?.profile?.targetRole || "Target Role Not Set"}
       hasResume={!!resume}
       hasJob={!!job}
-      onLoadSample={handleLoadSample}
       onReset={handleReset}
-      isSampleLoaded={isSampleLoaded}
       skillCount={matrix?.items.length || 0}
       criticalGapCount={gapReport?.summary.criticalGapCount || 0}
       candidateName={currentUser?.name || resume?.profile.name || "Developer Twin"}
@@ -1109,7 +895,6 @@ export const App: React.FC = () => {
           gapReport={gapReport}
           readinessReport={readinessReport}
           onNavigate={handleNavigate}
-          onLoadSample={handleLoadSample}
           onRefreshReadiness={handleEvaluateReadiness}
         />
       )}
@@ -1119,7 +904,6 @@ export const App: React.FC = () => {
           currentResume={resume}
           onUploadFile={handleUploadResumeFile}
           onUploadText={handleUploadResumeText}
-          onLoadSample={handleLoadSample}
           onNavigate={handleNavigate}
           loading={loading}
           errorMessage={apiError}
@@ -1135,7 +919,6 @@ export const App: React.FC = () => {
         <SkillMatrixView
           matrix={matrix}
           onNavigate={handleNavigate}
-          onLoadSample={handleLoadSample}
         />
       )}
 
@@ -1144,7 +927,6 @@ export const App: React.FC = () => {
           currentJob={job}
           onUploadFile={handleUploadJobFile}
           onUploadJob={handleUploadJobText}
-          onLoadSample={handleLoadSample}
           onNavigate={handleNavigate}
           loading={loading}
           errorMessage={apiError}
@@ -1166,7 +948,6 @@ export const App: React.FC = () => {
         <GapAnalysisView
           report={gapReport}
           onNavigate={handleNavigate}
-          onLoadSample={handleLoadSample}
           onRecomputeGap={handleRunGapAnalysis}
           onRunOptimization={handleRunResumeOptimization}
           loading={loading}
@@ -1178,7 +959,6 @@ export const App: React.FC = () => {
           optimization={optimization}
           resume={resume}
           onNavigate={handleNavigate}
-          onLoadSample={handleLoadSample}
           onRecomputeOptimization={handleRunResumeOptimization}
         />
       )}
@@ -1189,7 +969,6 @@ export const App: React.FC = () => {
           masterResume={resume}
           selectedJob={job}
           onNavigate={handleNavigate}
-          onLoadSample={handleLoadSample}
           onRecomputeTailoring={handleRunJobTailoring}
         />
       )}
@@ -1220,7 +999,6 @@ export const App: React.FC = () => {
           onGenerateBlueprint={handleGenerateBlueprint}
           onRefreshRecommendations={handleRefreshProjectRecommendations}
           onNavigate={handleNavigate}
-          onLoadSample={handleLoadSample}
           isLoading={loading}
         />
       )}
@@ -1235,7 +1013,6 @@ export const App: React.FC = () => {
           token={githubToken}
           onConnect={handleConnectGithub}
           onNavigate={handleNavigate}
-          onLoadSample={handleLoadSample}
           isLoading={loading}
         />
       )}
@@ -1244,9 +1021,8 @@ export const App: React.FC = () => {
         <LatexStudioView
           resume={resume}
           tailoredResume={tailoredResume}
-          initialTexSource={sampleLatexResumeCode}
+          initialTexSource={""}
           onNavigate={(screen) => handleNavigate(screen as ActiveScreen)}
-          onLoadSample={handleLoadSample}
         />
       )}
 

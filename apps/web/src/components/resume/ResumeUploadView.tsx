@@ -10,7 +10,6 @@ interface ResumeUploadViewProps {
   currentResume: ResumeExtraction | null;
   onUploadFile?: (file: File) => void;
   onUploadText: (fileName: string, text: string) => void;
-  onLoadSample: () => void;
   onNavigate: (screen: ActiveScreen) => void;
   loading: boolean;
   errorMessage?: string | null;
@@ -21,7 +20,6 @@ export const ResumeUploadView: React.FC<ResumeUploadViewProps> = ({
   currentResume,
   onUploadFile,
   onUploadText,
-  onLoadSample,
   onNavigate,
   loading,
   errorMessage,
@@ -122,15 +120,6 @@ export const ResumeUploadView: React.FC<ResumeUploadViewProps> = ({
             projects, and work evidence for canonical taxonomy mapping.
           </p>
         </div>
-
-        <Button
-          variant="secondary"
-          size="sm"
-          icon={<Layers size={13} />}
-          onClick={onLoadSample}
-        >
-          Load Verified Sample Resume
-        </Button>
       </div>
 
       {/* 4-Step Resume Workflow Stepper */}

@@ -19,10 +19,9 @@ import { Badge } from "../common/Badge.js";
 
 interface LandingPageProps {
   onEnterApp: () => void;
-  onLoadSample: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onLoadSample }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
   return (
     <div className="min-h-screen bg-surface-canvas text-content-primary px-6 pb-20">
       {/* Top Navbar */}
@@ -38,17 +37,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onLoadSamp
         </div>
 
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onLoadSample}
-            icon={<Layers size={13} />}
-            aria-label="Explore Sample Profile (See How It Works)"
-          >
-            See How It Works
+          <Button variant="outline" size="sm" onClick={onEnterApp}>
+            Sign In
           </Button>
           <Button variant="primary" size="sm" onClick={onEnterApp}>
-            Analyze My Resume
+            Get Started
           </Button>
         </div>
       </nav>
@@ -82,17 +75,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onLoadSamp
             icon={<ArrowRight size={15} />}
             className="px-6 py-3 text-sm font-semibold"
           >
-            Analyze My Resume
-          </Button>
-          <Button
-            variant="secondary"
-            size="lg"
-            onClick={onLoadSample}
-            icon={<Layers size={15} />}
-            className="px-5 py-3 text-sm font-semibold"
-            aria-label="Explore Sample Profile (See How It Works)"
-          >
-            See How It Works
+            Get Started
           </Button>
         </div>
       </section>
@@ -258,13 +241,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onLoadSamp
       <section className="max-w-6xl mx-auto bg-surface-canvas border border-border-subtle rounded-lg p-6 shadow-card">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
           <div>
-            <h4 className="text-base font-bold text-brand-navy">Live Intelligence Preview</h4>
+            <h4 className="text-base font-bold text-brand-navy">Evidence Assessment Framework</h4>
             <p className="text-xs text-content-secondary">
-              Sample Profile: Alex Rivera vs Senior Full Stack Engineer JD
+              Deterministic skill matching and critical gap identification
             </p>
           </div>
-          <Button variant="secondary" size="sm" onClick={onLoadSample}>
-            View Full Analysis
+          <Button variant="secondary" size="sm" onClick={onEnterApp}>
+            Analyze Your Resume
           </Button>
         </div>
 

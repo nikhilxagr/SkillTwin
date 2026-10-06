@@ -5,7 +5,7 @@ import {
   type SkillMatrix,
   type AnalyzedRepository,
 } from "@skilltwin/contracts";
-import { githubService, SAMPLE_ALEX_REPOS } from "./github.service.js";
+import { githubService } from "./github.service.js";
 import { demoGithubSync, githubStatus } from "../../github.js";
 
 export const githubRouter = Router();
@@ -33,7 +33,7 @@ githubRouter.get("/status", (_req: Request, res: Response) => {
  * Backward-compatible sync endpoint returning repository signals and report.
  */
 githubRouter.post("/sync", async (req: Request, res: Response) => {
-  const username = req.body?.username || githubService.getStatus().username || "alexrivera-dev";
+  const username = req.body?.username || githubService.getStatus().username || "";
   const token = req.body?.token;
   const resume = (req.body?.resume as ResumeExtraction | undefined) ?? null;
   const matrix = (req.body?.matrix as SkillMatrix | undefined) ?? null;
@@ -103,10 +103,10 @@ githubRouter.post("/connect", async (req: Request, res: Response) => {
  * Phase 11: Compares arbitrary analyzed repositories against resume claims.
  */
 githubRouter.post("/compare", async (req: Request, res: Response) => {
-  const username = req.body?.username || "alexrivera-dev";
+  const username = req.body?.username || "";
   const resume = (req.body?.resume as ResumeExtraction | undefined) ?? null;
   const matrix = (req.body?.matrix as SkillMatrix | undefined) ?? null;
-  const customRepos = (req.body?.repositories as AnalyzedRepository[] | undefined) ?? SAMPLE_ALEX_REPOS;
+  const customRepos = (req.body?.repositories as AnalyzedRepository[] | undefined) ?? [];
 
   try {
     const report = await githubService.connectAndAnalyze({
@@ -156,7 +156,7 @@ githubRouter.get("/report/latest", (_req: Request, res: Response) => {
  */
 githubRouter.get("/repositories", (_req: Request, res: Response) => {
   const report = githubService.getLatestReport();
-  const repos = report?.analyzedRepositories || SAMPLE_ALEX_REPOS;
+  const repos = report?.analyzedRepositories || [];
   res.status(200).json({
     status: "success",
     data: repos,

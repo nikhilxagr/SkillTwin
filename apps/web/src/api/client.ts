@@ -73,6 +73,8 @@ export async function uploadResumeFile(file: File): Promise<ResumePipelineResult
 
   const response = await fetch(`${API_BASE_URL}/api/v1/resumes/upload`, {
     method: "POST",
+    headers: { ...getAuthHeaders() },
+    credentials: "include",
     body: formData,
   });
 
@@ -93,7 +95,9 @@ export async function uploadResumeText(fileName: string, text: string): Promise<
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...getAuthHeaders(),
     },
+    credentials: "include",
     body: JSON.stringify({ fileName, text }),
   });
 
@@ -110,7 +114,10 @@ export async function uploadResumeText(fileName: string, text: string): Promise<
  * Retrieve a previously analyzed resume
  */
 export async function getResume(id: string): Promise<ResumeExtraction> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/resumes/${id}`);
+  const response = await fetch(`${API_BASE_URL}/api/v1/resumes/${id}`, {
+    headers: { ...getAuthHeaders() },
+    credentials: "include",
+  });
   const body = await response.json();
 
   if (!response.ok || body.status === "error") {
@@ -118,6 +125,40 @@ export async function getResume(id: string): Promise<ResumeExtraction> {
   }
 
   return body.data as ResumeExtraction;
+}
+
+/**
+ * Retrieve the latest analyzed resume for authenticated user
+ */
+export async function getLatestResume(): Promise<ResumeExtraction | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/resumes/latest`, {
+      headers: { ...getAuthHeaders() },
+      credentials: "include",
+    });
+    if (!response.ok) return null;
+    const body = await response.json();
+    return body.data || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Retrieve the skill matrix for a resume
+ */
+export async function getResumeMatrix(id: string): Promise<SkillMatrix | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/resumes/${encodeURIComponent(id)}/matrix`, {
+      headers: { ...getAuthHeaders() },
+      credentials: "include",
+    });
+    if (!response.ok) return null;
+    const body = await response.json();
+    return body.data || null;
+  } catch {
+    return null;
+  }
 }
 
 export interface JobPipelineResult {
@@ -140,6 +181,8 @@ export async function uploadJobFile(
 
   const response = await fetch(`${API_BASE_URL}/api/v1/jobs/upload`, {
     method: "POST",
+    headers: { ...getAuthHeaders() },
+    credentials: "include",
     body: formData,
   });
 
@@ -164,7 +207,9 @@ export async function uploadJobText(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...getAuthHeaders(),
     },
+    credentials: "include",
     body: JSON.stringify({ title, company, text }),
   });
 
@@ -181,7 +226,10 @@ export async function uploadJobText(
  * Retrieve a previously analyzed job description
  */
 export async function getJob(id: string): Promise<JobExtraction> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/jobs/${id}`);
+  const response = await fetch(`${API_BASE_URL}/api/v1/jobs/${id}`, {
+    headers: { ...getAuthHeaders() },
+    credentials: "include",
+  });
   const body = await response.json();
 
   if (!response.ok || body.status === "error") {
@@ -192,10 +240,30 @@ export async function getJob(id: string): Promise<JobExtraction> {
 }
 
 /**
+ * Retrieve the latest analyzed job description for authenticated user
+ */
+export async function getLatestJob(): Promise<{ job: JobExtraction; analysis: JobAnalysis } | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/jobs/latest`, {
+      headers: { ...getAuthHeaders() },
+      credentials: "include",
+    });
+    if (!response.ok) return null;
+    const body = await response.json();
+    return body.data || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Retrieve the analysis summary for a job description
  */
 export async function getJobAnalysis(id: string): Promise<JobAnalysis> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/jobs/${id}/analysis`);
+  const response = await fetch(`${API_BASE_URL}/api/v1/jobs/${id}/analysis`, {
+    headers: { ...getAuthHeaders() },
+    credentials: "include",
+  });
   const body = await response.json();
 
   if (!response.ok || body.status === "error") {
@@ -219,7 +287,9 @@ export async function compareGap(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...getAuthHeaders(),
     },
+    credentials: "include",
     body: JSON.stringify({ matrix, job, resumeId, jobId }),
   });
 
@@ -236,7 +306,10 @@ export async function compareGap(
  * Retrieve a previously computed gap analysis report
  */
 export async function getGapReport(id: string): Promise<GapAnalysisReport> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/gap/${id}`);
+  const response = await fetch(`${API_BASE_URL}/api/v1/gap/${id}`, {
+    headers: { ...getAuthHeaders() },
+    credentials: "include",
+  });
   const body = await response.json();
 
   if (!response.ok || body.status === "error") {
@@ -249,15 +322,18 @@ export async function getGapReport(id: string): Promise<GapAnalysisReport> {
 /**
  * Retrieve the latest computed gap analysis report
  */
-export async function getLatestGapReport(): Promise<GapAnalysisReport> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/gap/latest`);
-  const body = await response.json();
-
-  if (!response.ok || body.status === "error") {
-    throw new ApiError(body.message || "No gap analysis found.", undefined, response.status);
+export async function getLatestGapReport(): Promise<GapAnalysisReport | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/gap/latest`, {
+      headers: { ...getAuthHeaders() },
+      credentials: "include",
+    });
+    if (!response.ok) return null;
+    const body = await response.json();
+    return body.data || null;
+  } catch {
+    return null;
   }
-
-  return body.data as GapAnalysisReport;
 }
 
 /**

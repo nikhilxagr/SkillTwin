@@ -17,9 +17,7 @@ interface HeaderProps {
   activeRole: string;
   hasResume: boolean;
   hasJob: boolean;
-  onLoadSample: () => void;
-  onReset: () => void;
-  isSampleLoaded: boolean;
+  onReset?: () => void;
   onToggleMobileMenu?: () => void;
   currentUser?: SafeUser | null;
   onLogout?: () => void;
@@ -30,9 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeRole,
   hasResume,
   hasJob,
-  onLoadSample,
   onReset,
-  isSampleLoaded,
   onToggleMobileMenu,
   currentUser,
   onLogout,
@@ -93,17 +89,11 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        <Button
-          variant={isSampleLoaded ? "secondary" : "primary"}
-          size="sm"
-          icon={<Layers size={13} />}
-          onClick={onLoadSample}
-        >
-          {isSampleLoaded ? "Sample Profile Active" : "Load Full Sample Profile"}
-        </Button>
-        <Button variant="outline" size="sm" icon={<RefreshCw size={13} />} onClick={onReset}>
-          Reset
-        </Button>
+        {onReset && (
+          <Button variant="outline" size="sm" icon={<RefreshCw size={13} />} onClick={onReset}>
+            Reset
+          </Button>
+        )}
 
         {/* User Account / Auth Section */}
         {currentUser ? (

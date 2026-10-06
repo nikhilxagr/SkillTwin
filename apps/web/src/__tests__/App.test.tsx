@@ -8,846 +8,331 @@ import { VerifyEmailView } from "../components/auth/VerifyEmailView.js";
 import { ForgotPasswordView } from "../components/auth/ForgotPasswordView.js";
 import { ResetPasswordView } from "../components/auth/ResetPasswordView.js";
 import { ProfileView } from "../components/profile/ProfileView.js";
+import { DashboardView } from "../components/dashboard/DashboardView.js";
+import { ResumeUploadView } from "../components/resume/ResumeUploadView.js";
+import { JobUploadView } from "../components/job/JobUploadView.js";
+import { SkillMatrixView } from "../components/matrix/SkillMatrixView.js";
+import { GapAnalysisView } from "../components/gap/GapAnalysisView.js";
+import { ResumeOptimizerView } from "../components/optimizer/ResumeOptimizerView.js";
+import { LatexStudioView } from "../components/latex/LatexStudioView.js";
+import { EvidencePageView } from "../components/evidence/EvidencePageView.js";
+import { ProjectRecommendationsView } from "../components/projects/ProjectRecommendationsView.js";
 import type { SafeUser } from "@skilltwin/contracts";
-import { sampleCareerReadinessReport } from "../mock/sampleData.js";
 
-describe("SkillTwin Web Application Shell & UI Views", () => {
+describe("SkillTwin Clean Production Shell & UI Views", () => {
   beforeEach(() => {
     window.scrollTo = () => {};
     window.location.hash = "";
   });
 
-  it("renders the Landing Page with core value proposition", () => {
+  it("renders the Landing Page with core value proposition and authentication CTA", () => {
     render(<App />);
 
     expect(screen.getByText(/Developer Career Intelligence/i)).toBeDefined();
+    expect(screen.getByText(/Understand your skills/i)).toBeDefined();
     expect(screen.getByText(/Quantify your actual skills with evidence/i)).toBeDefined();
-    expect(screen.getByText(/Claimed vs. Demonstrated Skills/i)).toBeDefined();
-    expect(screen.getByText(/Deterministic 5-Tier Gap Engine/i)).toBeDefined();
-    expect(screen.getByText(/Zero-Hallucination Optimization/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Sign In/i })).toBeDefined();
+    expect(screen.getAllByRole("button", { name: /Get Started/i }).length).toBeGreaterThan(0);
   });
 
-  it("loads the full sample profile and navigates to Dashboard", async () => {
+  it("navigates to Login page when Sign In button is clicked on Landing Page", async () => {
     render(<App />);
 
-    const loadSampleBtns = screen.getAllByRole("button", { name: /Explore Sample Profile/i });
-    fireEvent.click(loadSampleBtns[0]);
+    const signInBtn = screen.getByRole("button", { name: /Sign In/i });
+    fireEvent.click(signInBtn);
 
     await waitFor(() => {
-      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
+      expect(screen.getByRole("heading", { name: /Welcome back/i })).toBeDefined();
+      expect(screen.getByPlaceholderText(/name@example\.com/i)).toBeDefined();
     });
-
-    // Check Dashboard KPI stats
-    expect(screen.getByText(/Skills Tracked/i)).toBeDefined();
-    expect(screen.getByText(/Role Alignment/i)).toBeDefined();
-    expect(screen.getAllByText(/58%/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Critical Gaps/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Demonstrated Technical Strengths/i)).toBeDefined();
   });
 
-  it("navigates to Skill Matrix and opens the Evidence Drawer", async () => {
+  it("navigates to Signup page when user chooses to create account from login", async () => {
     render(<App />);
 
-    // Load sample profile
-    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
+    const getStartedBtns = screen.getAllByRole("button", { name: /Get Started/i });
+    fireEvent.click(getStartedBtns[0]);
 
     await waitFor(() => {
-      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
+      expect(screen.getByRole("heading", { name: /Welcome back/i })).toBeDefined();
     });
 
-    // Navigate to Skill Matrix tab on sidebar
-    fireEvent.click(screen.getByTestId("nav-matrix"));
+    const switchToSignupBtn = screen.getByTestId("switch-to-signup-btn");
+    fireEvent.click(switchToSignupBtn);
 
     await waitFor(() => {
-      expect(screen.getByText(/Canonical Skill Matrix/i)).toBeDefined();
-      expect(screen.getByRole("columnheader", { name: "Skill" })).toBeDefined();
-      expect(screen.getByRole("columnheader", { name: "Category" })).toBeDefined();
-      expect(screen.getByRole("columnheader", { name: "Proficiency" })).toBeDefined();
-      expect(screen.getByRole("columnheader", { name: "Confidence" })).toBeDefined();
-      expect(screen.getByRole("columnheader", { name: "Evidence" })).toBeDefined();
-      expect(screen.getByRole("columnheader", { name: "Weak / Strong Evidence" })).toBeDefined();
-      expect(screen.getByRole("columnheader", { name: "Missing Evidence" })).toBeDefined();
-      expect(screen.getByText("React")).toBeDefined();
-      expect(screen.getByText("Docker")).toBeDefined();
-      expect(screen.getByText("JavaScript")).toBeDefined();
-    });
-
-    // Click inspect evidence on React
-    const inspectButtons = screen.getAllByRole("button", { name: /Inspect Evidence/i });
-    fireEvent.click(inspectButtons[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Assessment Rationale/i)).toBeDefined();
-      expect(screen.getByText(/Corroborating Evidence/i)).toBeDefined();
-      expect(screen.getByText(/Missing Evidence Checklist/i)).toBeDefined();
-      expect(screen.getByText(/Strong Evidence \(Demonstrated\)/i)).toBeDefined();
+      expect(screen.getByRole("heading", { name: /Create your developer profile/i })).toBeDefined();
     });
   });
 
-  it("navigates to Gap Analysis and verifies 5-tier classification", async () => {
-    render(<App />);
+  it("renders LoginView with email and password fields and submit validation", async () => {
+    const onNavigate = vi.fn();
+    const onLoginSuccess = vi.fn();
 
-    // Load sample profile
-    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
+    render(<LoginView onNavigate={onNavigate} onLoginSuccess={onLoginSuccess} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
+    expect(screen.getByLabelText(/Email address/i)).toBeDefined();
+    expect(screen.getByLabelText(/Password/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Sign In/i })).toBeDefined();
+
+    // Fill valid format and submit
+    fireEvent.change(screen.getByLabelText(/Email address/i), {
+      target: { value: "developer@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/Password/i), {
+      target: { value: "StrongPassword123!" },
     });
 
-    // Navigate to Gap Analysis on sidebar
-    fireEvent.click(screen.getByTestId("nav-gap-analysis"));
-
-    await waitFor(() => {
-      expect(screen.getByText(/Deterministic Gap Analysis/i)).toBeDefined();
-      expect(screen.getByText(/58%/i)).toBeDefined();
-      expect(screen.getByText(/🔴 Critical Gaps \(3\)/i)).toBeDefined();
-      expect(screen.getByText(/🟠 Partial Gaps \(2\)/i)).toBeDefined();
-      expect(screen.getByText(/🟢 Strong Matches \(2\)/i)).toBeDefined();
-    });
-
-    // Filter to Critical Gaps
-    const critTab = screen.getByRole("button", { name: /🔴 Critical Gaps/i });
-    fireEvent.click(critTab);
-
-    await waitFor(() => {
-      expect(screen.getAllByText(/Docker/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/Automated Testing/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/System Design/i).length).toBeGreaterThan(0);
-    });
+    const form = screen.getByRole("button", { name: /Sign In/i });
+    fireEvent.click(form);
   });
 
-  it("navigates to Resume Optimizer and displays grounded bullet diffs", async () => {
-    render(<App />);
+  it("renders SignupView and validates registration inputs", () => {
+    const onNavigate = vi.fn();
+    const onSignupSuccess = vi.fn();
 
-    // Load sample profile
-    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
+    render(<SignupView onNavigate={onNavigate} onSignupSuccess={onSignupSuccess} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
-    });
+    expect(screen.getByLabelText(/Full name/i)).toBeDefined();
+    expect(screen.getByLabelText(/Email address/i)).toBeDefined();
+    expect(screen.getByLabelText(/^Password/i)).toBeDefined();
+    expect(screen.getByLabelText(/Confirm password/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Create account/i })).toBeDefined();
 
-    // Navigate to Resume Optimizer on sidebar
-    fireEvent.click(screen.getByTestId("nav-resume-optimizer"));
-
-    await waitFor(() => {
-      expect(screen.getByText(/Evidence-Grounded Resume Optimizer/i)).toBeDefined();
-      expect(screen.getByText(/Zero-Fabrication Guarantee/i)).toBeDefined();
-      expect(screen.getAllByText(/Current Phrasing \(Under-demonstrates Context\)/i).length).toBe(3);
-      expect(screen.getAllByText(/Enhanced Phrasing \(Evidence-Grounded\)/i).length).toBe(3);
-    });
+    // Type strong password
+    const passwordInput = screen.getByLabelText(/^Password/i);
+    fireEvent.change(passwordInput, { target: { value: "SuperSecretPass123!" } });
+    expect((passwordInput as HTMLInputElement).value).toBe("SuperSecretPass123!");
   });
 
-  it("navigates to Resume Ingestion and Structured View", async () => {
-    render(<App />);
+  it("renders VerifyEmailView in pending verification mode", () => {
+    const onNavigate = vi.fn();
 
-    // Load sample profile
-    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
+    render(<VerifyEmailView onNavigate={onNavigate} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
-    });
-
-    // Navigate to Resume Ingestion
-    fireEvent.click(screen.getByTestId("nav-resume"));
-
-    await waitFor(() => {
-      expect(screen.getByText(/Resume Evidence Ingestion/i)).toBeDefined();
-      expect(screen.getByText(/Active Ingestion Summary/i)).toBeDefined();
-    });
-
-    // Click inspect structured data
-    const inspectBtn = screen.getByRole("button", { name: /Inspect Structured Data/i });
-    fireEvent.click(inspectBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Structured Resume Inspector/i)).toBeDefined();
-      expect(screen.getByText(/Detected Projects/i)).toBeDefined();
-      expect(screen.getByText(/DevPulse/i)).toBeDefined();
-      expect(screen.getByText(/CloudCart/i)).toBeDefined();
-    });
+    expect(screen.getByText(/Check your email/i)).toBeDefined();
+    expect(screen.getByPlaceholderText(/Enter your registered email/i)).toBeDefined();
+    expect(screen.getByTestId("resend-verification-btn")).toBeDefined();
   });
 
-  it("navigates to Job Description Ingestion and analyzes target job", async () => {
-    render(<App />);
+  it("renders ForgotPasswordView and handles submission", () => {
+    const onNavigate = vi.fn();
 
-    // Load sample profile
-    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
+    render(<ForgotPasswordView onNavigate={onNavigate} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
-    });
-
-    // Navigate to Target Job Ingestion
-    fireEvent.click(screen.getByTestId("nav-jd-upload"));
-
-    await waitFor(() => {
-      expect(screen.getByText(/Target Job Description Ingestion/i)).toBeDefined();
-      expect(screen.getByText(/File Upload \(PDF \/ TXT\)/i)).toBeDefined();
-      expect(screen.getByText(/Direct Text Paste/i)).toBeDefined();
-      expect(screen.getByText(/Active Target Benchmark/i)).toBeDefined();
-    });
-
-    // Click "View Extracted Intelligence" button
-    const viewBreakdownBtn = screen.getByRole("button", { name: /View Extracted Intelligence/i });
-    fireEvent.click(viewBreakdownBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Linear Systems Inc\./i)).toBeDefined();
-      expect(screen.getByText(/Skill Engine Normalized/i)).toBeDefined();
-      expect(screen.getByText(/Required \(Must Haves\)/i)).toBeDefined();
-      expect(screen.getByText(/Preferred \(Nice-to-Have\)/i)).toBeDefined();
-      expect(screen.getByText(/Competencies & Skill Criteria/i)).toBeDefined();
-      expect(screen.getByText(/Extracted Technical Ecosystem by Category/i)).toBeDefined();
-      expect(screen.getByText(/Key Responsibilities/i)).toBeDefined();
-      expect(screen.getByText(/Qualifications & Background Criteria/i)).toBeDefined();
-    });
-
-    // Test filter to Required Only
-    const reqFilterBtn = screen.getByRole("button", { name: /Required \(/i });
-    fireEvent.click(reqFilterBtn);
-
-    await waitFor(() => {
-      const badges = screen.getAllByText("REQUIRED");
-      expect(badges.length).toBeGreaterThan(0);
-    });
-
-    // Test filter to Preferred Only
-    const prefFilterBtn = screen.getByRole("button", { name: /Preferred \(/i });
-    fireEvent.click(prefFilterBtn);
-
-    await waitFor(() => {
-      const badges = screen.getAllByText("PREFERRED");
-      expect(badges.length).toBeGreaterThan(0);
-    });
+    expect(screen.getByText(/Reset your password/i)).toBeDefined();
+    expect(screen.getByLabelText(/Email address/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Send password reset link/i })).toBeDefined();
   });
 
-  it("submits direct text JD and renders analysis results", async () => {
-    render(<App />);
+  it("renders ResetPasswordView with password inputs", () => {
+    const onNavigate = vi.fn();
 
-    // Navigate to JD upload from landing or app
-    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
+    render(<ResetPasswordView onNavigate={onNavigate} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
-    });
-
-    fireEvent.click(screen.getByTestId("nav-jd-upload"));
-
-    await waitFor(() => {
-      expect(screen.getByText(/Target Job Description Ingestion/i)).toBeDefined();
-    });
-
-    // Click quick preset button
-    const presetBtn = screen.getByRole("button", { name: /Frontend Specialist \(React\)/i });
-    fireEvent.click(presetBtn);
-
-    // Submit analysis
-    const analyzeBtn = screen.getByRole("button", { name: /Analyze Job Description/i });
-    fireEvent.click(analyzeBtn);
-
-    await waitFor(() => {
-      // Should navigate to jd_analysis screen
-      expect(screen.getByText(/Modern UI Labs/i)).toBeDefined();
-      expect(screen.getByText(/Frontend React Specialist/i)).toBeDefined();
-    });
+    expect(screen.getByText(/Set new password/i)).toBeDefined();
+    expect(screen.getByLabelText(/^New Password/i)).toBeDefined();
+    expect(screen.getByLabelText(/Confirm New Password/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Reset password/i })).toBeDefined();
   });
 
-  it("navigates from Job Analysis to Gap Analysis and displays gap details with actionable suggestions", async () => {
-    render(<App />);
-
-    // Load sample profile
-    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
-    });
-
-    // Navigate to JD Analysis
-    fireEvent.click(screen.getByTestId("nav-jd-analysis"));
-
-    await waitFor(() => {
-      expect(screen.getAllByText(/Linear Systems Inc\./i).length).toBeGreaterThan(0);
-    });
-
-    // Click "Compare Against My Skills"
-    const compareBtn = screen.getAllByRole("button", { name: /Compare Against My Skills/i })[0];
-    fireEvent.click(compareBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Deterministic Gap Analysis/i)).toBeDefined();
-      expect(screen.getAllByText(/Why it is a gap:/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/Current Evidence:/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/Next Action:/i).length).toBeGreaterThan(0);
-    });
-  });
-
-  it("executes the complete flow: Resume -> JD -> Skill Matrix -> Gap Analysis -> Resume Recommendations", async () => {
-    render(<App />);
-
-    // Load sample profile
-    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
-    });
-
-    // 1. Check Skill Matrix
-    fireEvent.click(screen.getByTestId("nav-matrix"));
-    await waitFor(() => {
-      expect(screen.getByText(/Canonical Skill Matrix/i)).toBeDefined();
-    });
-
-    // 2. Check JD Analysis
-    fireEvent.click(screen.getByTestId("nav-jd-analysis"));
-    await waitFor(() => {
-      expect(screen.getAllByText(/Linear Systems Inc\./i).length).toBeGreaterThan(0);
-    });
-
-    // 3. Trigger Gap Analysis
-    fireEvent.click(screen.getAllByRole("button", { name: /Compare Against My Skills/i })[0]);
-    await waitFor(() => {
-      expect(screen.getByText(/Deterministic Gap Analysis/i)).toBeDefined();
-    });
-
-    // 4. Trigger Resume Recommendations from Gap Analysis view
-    const optimizeBtn = screen.getByRole("button", { name: /Generate Resume Recommendations/i });
-    fireEvent.click(optimizeBtn);
-
-    // 5. Verify Resume Recommendations Before/After view
-    await waitFor(
-      () => {
-        expect(screen.getByText(/Evidence-Grounded Resume Optimizer/i)).toBeDefined();
-        expect(screen.getAllByText(/Original Resume/i).length).toBeGreaterThan(0);
-        expect(screen.getByText(/Untouched & Unaltered/i)).toBeDefined();
-        expect(screen.getByText(/Zero-Fabrication Guarantee/i)).toBeDefined();
-        expect(screen.getByText(/Highlight Filter:/i)).toBeDefined();
-        expect(screen.getByText(/🟢 MATCHED/i)).toBeDefined();
-        expect(screen.getByText(/🔴 MISSING/i)).toBeDefined();
-        expect(screen.getByText(/🟡 WEAK EVIDENCE/i)).toBeDefined();
-        expect(screen.getByText(/🔵 RECOMMENDED/i)).toBeDefined();
-      },
-      { timeout: 4000 }
-    );
-
-    // Verify tabs
-    expect(screen.getByRole("button", { name: /📝 Bullet Improvements/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /⚠️ Weak Representation/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /🎯 Missing Keywords/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /🚀 Project Enhancements/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /📑 Section Advice/i })).toBeDefined();
-
-    // Click Weak Representation tab
-    fireEvent.click(screen.getByRole("button", { name: /⚠️ Weak Representation/i }));
-    await waitFor(() => {
-      expect(screen.getAllByText(/Evidence Requirement:/i).length).toBeGreaterThan(0);
-    });
-  });
-
-  it("navigates to Job-Specific Tailoring workflow, renders Alignment Summary, Master vs Job-Specific comparison, and allows Accept/Reject/Edit", async () => {
-    render(<App />);
-
-    // Load sample profile
-    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
-    });
-
-    // 1. Navigate to Tailored Resume on sidebar
-    fireEvent.click(screen.getByTestId("nav-tailored-resume"));
-
-    // 2. Verify Job-Specific Resume Workflow view
-    await waitFor(
-      () => {
-        expect(screen.getByText(/Job-Specific Resume Workflow/i)).toBeDefined();
-        expect(screen.getByText(/Alignment Summary/i)).toBeDefined();
-        expect(screen.getAllByText(/MASTER RESUME/i).length).toBeGreaterThan(0);
-        expect(screen.getAllByText(/JOB-SPECIFIC VERSION/i).length).toBeGreaterThan(0);
-        expect(screen.getByText(/Untouched & Locked/i)).toBeDefined();
-        expect(screen.getAllByText(/Zero-Fabrication Guarantee/i).length).toBeGreaterThan(0);
-      },
-      { timeout: 4000 }
-    );
-
-    // 3. Verify Alignment Summary elements
-    expect(screen.getByText(/Master Baseline/i)).toBeDefined();
-    expect(screen.getByText(/Tailored Match/i)).toBeDefined();
-    expect(screen.getByText(/Core Skills Prioritized/i)).toBeDefined();
-    expect(screen.getByText(/Why this tailored version is better aligned:/i)).toBeDefined();
-
-    // 4. Verify Accept, Reject, and Edit recommendation controls
-    expect(screen.getAllByRole("button", { name: /Accept/i }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("button", { name: /Reject/i }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("button", { name: /Edit/i }).length).toBeGreaterThan(0);
-
-    // 5. Toggle to Job-Specific Version Document draft tab
-    fireEvent.click(screen.getByRole("button", { name: /View Job-Specific Version/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText(/Job-Specific Tailored Resume Draft/i)).toBeDefined();
-      expect(screen.getByRole("button", { name: /Download \.md/i })).toBeDefined();
-      expect(screen.getByRole("button", { name: /Copy Markdown/i })).toBeDefined();
-    });
-  });
-
-  it("PHASE 8: renders Advanced Career Readiness Dashboard with Next Best Actions", async () => {
-    render(<App />);
-
-    // Load sample profile to land on Dashboard
-    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByTestId("career-readiness-dashboard")).toBeDefined();
-    });
-
-    // 1. Overall readiness score and rating
-    expect(screen.getByText(/Overall Career Readiness/i)).toBeDefined();
-    expect(screen.getByTestId("readiness-score-value")).toBeDefined();
-    expect(screen.getByTestId("readiness-score-value").textContent).toBe("40");
-    expect(screen.getAllByText(/Needs Targeted Prep/i).length).toBeGreaterThan(0);
-    expect(screen.getByTestId("readiness-executive-summary")).toBeDefined();
-
-    // 2. Score breakdown formula
-    expect(screen.getByText(/Alignment Component \(40%\):/i)).toBeDefined();
-    expect(screen.getByText(/Coverage Component \(35%\):/i)).toBeDefined();
-    expect(screen.getByText(/Evidence Component \(25%\):/i)).toBeDefined();
-    expect(screen.getByText(/Critical Gap Penalty:/i)).toBeDefined();
-
-    // 3. Skill coverage breakdown
-    expect(screen.getByText(/Skill Coverage Breakdown/i)).toBeDefined();
-    expect(screen.getByText(/Required Role Skills/i)).toBeDefined();
-    expect(screen.getAllByText(/Preferred Qualifications/i).length).toBeGreaterThan(0);
-
-    // 4. Evidence strength distribution across 4 tiers
-    expect(screen.getByText(/Evidence Strength Distribution/i)).toBeDefined();
-    expect(screen.getAllByText(/Work experience/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Projects/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Education \/ certification/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Listed only/i).length).toBeGreaterThan(0);
-
-    // 5. Strongest and Weakest areas
-    expect(screen.getByText(/Demonstrated Technical Strengths/i)).toBeDefined();
-    expect(screen.getByText(/Weakest Areas \/ Evidence Deficits/i)).toBeDefined();
-
-    // 6. Top Target Role Gaps
-    expect(screen.getByText(/Top Target Role Gaps/i)).toBeDefined();
-
-    // 7. "Your Next Best Actions" section and canonical action cards
-    expect(screen.getByTestId("next-best-actions-heading")).toBeDefined();
-    expect(screen.getByText(/Your Next Best Actions/i)).toBeDefined();
-    expect(screen.getByText(/Improve testing evidence/i)).toBeDefined();
-    expect(screen.getByText(/Build a Docker-based project/i)).toBeDefined();
-    expect(screen.getByText(/Strengthen Node\.js fundamentals/i)).toBeDefined();
-
-    // 8. Test action CTA interaction
-    const actionBtn = screen.getByRole("button", { name: /View testing gaps/i });
-    expect(actionBtn).toBeDefined();
-    fireEvent.click(actionBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Deterministic Gap Analysis/i)).toBeDefined();
-    });
-  });
-
-  it("PHASE 9: navigates to Interview Simulator, executes Question -> Answer -> Feedback -> Next Question flow, and checks history", async () => {
-    render(<App />);
-
-    // Load sample profile
-    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
-    });
-
-    // Navigate to Interview Simulator from sidebar
-    const simulatorNavBtn = screen.getByTestId("nav-interview-simulator");
-    expect(simulatorNavBtn).toBeDefined();
-    fireEvent.click(simulatorNavBtn);
-
-    await waitFor(
-      () => {
-        expect(screen.getByTestId("interview-simulator-view")).toBeDefined();
-        expect(screen.getAllByText(/Interview Simulator/i).length).toBeGreaterThan(0);
-      },
-      { timeout: 4000 }
-    );
-
-    // 1. QUESTION SECTION
-    expect(screen.getByTestId("question-card")).toBeDefined();
-    expect(screen.getByText(/Why asked:/i)).toBeDefined();
-
-    // 2. ANSWER SECTION
-    const answerInput = screen.getByTestId("interview-answer-input");
-    expect(answerInput).toBeDefined();
-
-    fireEvent.change(answerInput, {
-      target: {
-        value:
-          "To architect scalable workflows for Linear Systems, I structure components into clean domain boundaries using TypeScript and React. We containerize microservices using Docker and manage state and concurrency with asynchronous queues and automated integration testing to ensure zero regression in production.",
-      },
-    });
-
-    const submitBtn = screen.getByTestId("btn-submit-answer");
-    expect(submitBtn).toBeDefined();
-    fireEvent.click(submitBtn);
-
-    // 3. FEEDBACK SECTION
-    await waitFor(() => {
-      expect(screen.getByTestId("feedback-card")).toBeDefined();
-      expect(screen.getByText(/Answer Evaluation/i)).toBeDefined();
-      expect(screen.getByText(/Technical Accuracy/i)).toBeDefined();
-      expect(screen.getByText(/Technical Depth/i)).toBeDefined();
-      expect(screen.getByText(/Communication/i)).toBeDefined();
-      expect(screen.getByText(/Project Grounding/i)).toBeDefined();
-      expect(screen.getByText(/Interviewer Feedback:/i)).toBeDefined();
-      expect(screen.getByText(/Strengths Observed/i)).toBeDefined();
-      expect(screen.getByText(/Areas to Improve/i)).toBeDefined();
-    });
-
-    // 4. NEXT QUESTION ACTION
-    const nextBtn = screen.getByTestId("btn-next-question");
-    expect(nextBtn).toBeDefined();
-    fireEvent.click(nextBtn);
-
-    // 5. INTERVIEW HISTORY MODAL
-    const historyBtn = screen.getByTestId("btn-interview-history");
-    expect(historyBtn).toBeDefined();
-    fireEvent.click(historyBtn);
-
-    await waitFor(() => {
-      expect(screen.getAllByText(/Interview History/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/Senior Full-Stack Engineer/i).length).toBeGreaterThan(0);
-      expect(screen.getByText(/Staff Platform Engineer/i)).toBeDefined();
-    });
-
-    const closeBtn = screen.getByRole("button", { name: /Close/i });
-    fireEvent.click(closeBtn);
-  });
-
-  it("PHASE 10: navigates to Recommended Projects, verifies gap-targeting project, and generates Project Blueprint", async () => {
-    render(<App />);
-
-    // Load sample profile
-    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
-    });
-
-    // Navigate to Recommended Projects
-    const navProjectsBtn = screen.getByTestId("nav-project-recommendations");
-    expect(navProjectsBtn).toBeDefined();
-    fireEvent.click(navProjectsBtn);
-
-    await waitFor(() => {
-      expect(screen.getByTestId("project-recommendations-view")).toBeDefined();
-      expect(screen.getByTestId("projects-title")).toBeDefined();
-      expect(screen.getByText(/Project Recommendation Engine/i)).toBeDefined();
-      expect(screen.getByText(/Identified Target Gaps to Close:/i)).toBeDefined();
-    });
-
-    // Check project card and targeted gaps
-    const workflowCard = screen.getByTestId("project-card-proj-workflow-platform");
-    expect(workflowCard).toBeDefined();
-    expect(screen.getByText(/Production-Ready Task & Distributed Workflow Platform/i)).toBeDefined();
-    expect(screen.getAllByText(/Production-Grade/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Why this project is relevant:/i).length).toBeGreaterThan(0);
-
-    // Check skills demonstrated
-    expect(screen.getAllByText(/Docker/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Redis/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Testing/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/AWS/i).length).toBeGreaterThan(0);
-
-    // Click "Generate Project Blueprint"
-    const blueprintBtn = screen.getByTestId("btn-blueprint-proj-workflow-platform");
-    expect(blueprintBtn).toBeDefined();
-    fireEvent.click(blueprintBtn);
-
-    // Verify Blueprint Modal
-    await waitFor(() => {
-      expect(screen.getByTestId("project-blueprint-modal")).toBeDefined();
-      expect(screen.getByText(/Technical Project Blueprint/i)).toBeDefined();
-      expect(screen.getByText(/System Topology & Service Flow/i)).toBeDefined();
-      expect(screen.getByText(/REST API Route Specifications/i)).toBeDefined();
-      expect(screen.getByText(/PostgreSQL Relational Schema Specifications/i)).toBeDefined();
-      expect(screen.getByText(/Production Code Templates & Infrastructure Manifests/i)).toBeDefined();
-      expect(screen.getAllByText(/Dockerfile/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/docker-compose\.yml/i).length).toBeGreaterThan(0);
-      expect(screen.getByText(/Evidence Verification Checklist/i)).toBeDefined();
-      expect(screen.getByText(/Recommended Resume Bullet Points/i)).toBeDefined();
-    });
-
-    // Close blueprint modal
-    const closeBtn = screen.getByRole("button", { name: /Close Blueprint/i });
-    expect(closeBtn).toBeDefined();
-    fireEvent.click(closeBtn);
-  });
-
-  it("PHASE 11: navigates to Evidence page, verifies authorized API mode, repository signals, cross-verification matrix, and respectful discrepancy notices", async () => {
-    render(<App />);
-
-    // Load sample profile
-    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
-    });
-
-    // Navigate to Evidence tab on sidebar
-    const navEvidenceBtn = screen.getByTestId("nav-evidence");
-    expect(navEvidenceBtn).toBeDefined();
-    fireEvent.click(navEvidenceBtn);
-
-    await waitFor(() => {
-      expect(screen.getByTestId("evidence-page")).toBeDefined();
-      expect(screen.getByText(/Evidence Verification & GitHub Integration/i)).toBeDefined();
-      expect(screen.getByText(/Authorized API Mode \(No Scraping\)/i)).toBeDefined();
-    });
-
-    // Check KPI counts
-    expect(screen.getByTestId("stat-repos-count")).toBeDefined();
-    expect(screen.getByTestId("stat-verified-count")).toBeDefined();
-    expect(screen.getByTestId("stat-discrepancy-count")).toBeDefined();
-    expect(screen.getByTestId("stat-github-only-count")).toBeDefined();
-
-    // Check connected repositories and detected signals (Docker, tests, CI)
-    expect(screen.getByTestId("repo-card-devpulse")).toBeDefined();
-    expect(screen.getByTestId("repo-card-cloudcart")).toBeDefined();
-    expect(screen.getByTestId("repo-card-task-orchestrator")).toBeDefined();
-    expect(screen.getByTestId("repo-devpulse-docker-badge")).toBeDefined();
-    expect(screen.getByTestId("repo-devpulse-tests-badge")).toBeDefined();
-    expect(screen.getByTestId("repo-devpulse-ci-badge")).toBeDefined();
-
-    // Verify respectful discrepancy notice for AWS (as specified: "AWS is listed on your resume, but current connected evidence does not demonstrate it.")
-    const awsCallout = screen.getByTestId("discrepancy-aws");
-    expect(awsCallout).toBeDefined();
-    expect(
-      screen.getByText(/AWS is listed on your resume, but current connected evidence does not demonstrate it\./i)
-    ).toBeDefined();
-
-    // Check Cross-Verification Matrix for Docker (Resume: Yes, GitHub: Yes, Project: Strong, Confidence: High)
-    const dockerRow = screen.getByTestId("matrix-row-docker");
-    expect(dockerRow).toBeDefined();
-    expect(dockerRow.textContent).toContain("Docker");
-    expect(dockerRow.textContent).toContain("Yes");
-    expect(dockerRow.textContent).toContain("Strong");
-    expect(dockerRow.textContent).toContain("High");
-    expect(dockerRow.textContent).toContain("Verified Match");
-
-    // Test filter tabs: Click "Discrepancies"
-    const discrepanciesTab = screen.getByRole("button", { name: /^Discrepancies/i });
-    fireEvent.click(discrepanciesTab);
-    expect(screen.getByTestId("matrix-row-aws")).toBeDefined();
-
-    // Test filter tabs: Click "Verified"
-    const verifiedTab = screen.getByRole("button", { name: /^Verified/i });
-    fireEvent.click(verifiedTab);
-    expect(screen.getByTestId("matrix-row-docker")).toBeDefined();
-
-    // Test input connection form and Demo Profile button
-    const usernameInput = screen.getByTestId("github-username-input") as HTMLInputElement;
-    expect(usernameInput.value).toBe("alexrivera-dev");
-    const demoBtn = screen.getByTestId("load-demo-profile-btn");
-    fireEvent.click(demoBtn);
-  });
-
-  it("LaTeX Resume Studio: navigates to Overleaf-style editor, displays ATS standards, and supports code editing and profile sync", async () => {
-    render(<App />);
-
-    // Load sample profile
-    fireEvent.click(screen.getAllByRole("button", { name: /Explore Sample Profile/i })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Alex Rivera/i)).toBeDefined();
-    });
-
-    // Navigate to LaTeX Studio via sidebar button
-    const navLatexBtn = screen.getByTestId("nav-latex-studio");
-    expect(navLatexBtn).toBeDefined();
-    fireEvent.click(navLatexBtn);
-
-    await waitFor(() => {
-      expect(screen.getByTestId("latex-studio-view")).toBeDefined();
-      expect(screen.getByText(/LaTeX Resume Studio & Compiler/i)).toBeDefined();
-      expect(screen.getByText(/100% Free Compiler/i)).toBeDefined();
-      expect(screen.getByText(/Jake's Resume ATS Standard/i)).toBeDefined();
-    });
-
-    // Verify ATS checklist highlights
-    expect(screen.getByText(/Single-column ATS format/i)).toBeDefined();
-    expect(screen.getByText(/glyphtounicode Unicode mapping/i)).toBeDefined();
-    expect(screen.getByText(/No tables\/graphics breaking OCR/i)).toBeDefined();
-    expect(screen.getByText(/Overleaf & TeX Live compatible/i)).toBeDefined();
-
-    // Verify LaTeX editor textarea and controls
-    const editorTextarea = screen.getByTestId("latex-editor-textarea") as HTMLTextAreaElement;
-    expect(editorTextarea).toBeDefined();
-    expect(editorTextarea.value).toContain("\\documentclass");
-    expect(editorTextarea.value).toContain("Alex Rivera");
-
-    // Verify action buttons
-    expect(screen.getByTestId("sync-profile-btn")).toBeDefined();
-    expect(screen.getByTestId("compile-latex-btn")).toBeDefined();
-    expect(screen.getByTestId("download-tex-btn")).toBeDefined();
-
-    // Simulate typing in the editor
-    fireEvent.change(editorTextarea, {
-      target: { value: editorTextarea.value + "\n% Custom note added by user" },
-    });
-    expect(editorTextarea.value).toContain("% Custom note added by user");
-
-    // Click Sync from Profile to refresh from master resume
-    fireEvent.click(screen.getByTestId("sync-profile-btn"));
-    await waitFor(() => {
-      expect((screen.getByTestId("latex-editor-textarea") as HTMLTextAreaElement).value).toContain("Alex Rivera");
-    });
-
-    // Navigate to Tailored Resume and verify the "LaTeX Studio (ATS PDF)" quick jump button
-    fireEvent.click(screen.getByTestId("nav-tailored-resume"));
-    await waitFor(() => {
-      expect(screen.getByText(/Job-Specific Resume Workflow/i)).toBeDefined();
-    });
-
-    const latexJumpBtn = screen.getByRole("button", { name: /LaTeX Studio \(ATS PDF\)/i });
-    expect(latexJumpBtn).toBeDefined();
-    fireEvent.click(latexJumpBtn);
-
-    await waitFor(() => {
-      expect(screen.getByTestId("latex-studio-view")).toBeDefined();
-    });
-  });
-
-  describe("PHASE 13: Secure Authentication and User Profiles", () => {
+  it("renders ProfileView with user account information and target role editing", () => {
     const mockUser: SafeUser = {
-      id: "user-test-456",
-      name: "Nikhil Agrahari",
+      id: "u-123",
       email: "nikhil@skilltwin.dev",
+      name: "Nikhil Agrahari",
       emailVerified: true,
-      emailVerifiedAt: new Date().toISOString(),
       profile: {
-        headline: "BCA Student | Full Stack Developer",
-        targetRole: "Full Stack Developer",
-        bio: "Specializing in React, Node.js, and TypeScript architectures.",
+        targetRole: "Full Stack Engineer",
+        targetCompany: "CloudScale Inc",
+        githubUsername: "nikhilxagr",
+        experienceYears: 4,
+        bio: "Senior engineer focusing on scalable systems.",
       },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    it("renders Signup View with validation and password requirement enforcement", async () => {
-      const handleNavigate = vi.fn();
-      render(<SignupView onNavigate={handleNavigate} />);
+    render(
+      <ProfileView
+        currentUser={mockUser}
+        onUpdateUser={vi.fn()}
+        onNavigate={vi.fn()}
+      />
+    );
 
-      expect(screen.getByText(/Create your developer profile/i)).toBeDefined();
-      expect(screen.getByLabelText(/Full name/i)).toBeDefined();
-      expect(screen.getByLabelText(/Email address/i)).toBeDefined();
-      expect(screen.getByLabelText(/^Password/i)).toBeDefined();
-      expect(screen.getByLabelText(/Confirm password/i)).toBeDefined();
+    expect(screen.getByText(/Nikhil Agrahari/i)).toBeDefined();
+    expect(screen.getByText(/nikhil@skilltwin.dev/i)).toBeDefined();
+    expect(screen.getByText(/Full Stack Engineer/i)).toBeDefined();
+    expect(screen.getByTestId("verified-badge")).toBeDefined();
+  });
 
-      const nameInput = screen.getByLabelText(/Full name/i);
-      const emailInput = screen.getByLabelText(/Email address/i);
-      const passwordInput = screen.getByLabelText(/^Password/i);
-      const confirmInput = screen.getByLabelText(/Confirm password/i);
-      const submitBtn = screen.getByRole("button", { name: /Create account/i });
+  it("renders clean EmptyState on Dashboard when no matrix has been ingested", () => {
+    const onNavigate = vi.fn();
 
-      // Password mismatch check
-      fireEvent.change(nameInput, { target: { value: "Test User" } });
-      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-      fireEvent.change(passwordInput, { target: { value: "Password123" } });
-      fireEvent.change(confirmInput, { target: { value: "Mismatch123" } });
-      fireEvent.click(submitBtn);
+    render(
+      <DashboardView
+        currentUser={null}
+        resume={null}
+        matrix={null}
+        job={null}
+        gapReport={null}
+        onNavigate={onNavigate}
+      />
+    );
 
-      await waitFor(() => {
-        expect(screen.getByText(/Passwords do not match/i)).toBeDefined();
-      });
+    expect(screen.getByText(/Your developer profile is ready to build/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Upload Resume/i })).toBeDefined();
 
-      // Navigation to login
-      const signinLink = screen.getByRole("button", { name: /Sign in/i });
-      fireEvent.click(signinLink);
-      expect(handleNavigate).toHaveBeenCalledWith("login");
-    });
+    fireEvent.click(screen.getByRole("button", { name: /Upload Resume/i }));
+    expect(onNavigate).toHaveBeenCalledWith("resume_upload");
+  });
 
-    it("renders Login View, displays verification notice if unverified, and allows navigation", async () => {
-      const handleNavigate = vi.fn();
-      const handleLoginSuccess = vi.fn();
-      render(<LoginView onNavigate={handleNavigate} onLoginSuccess={handleLoginSuccess} />);
+  it("renders ResumeUploadView with zero sample data prompts", () => {
+    const onNavigate = vi.fn();
+    const onUploadFile = vi.fn();
+    const onUploadText = vi.fn();
 
-      expect(screen.getByText(/Welcome back/i)).toBeDefined();
-      expect(screen.getByLabelText(/Email address/i)).toBeDefined();
-      expect(screen.getByLabelText(/Password/i)).toBeDefined();
-      expect(screen.getByRole("button", { name: /Sign in/i })).toBeDefined();
+    render(
+      <ResumeUploadView
+        currentResume={null}
+        onUploadFile={onUploadFile}
+        onUploadText={onUploadText}
+        onNavigate={onNavigate}
+        loading={false}
+      />
+    );
 
-      // Navigation to forgot password
-      const forgotBtn = screen.getByRole("button", { name: /Forgot password\?/i });
-      fireEvent.click(forgotBtn);
-      expect(handleNavigate).toHaveBeenCalledWith("forgot_password");
+    expect(screen.getByText(/Resume Evidence Ingestion/i)).toBeDefined();
+    expect(screen.getByText(/File Upload \(PDF \/ Text\)/i)).toBeDefined();
+    expect(screen.getByText(/Direct Text Paste/i)).toBeDefined();
+    expect(screen.queryByText(/Load Verified Sample Resume/i)).toBeNull();
+  });
 
-      // Navigation to signup
-      const createAccountBtn = screen.getByRole("button", { name: /Create one/i });
-      fireEvent.click(createAccountBtn);
-      expect(handleNavigate).toHaveBeenCalledWith("signup");
-    });
+  it("renders JobUploadView with empty title/company and zero sample presets", () => {
+    const onNavigate = vi.fn();
+    const onUploadFile = vi.fn();
+    const onUploadJob = vi.fn();
 
-    it("renders Verify Email View and displays verification status and instructions", () => {
-      const handleNavigate = vi.fn();
-      render(<VerifyEmailView initialEmail="test@example.com" onNavigate={handleNavigate} />);
+    render(
+      <JobUploadView
+        currentJob={null}
+        onUploadFile={onUploadFile}
+        onUploadJob={onUploadJob}
+        onNavigate={onNavigate}
+        loading={false}
+      />
+    );
 
-      expect(screen.getByText(/Check your email/i)).toBeDefined();
-      expect(screen.getByText(/Confirm your email address to activate your SkillTwin account/i)).toBeDefined();
-      expect(screen.getByRole("button", { name: /Resend verification email/i })).toBeDefined();
-      expect(screen.getByRole("button", { name: /Back to sign in/i })).toBeDefined();
-    });
+    expect(screen.getByText(/Target Job Description Ingestion/i)).toBeDefined();
+    expect(screen.queryByText(/Load Verified Senior JD/i)).toBeNull();
+    expect(screen.queryByText(/Quick Presets/i)).toBeNull();
+  });
 
-    it("renders Forgot Password View and Reset Password View with secure input handling", () => {
-      const handleNavigate = vi.fn();
-      const { unmount } = render(<ForgotPasswordView onNavigate={handleNavigate} />);
+  it("renders SkillMatrixView with clean empty state when no matrix is loaded", () => {
+    const onNavigate = vi.fn();
 
-      expect(screen.getByText(/Reset your password/i)).toBeDefined();
-      expect(screen.getByLabelText(/Email address/i)).toBeDefined();
-      expect(screen.getByRole("button", { name: /Send password reset link/i })).toBeDefined();
+    render(
+      <SkillMatrixView
+        matrix={null}
+        onNavigate={onNavigate}
+      />
+    );
 
-      unmount();
+    expect(screen.getByText(/Skill Matrix Not Generated/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Upload Resume/i })).toBeDefined();
+    expect(screen.queryByText(/Load Sample Profile/i)).toBeNull();
+  });
 
-      render(<ResetPasswordView initialToken="mock-token-xyz" onNavigate={handleNavigate} />);
-      expect(screen.getByText(/Set new password/i)).toBeDefined();
-      expect(screen.getByLabelText(/^New password/i)).toBeDefined();
-      expect(screen.getByLabelText(/Confirm new password/i)).toBeDefined();
-      expect(screen.getByRole("button", { name: /Reset password/i })).toBeDefined();
-    });
+  it("renders GapAnalysisView with clean empty state when no report is available", () => {
+    const onNavigate = vi.fn();
 
-    it("renders Profile View, displays verified identity, and enables editing profile info", async () => {
-      const handleUpdate = vi.fn();
-      const handleNavigate = vi.fn();
+    render(
+      <GapAnalysisView
+        report={null}
+        onNavigate={onNavigate}
+        onRecomputeGap={vi.fn()}
+        onRunOptimization={vi.fn()}
+      />
+    );
 
-      render(<ProfileView currentUser={mockUser} onUpdateUser={handleUpdate} onNavigate={handleNavigate} />);
+    expect(screen.getByText(/Gap Analysis Not Available/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Compute Gap Analysis Now/i })).toBeDefined();
+    expect(screen.queryByText(/Load Sample Profile/i)).toBeNull();
+  });
 
-      expect(screen.getByText("Nikhil Agrahari")).toBeDefined();
-      expect(screen.getByText("nikhil@skilltwin.dev")).toBeDefined();
-      expect(screen.getByText("Verified")).toBeDefined();
-      expect(screen.getByText("BCA Student | Full Stack Developer")).toBeDefined();
+  it("renders ResumeOptimizerView with clean empty state when no report is available", () => {
+    const onNavigate = vi.fn();
 
-      // Click Edit Profile
-      const editBtn = screen.getByRole("button", { name: /Edit Profile/i });
-      fireEvent.click(editBtn);
+    render(
+      <ResumeOptimizerView
+        optimization={null}
+        resume={null}
+        onNavigate={onNavigate}
+      />
+    );
 
-      await waitFor(() => {
-        expect(screen.getByLabelText(/Full Name/i)).toBeDefined();
-        expect(screen.getByLabelText(/Target Engineering Role/i)).toBeDefined();
-        expect(screen.getByLabelText(/Professional Headline/i)).toBeDefined();
-        expect(screen.getByLabelText(/Biography/i)).toBeDefined();
-      });
+    expect(screen.getByText(/Optimization Report Not Generated/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Compare with Job/i })).toBeDefined();
+    expect(screen.queryByText(/Load Sample Profile/i)).toBeNull();
+  });
 
-      // Modify headline
-      const headlineInput = screen.getByLabelText(/Professional Headline/i);
-      fireEvent.change(headlineInput, { target: { value: "Full Stack Engineer & System Architect" } });
+  it("renders ProjectRecommendationsView with clean empty state", () => {
+    const onNavigate = vi.fn();
 
-      // Save changes
-      const saveBtn = screen.getByTestId("save-profile-btn");
-      expect(saveBtn).toBeDefined();
-      expect(saveBtn.textContent).toContain("Save Changes");
-    });
+    render(
+      <ProjectRecommendationsView
+        report={null}
+        blueprint={null}
+        job={null}
+        matrix={null}
+        gapReport={null}
+        onGenerateBlueprint={vi.fn()}
+        onRefreshRecommendations={vi.fn()}
+        onNavigate={onNavigate}
+      />
+    );
+
+    expect(screen.getByText(/No Project Recommendations Available/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Upload Job Description/i })).toBeDefined();
+    expect(screen.queryByText(/Load Sample Profile/i)).toBeNull();
+  });
+
+  it("renders EvidencePageView with GitHub connect card and zero demo buttons", () => {
+    const onNavigate = vi.fn();
+    const onConnect = vi.fn();
+
+    render(
+      <EvidencePageView
+        report={null}
+        repositories={[]}
+        resume={null}
+        matrix={null}
+        username=""
+        token=""
+        onConnect={onConnect}
+        onNavigate={onNavigate}
+      />
+    );
+
+    expect(screen.getByText(/Evidence Verification & GitHub Integration/i)).toBeDefined();
+    expect(screen.getByPlaceholderText(/Enter GitHub username\.\.\./i)).toBeDefined();
+    expect(screen.queryByRole("button", { name: /Demo Profile/i })).toBeNull();
+  });
+
+  it("renders LatexStudioView without sample code pre-loaded", () => {
+    const onNavigate = vi.fn();
+
+    render(
+      <LatexStudioView
+        resume={null}
+        tailoredResume={null}
+        initialTexSource=""
+        onNavigate={onNavigate}
+      />
+    );
+
+    expect(screen.getByText(/LaTeX Resume Studio/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Sync From Profile/i })).toBeDefined();
   });
 });
-
-
-

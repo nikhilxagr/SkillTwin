@@ -23,7 +23,6 @@ import type { ActiveScreen } from "../../types/navigation.js";
 interface SkillMatrixViewProps {
   matrix: SkillMatrix | null;
   onNavigate: (screen: ActiveScreen) => void;
-  onLoadSample: () => void;
 }
 
 const CATEGORIES = [
@@ -50,7 +49,6 @@ const CATEGORIES = [
 export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
   matrix,
   onNavigate,
-  onLoadSample,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedProficiency, setSelectedProficiency] = useState<string>("All");
@@ -67,8 +65,6 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
         description="Upload a technical resume to run the evidence extractor and build your canonical skill matrix."
         actionText="Upload Resume"
         onAction={() => onNavigate("resume_upload")}
-        secondaryActionText="Load Sample Profile"
-        onSecondaryAction={onLoadSample}
       />
     );
   }

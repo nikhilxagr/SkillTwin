@@ -42,7 +42,6 @@ interface JobSpecificResumeViewProps {
   masterResume: ResumeExtraction | null;
   selectedJob: JobExtraction | null;
   onNavigate: (screen: ActiveScreen) => void;
-  onLoadSample?: () => void;
   onRecomputeTailoring?: () => void;
 }
 
@@ -51,7 +50,6 @@ export const JobSpecificResumeView: React.FC<JobSpecificResumeViewProps> = ({
   masterResume,
   selectedJob,
   onNavigate,
-  onLoadSample,
   onRecomputeTailoring,
 }) => {
   // Decision states: Set of accepted IDs and Set of rejected IDs
@@ -85,8 +83,6 @@ export const JobSpecificResumeView: React.FC<JobSpecificResumeViewProps> = ({
         description="Select a target job description and your master resume to generate an evidence-grounded, tailored resume recommendation."
         actionText="Upload Target Job"
         onAction={() => onNavigate("jd_upload")}
-        secondaryActionText="Load Sample Profile"
-        onSecondaryAction={onLoadSample}
       />
     );
   }
