@@ -10,6 +10,7 @@ import {
   RefreshCw,
   ShieldCheck,
   KeyRound,
+  ClipboardCopy,
 } from "lucide-react";
 import { signupUser, verifyEmailOtp, resendEmailOtp } from "../../api/client.js";
 import { SocialAuthButtons } from "./SocialAuthButtons.js";
@@ -40,6 +41,7 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate, onSignupSucc
   const [resending, setResending] = useState(false);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
+  const [copiedNotice, setCopiedNotice] = useState<string | null>(null);
 
   // Cooldown timer for resend
   useEffect(() => {
@@ -50,7 +52,7 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate, onSignupSucc
     return () => clearTimeout(timer);
   }, [countdown]);
 
-  // Check URL query and hash for OAuth error redirects
+  // Check URL query and hash for OAuth error redirects or direct 1-click email verify links
   useEffect(() => {
     try {
       const searchParams = new URLSearchParams(window.location.search);
@@ -58,6 +60,38 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate, onSignupSucc
         ? window.location.hash.split("?")[1]
         : "";
       const hashParams = new URLSearchParams(hashQuery);
+
+      const urlEmail = hashParams.get("email") || searchParams.get("email");
+      const urlOtp = hashParams.get("otp") || searchParams.get("otp");
+      const autoVerify = hashParams.get("auto") || searchParams.get("auto");
+
+      if (urlEmail) {
+        setEmail(decodeURIComponent(urlEmail));
+      }
+
+      if (urlOtp && urlOtp.length === 6) {
+        setOtp(urlOtp);
+        setStep("otp");
+
+        // If direct 1-click link from email was clicked on mobile phone or web browser
+        if (autoVerify === "true" && urlEmail) {
+          setVerifyingOtp(true);
+          verifyEmailOtp(urlEmail.trim().toLowerCase(), urlOtp)
+            .then((result) => {
+              if (result.user && onSignupSuccess) {
+                onSignupSuccess(result.user);
+              } else {
+                onNavigate("login");
+              }
+            })
+            .catch((err: any) => {
+              setError(err.message || "Invalid or expired verification code.");
+            })
+            .finally(() => {
+              setVerifyingOtp(false);
+            });
+        }
+      }
 
       const oauthErr = searchParams.get("oauth_error") || hashParams.get("oauth_error");
       if (oauthErr) {
@@ -67,6 +101,25 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate, onSignupSucc
       // Ignore URL parse error
     }
   }, []);
+
+  const handlePasteOtp = async () => {
+    try {
+      if (navigator?.clipboard?.readText) {
+        const text = await navigator.clipboard.readText();
+        const clean = text.replace(/\D/g, "").slice(0, 6);
+        if (clean) {
+          setOtp(clean);
+          setCopiedNotice("Pasted!");
+          setTimeout(() => setCopiedNotice(null), 2500);
+          return;
+        }
+      }
+    } catch {
+      // Browser permission prompt or restriction
+    }
+    setCopiedNotice("Use Ctrl+V or long-press to paste");
+    setTimeout(() => setCopiedNotice(null), 2500);
+  };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,9 +246,20 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate, onSignupSucc
           {/* OTP Input Form */}
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div>
-              <label htmlFor="otp-input" className="block text-xs font-semibold text-slate-700 mb-2">
-                Enter 6-Digit Code
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label htmlFor="otp-input" className="block text-xs font-semibold text-slate-700">
+                  Enter 6-Digit Code
+                </label>
+                <button
+                  type="button"
+                  onClick={handlePasteOtp}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-brand-blue hover:text-brand-blue-hover bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-md border border-blue-200 transition-colors"
+                  title="Paste OTP from clipboard (Mobile & Web)"
+                >
+                  <ClipboardCopy size={12} />
+                  <span>{copiedNotice || "Paste Code"}</span>
+                </button>
+              </div>
               <input
                 id="otp-input"
                 type="text"
@@ -214,9 +278,10 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate, onSignupSucc
                 className="w-full py-3.5 px-4 text-center text-3xl font-mono font-bold tracking-[0.4em] bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 focus:bg-white transition-all"
                 data-testid="otp-input"
               />
-              <p className="text-[11px] text-slate-400 mt-2">
-                Code expires in 10 minutes. Check your inbox and spam folder.
-              </p>
+              <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2">
+                <span>Code expires in 10 minutes</span>
+                <span className="text-slate-500 font-medium">1-tap copy &amp; paste</span>
+              </div>
             </div>
 
             <button

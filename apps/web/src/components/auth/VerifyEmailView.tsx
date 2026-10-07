@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   Mail,
   KeyRound,
+  ClipboardCopy,
 } from "lucide-react";
 import { verifyEmailOtp, resendEmailOtp, verifyEmailToken } from "../../api/client.js";
 
@@ -29,6 +30,7 @@ export const VerifyEmailView: React.FC<VerifyEmailViewProps> = ({
   const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [copiedNotice, setCopiedNotice] = useState<string | null>(null);
 
   // Cooldown timer
   useEffect(() => {
@@ -39,10 +41,12 @@ export const VerifyEmailView: React.FC<VerifyEmailViewProps> = ({
     return () => clearTimeout(timer);
   }, [countdown]);
 
-  // Check if a legacy token was passed via URL hash or query params
+  // Check if token or OTP was passed via URL hash or query params
   useEffect(() => {
     let activeToken = initialToken;
     let activeEmail = initialEmail;
+    let activeOtp = "";
+    let autoVerify = false;
 
     if (typeof window !== "undefined") {
       const hash = window.location.hash;
@@ -51,21 +55,64 @@ export const VerifyEmailView: React.FC<VerifyEmailViewProps> = ({
         const params = new URLSearchParams(hash.substring(queryIndex));
         if (!activeToken) activeToken = params.get("token") || "";
         if (!activeEmail) activeEmail = params.get("email") || "";
+        activeOtp = params.get("otp") || "";
+        autoVerify = params.get("auto") === "true";
       } else {
         const searchParams = new URLSearchParams(window.location.search);
         if (!activeToken) activeToken = searchParams.get("token") || "";
         if (!activeEmail) activeEmail = searchParams.get("email") || "";
+        activeOtp = searchParams.get("otp") || "";
+        autoVerify = searchParams.get("auto") === "true";
       }
     }
 
     if (activeEmail) {
-      setEmail(activeEmail);
+      setEmail(decodeURIComponent(activeEmail));
     }
 
-    if (activeToken) {
+    if (activeOtp) {
+      setOtp(activeOtp);
+    }
+
+    // Direct 1-click verification from email link
+    if (activeEmail && activeOtp && (autoVerify || activeOtp.length === 6)) {
+      executeOtpAutoVerification(decodeURIComponent(activeEmail), activeOtp);
+    } else if (activeToken) {
       executeTokenVerification(activeToken);
     }
   }, [initialToken, initialEmail]);
+
+  const executeOtpAutoVerification = async (targetEmail: string, targetOtp: string) => {
+    setStatus("loading");
+    setMessage("Verifying email via 1-click OTP code...");
+    try {
+      const res = await verifyEmailOtp(targetEmail.trim().toLowerCase(), targetOtp.trim());
+      setStatus("success");
+      setMessage(res.message || "Email verified successfully! Welcome to SkillTwin.");
+    } catch (err: any) {
+      setStatus("error");
+      setMessage(err.message || "Invalid or expired verification code. Please enter the 6-digit code manually.");
+    }
+  };
+
+  const handlePasteClipboard = async () => {
+    try {
+      if (navigator?.clipboard?.readText) {
+        const text = await navigator.clipboard.readText();
+        const clean = text.replace(/\D/g, "").slice(0, 6);
+        if (clean) {
+          setOtp(clean);
+          setCopiedNotice("Pasted!");
+          setTimeout(() => setCopiedNotice(null), 2500);
+          return;
+        }
+      }
+    } catch {
+      // Browser permission prompt or restriction
+    }
+    setCopiedNotice("Use Ctrl+V or long-press to paste");
+    setTimeout(() => setCopiedNotice(null), 2500);
+  };
 
   const executeTokenVerification = async (verifyToken: string) => {
     setStatus("loading");
@@ -211,9 +258,20 @@ export const VerifyEmailView: React.FC<VerifyEmailViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  6-Digit Verification Code
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    6-Digit Verification Code
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handlePasteClipboard}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-brand-blue hover:text-brand-blue-hover bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 transition-colors"
+                    title="Paste OTP from clipboard (Mobile & Web)"
+                  >
+                    <ClipboardCopy size={11} />
+                    <span>{copiedNotice || "Paste Code"}</span>
+                  </button>
+                </div>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -226,6 +284,10 @@ export const VerifyEmailView: React.FC<VerifyEmailViewProps> = ({
                   required
                   className="w-full py-3 px-4 text-center text-2xl font-mono font-bold tracking-[0.4em] bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 focus:bg-white"
                 />
+                <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1.5">
+                  <span>Code expires in 10 minutes</span>
+                  <span className="text-slate-500 font-medium">1-tap copy &amp; paste</span>
+                </div>
               </div>
 
               <button

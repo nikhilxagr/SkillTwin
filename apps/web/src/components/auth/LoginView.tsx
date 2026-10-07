@@ -9,6 +9,7 @@ import {
   ShieldAlert,
   KeyRound,
   CheckCircle2,
+  ClipboardCopy,
 } from "lucide-react";
 import { loginUser, verifyEmailOtp, resendEmailOtp } from "../../api/client.js";
 import { SocialAuthButtons } from "./SocialAuthButtons.js";
@@ -30,6 +31,26 @@ export const LoginView: React.FC<LoginViewProps> = ({ onNavigate, onLoginSuccess
   const [resending, setResending] = useState(false);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
+  const [copiedNotice, setCopiedNotice] = useState<string | null>(null);
+
+  const handlePasteOtp = async () => {
+    try {
+      if (navigator?.clipboard?.readText) {
+        const text = await navigator.clipboard.readText();
+        const clean = text.replace(/\D/g, "").slice(0, 6);
+        if (clean) {
+          setOtp(clean);
+          setCopiedNotice("Pasted!");
+          setTimeout(() => setCopiedNotice(null), 2500);
+          return;
+        }
+      }
+    } catch {
+      // Browser restriction
+    }
+    setCopiedNotice("Use Ctrl+V or long-press to paste");
+    setTimeout(() => setCopiedNotice(null), 2500);
+  };
 
   // Cooldown timer for resend
   useEffect(() => {
@@ -169,9 +190,20 @@ export const LoginView: React.FC<LoginViewProps> = ({ onNavigate, onLoginSuccess
 
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div>
-              <label htmlFor="login-otp-input" className="block text-xs font-semibold text-slate-700 mb-2">
-                Enter 6-Digit Code
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label htmlFor="login-otp-input" className="block text-xs font-semibold text-slate-700">
+                  Enter 6-Digit Code
+                </label>
+                <button
+                  type="button"
+                  onClick={handlePasteOtp}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-brand-blue hover:text-brand-blue-hover bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-md border border-blue-200 transition-colors"
+                  title="Paste OTP from clipboard (Mobile & Web)"
+                >
+                  <ClipboardCopy size={12} />
+                  <span>{copiedNotice || "Paste Code"}</span>
+                </button>
+              </div>
               <input
                 id="login-otp-input"
                 type="text"
@@ -190,9 +222,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onNavigate, onLoginSuccess
                 className="w-full py-3.5 px-4 text-center text-3xl font-mono font-bold tracking-[0.4em] bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 focus:bg-white transition-all"
                 data-testid="login-otp-input"
               />
-              <p className="text-[11px] text-slate-400 mt-2">
-                Check your inbox and spam folders for the Nodemailer OTP.
-              </p>
+              <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2">
+                <span>Code expires in 10 minutes</span>
+                <span className="text-slate-500 font-medium">1-tap copy &amp; paste</span>
+              </div>
             </div>
 
             <button
