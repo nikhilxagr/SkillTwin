@@ -8,6 +8,20 @@ export const userProfileSchema = z.object({
 
 export type UserProfile = z.infer<typeof userProfileSchema>;
 
+export const oauthProviderSchema = z.enum(["google", "github", "linkedin"]);
+export type OAuthProvider = z.infer<typeof oauthProviderSchema>;
+
+export const linkedProviderSchema = z.object({
+  provider: oauthProviderSchema,
+  providerId: z.string(),
+  email: z.string().optional(),
+  displayName: z.string().optional(),
+  avatarUrl: z.string().optional(),
+  connectedAt: z.string(),
+});
+
+export type LinkedProvider = z.infer<typeof linkedProviderSchema>;
+
 export const safeUserSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -19,9 +33,19 @@ export const safeUserSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   lastLoginAt: z.string().nullable().optional(),
+  hasPassword: z.boolean().optional().default(true),
+  connectedProviders: z.array(linkedProviderSchema).optional().default([]),
 });
 
 export type SafeUser = z.infer<typeof safeUserSchema>;
+
+export const connectedProvidersResponseSchema = z.object({
+  success: z.boolean(),
+  providers: z.array(linkedProviderSchema),
+  hasPassword: z.boolean(),
+});
+
+export type ConnectedProvidersResponse = z.infer<typeof connectedProvidersResponseSchema>;
 
 export const signupRequestSchema = z
   .object({
@@ -118,6 +142,31 @@ export const updateProfileRequestSchema = z.object({
 
 export type UpdateProfileRequest = z.infer<typeof updateProfileRequestSchema>;
 
+export const verifyOtpRequestSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Please provide a valid email address"),
+  otp: z
+    .string()
+    .trim()
+    .length(6, "Verification code must be exactly 6 digits")
+    .regex(/^\d{6}$/, "Verification code must consist of 6 digits"),
+});
+
+export type VerifyOtpRequest = z.infer<typeof verifyOtpRequestSchema>;
+
+export const resendOtpRequestSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Please provide a valid email address"),
+});
+
+export type ResendOtpRequest = z.infer<typeof resendOtpRequestSchema>;
+
 export const authResponseSchema = z.object({
   success: z.boolean(),
   message: z.string(),
@@ -125,6 +174,8 @@ export const authResponseSchema = z.object({
   requiresVerification: z.boolean().optional(),
   verificationToken: z.string().optional(),
   verificationUrl: z.string().optional(),
+  email: z.string().optional(),
 });
 
 export type AuthResponse = z.infer<typeof authResponseSchema>;
+

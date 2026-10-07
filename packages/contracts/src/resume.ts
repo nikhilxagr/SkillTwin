@@ -5,9 +5,9 @@ export const resumeProfileSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().optional(),
   location: z.string().optional(),
-  githubUrl: z.string().url().optional(),
-  linkedinUrl: z.string().url().optional(),
-  portfolioUrl: z.string().url().optional(),
+  githubUrl: z.string().optional(),
+  linkedinUrl: z.string().optional(),
+  portfolioUrl: z.string().optional(),
   summary: z.string().optional(),
   yearsOfExperienceEstimate: z.number().nonnegative().optional(),
 });
@@ -19,8 +19,8 @@ export const resumeProjectSchema = z.object({
   description: z.string().optional(),
   technologies: z.array(z.string()).default([]),
   bullets: z.array(z.string()).default([]),
-  githubUrl: z.string().url().optional(),
-  liveUrl: z.string().url().optional(),
+  githubUrl: z.string().optional(),
+  liveUrl: z.string().optional(),
 });
 export type ResumeProject = z.infer<typeof resumeProjectSchema>;
 
