@@ -32,12 +32,14 @@ describe("Phase 13: Secure Authentication, Email Verification & Multi-User Owner
     const rawToken = sentEmail!.token;
     expect(rawToken).toBeDefined();
 
-    // Verify user in DB has emailVerified = false and NEVER stores plain password
-    const userInDb = await dbService.users.findOne({ email: "nikhil@skilltwin.dev" });
-    expect(userInDb).not.toBeNull();
-    expect(userInDb?.emailVerified).toBe(false);
-    expect(userInDb?.passwordHash).not.toBe("SecurePassword123!");
-    expect(userInDb?.passwordHash?.startsWith("$2")).toBe(true);
+    // Verify user is staged in pendingRegistrations and NOT stored in users DB yet
+    const userInDbBefore = await dbService.users.findOne({ email: "nikhil@skilltwin.dev" });
+    expect(userInDbBefore).toBeNull();
+
+    const pendingInDb = await dbService.pendingRegistrations.findOne({ email: "nikhil@skilltwin.dev" });
+    expect(pendingInDb).not.toBeNull();
+    expect(pendingInDb?.passwordHash).not.toBe("SecurePassword123!");
+    expect(pendingInDb?.passwordHash?.startsWith("$2")).toBe(true);
 
     // 2. Attempt login before verification -> MUST BE REJECTED with 403
     const unverifiedLogin = await request(app)
@@ -58,6 +60,11 @@ describe("Phase 13: Secure Authentication, Email Verification & Multi-User Owner
     expect(verifyRes.status).toBe(200);
     expect(verifyRes.body.success).toBe(true);
     expect(verifyRes.body.message).toContain("Email verified successfully");
+
+    // Verify user is NOW stored in users DB with emailVerified = true
+    const userInDbAfter = await dbService.users.findOne({ email: "nikhil@skilltwin.dev" });
+    expect(userInDbAfter).not.toBeNull();
+    expect(userInDbAfter?.emailVerified).toBe(true);
 
     // Verify token is single-use: attempting reuse must fail
     const reuseVerify = await request(app)
@@ -104,8 +111,9 @@ describe("Phase 13: Secure Authentication, Email Verification & Multi-User Owner
     expect(logoutRes.headers["set-cookie"][0]).toContain("skilltwin_session=;");
   });
 
-  it("rejects duplicate email signups with a safe message", async () => {
-    await request(app)
+  it("allows unverified email re-registration and rejects verified duplicate signups", async () => {
+    // 1. First signup: creates pending registration without saving to users DB
+    const firstRes = await request(app)
       .post("/api/v1/auth/signup")
       .send({
         name: "Alex",
@@ -113,11 +121,39 @@ describe("Phase 13: Secure Authentication, Email Verification & Multi-User Owner
         password: "Password123!",
         confirmPassword: "Password123!",
       });
+    expect(firstRes.status).toBe(201);
+    expect(firstRes.body.success).toBe(true);
 
-    const duplicateRes = await request(app)
+    // 2. Re-registering before verification does NOT error with duplicate in DB;
+    // it issues fresh verification OTP and updates pending registration
+    const reRegisterRes = await request(app)
       .post("/api/v1/auth/signup")
       .send({
         name: "Alex Twin",
+        email: "alex@example.com",
+        password: "Password123!",
+        confirmPassword: "Password123!",
+      });
+    expect(reRegisterRes.status).toBe(201);
+    expect(reRegisterRes.body.success).toBe(true);
+
+    // 3. User verifies with the latest OTP
+    const latestEmail = emailService.getLatestEmailFor("alex@example.com");
+    expect(latestEmail).toBeDefined();
+    const verifyRes = await request(app)
+      .post("/api/v1/auth/verify-otp")
+      .send({
+        email: "alex@example.com",
+        otp: latestEmail!.otp,
+      });
+    expect(verifyRes.status).toBe(200);
+    expect(verifyRes.body.success).toBe(true);
+
+    // 4. Now that account is verified and stored in users DB, duplicate signup MUST be rejected
+    const duplicateRes = await request(app)
+      .post("/api/v1/auth/signup")
+      .send({
+        name: "Alex Impostor",
         email: "alex@example.com",
         password: "Password123!",
         confirmPassword: "Password123!",

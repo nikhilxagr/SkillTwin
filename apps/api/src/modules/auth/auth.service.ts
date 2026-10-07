@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { config } from "../../config.js";
 import { dbService } from "../database/database.service.js";
-import type { UserDoc, OAuthProviderType } from "../database/database.types.js";
+import type { UserDoc, OAuthProviderType, PendingRegistrationDoc } from "../database/database.types.js";
 import {
   hashPassword,
   verifyPassword,
@@ -35,18 +35,30 @@ export function generateOtp(): string {
 
 export class AuthService {
   /**
-   * Register a new user with unverified email and send 6-digit OTP via Nodemailer
+   * Register a new user: stores temporary state in pendingRegistrations,
+   * sends 6-digit OTP, and does NOT store user into users DB table until verified.
    */
   async signup(data: SignupRequest): Promise<AuthResponse> {
     const normalizedEmail = data.email.trim().toLowerCase();
 
-    // Check for existing user
-    const existing = await dbService.users.findOne({ email: normalizedEmail });
-    if (existing) {
-      return {
-        success: false,
-        message: "An account with this email address already exists. Please sign in or reset your password.",
-      };
+    // Check if user is ALREADY verified and active in the database
+    const existingUser = await dbService.users.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      if (existingUser.emailVerified) {
+        return {
+          success: false,
+          message: "An account with this email address already exists. Please sign in or reset your password.",
+        };
+      }
+      // If a legacy unverified record exists in users, clean it up
+      await dbService.users.deleteOne({ _id: existingUser._id });
+    }
+
+    // Check if an unverified pending registration already exists
+    const existingPending = await dbService.pendingRegistrations.findOne({ email: normalizedEmail });
+    if (existingPending) {
+      // User is re-registering before completing verification: clear the previous pending record
+      await dbService.pendingRegistrations.deleteOne({ _id: existingPending._id });
     }
 
     const passwordHash = await hashPassword(data.password);
@@ -58,36 +70,24 @@ export class AuthService {
     const otpHashed = hashToken(otp);
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    const userId = `usr-${crypto.randomUUID()}`;
-
-    const newUser: UserDoc = {
-      _id: userId,
+    const pendingDoc: PendingRegistrationDoc = {
+      _id: `pending-${crypto.randomUUID()}`,
       name: data.name.trim(),
       email: normalizedEmail,
       passwordHash,
-      emailVerified: false,
-      emailVerifiedAt: null,
       verificationTokenHash: hashedToken,
       verificationTokenExpiresAt: tokenExpiresAt,
       verificationOtpHash: otpHashed,
       verificationOtpExpiresAt: otpExpiresAt,
-      resetPasswordTokenHash: null,
-      resetPasswordTokenExpiresAt: null,
-      avatarUrl: "",
-      profile: {
-        headline: "",
-        targetRole: "Full Stack Developer",
-        bio: "",
-      },
       createdAt: new Date(),
       updatedAt: new Date(),
-      lastLoginAt: null,
     };
 
-    await dbService.users.insertOne(newUser);
+    // Stored ONLY in pendingRegistrations - NOT in users collection!
+    await dbService.pendingRegistrations.insertOne(pendingDoc);
 
     // Send 6-digit OTP email via Nodemailer
-    await emailService.sendVerificationOtpEmail(newUser.email, newUser.name, otp, rawToken);
+    await emailService.sendVerificationOtpEmail(pendingDoc.email, pendingDoc.name, otp, rawToken);
 
     return {
       success: true,
@@ -98,7 +98,8 @@ export class AuthService {
   }
 
   /**
-   * Verify email via 6-digit numeric OTP and activate session
+   * Verify email via 6-digit numeric OTP.
+   * Checks pendingRegistrations first; only after OTP matches does it store the user in the users DB table.
    */
   async verifyEmailOtp(email: string, rawOtp: string): Promise<LoginResult> {
     const normalizedEmail = email.trim().toLowerCase();
@@ -111,11 +112,72 @@ export class AuthService {
       };
     }
 
+    // 1. Look for pending registration
+    const pending = await dbService.pendingRegistrations.findOne({ email: normalizedEmail });
+    if (pending) {
+      if (pending.verificationOtpExpiresAt < new Date()) {
+        return {
+          success: false,
+          message: "Verification code has expired. Please click 'Resend Code'.",
+        };
+      }
+
+      const hashedInput = hashToken(cleanOtp);
+      if (hashedInput !== pending.verificationOtpHash) {
+        return {
+          success: false,
+          message: "Invalid verification code. Please check your email and try again.",
+        };
+      }
+
+      // OTP MATCHES! Now and ONLY now, persist user in the database users table!
+      const userId = `usr-${crypto.randomUUID()}`;
+      const now = new Date();
+      const newUser: UserDoc = {
+        _id: userId,
+        name: pending.name,
+        email: pending.email,
+        passwordHash: pending.passwordHash,
+        emailVerified: true,
+        emailVerifiedAt: now,
+        verificationTokenHash: null,
+        verificationTokenExpiresAt: null,
+        verificationOtpHash: null,
+        verificationOtpExpiresAt: null,
+        resetPasswordTokenHash: null,
+        resetPasswordTokenExpiresAt: null,
+        avatarUrl: "",
+        profile: {
+          headline: "",
+          targetRole: "Full Stack Developer",
+          bio: "",
+        },
+        createdAt: now,
+        updatedAt: now,
+        lastLoginAt: now,
+      };
+
+      await dbService.users.insertOne(newUser);
+      // Remove from pending registrations
+      await dbService.pendingRegistrations.deleteOne({ _id: pending._id });
+
+      const token = createSessionJwt(newUser._id, newUser.email);
+      const safeUser = toSafeUser(newUser);
+
+      return {
+        success: true,
+        message: "Email verified successfully! Welcome to SkillTwin.",
+        user: safeUser,
+        token,
+      };
+    }
+
+    // 2. If not in pending, check if already in users collection
     const user = await dbService.users.findOne({ email: normalizedEmail });
     if (!user) {
       return {
         success: false,
-        message: "User account not found. Please sign up first.",
+        message: "No pending registration found for this email. Please sign up first.",
       };
     }
 
@@ -129,6 +191,7 @@ export class AuthService {
       };
     }
 
+    // Legacy unverified user record handling (backwards compatibility)
     if (!user.verificationOtpHash || !user.verificationOtpExpiresAt) {
       return {
         success: false,
@@ -151,7 +214,6 @@ export class AuthService {
       };
     }
 
-    // Activate account and clear OTP
     const now = new Date();
     await dbService.users.updateOne(
       { _id: user._id },
@@ -188,37 +250,71 @@ export class AuthService {
    */
   async resendVerificationOtp(email: string): Promise<AuthResponse> {
     const normalizedEmail = email.trim().toLowerCase();
-    const user = await dbService.users.findOne({ email: normalizedEmail });
 
-    // Anti-enumeration: return success message even if not found or already verified
-    if (!user || user.emailVerified) {
+    // Check pending registrations first
+    const pending = await dbService.pendingRegistrations.findOne({ email: normalizedEmail });
+    if (pending) {
+      const otp = generateOtp();
+      const otpHashed = hashToken(otp);
+      const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      await dbService.pendingRegistrations.updateOne(
+        { _id: pending._id },
+        {
+          verificationOtpHash: otpHashed,
+          verificationOtpExpiresAt: otpExpiresAt,
+          updatedAt: new Date(),
+        }
+      );
+
+      await emailService.sendVerificationOtpEmail(pending.email, pending.name, otp);
+
       return {
         success: true,
-        message: "If an unverified account exists for this email, a verification code has been sent.",
+        message: "A new 6-digit verification code has been sent to your email.",
+        email: normalizedEmail,
+        requiresVerification: true,
+      };
+    }
+
+    const user = await dbService.users.findOne({ email: normalizedEmail });
+
+    if (user && user.emailVerified) {
+      return {
+        success: true,
+        message: "This email address is already verified. Please sign in.",
         email: normalizedEmail,
       };
     }
 
-    const otp = generateOtp();
-    const otpHashed = hashToken(otp);
-    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    if (user && !user.emailVerified) {
+      const otp = generateOtp();
+      const otpHashed = hashToken(otp);
+      const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    await dbService.users.updateOne(
-      { _id: user._id },
-      {
-        verificationOtpHash: otpHashed,
-        verificationOtpExpiresAt: otpExpiresAt,
-        updatedAt: new Date(),
-      }
-    );
+      await dbService.users.updateOne(
+        { _id: user._id },
+        {
+          verificationOtpHash: otpHashed,
+          verificationOtpExpiresAt: otpExpiresAt,
+          updatedAt: new Date(),
+        }
+      );
 
-    await emailService.sendVerificationOtpEmail(user.email, user.name, otp);
+      await emailService.sendVerificationOtpEmail(user.email, user.name, otp);
+
+      return {
+        success: true,
+        message: "A new 6-digit verification code has been sent to your email.",
+        email: normalizedEmail,
+        requiresVerification: true,
+      };
+    }
 
     return {
-      success: true,
-      message: "A new 6-digit verification code has been sent to your email.",
+      success: false,
+      message: "No registration in progress found for this email. Please sign up first.",
       email: normalizedEmail,
-      requiresVerification: true,
     };
   }
 
@@ -231,8 +327,55 @@ export class AuthService {
     }
 
     const hashedToken = hashToken(rawToken.trim());
-    const user = await dbService.users.findOne({ verificationTokenHash: hashedToken });
 
+    // 1. Check pending registrations
+    const pending = await dbService.pendingRegistrations.findOne({ verificationTokenHash: hashedToken });
+    if (pending) {
+      if (pending.verificationTokenExpiresAt && pending.verificationTokenExpiresAt < new Date()) {
+        return {
+          success: false,
+          message: "Verification link has expired. Please request a new verification code.",
+        };
+      }
+
+      // Create verified user
+      const userId = `usr-${crypto.randomUUID()}`;
+      const now = new Date();
+      const newUser: UserDoc = {
+        _id: userId,
+        name: pending.name,
+        email: pending.email,
+        passwordHash: pending.passwordHash,
+        emailVerified: true,
+        emailVerifiedAt: now,
+        verificationTokenHash: null,
+        verificationTokenExpiresAt: null,
+        verificationOtpHash: null,
+        verificationOtpExpiresAt: null,
+        resetPasswordTokenHash: null,
+        resetPasswordTokenExpiresAt: null,
+        avatarUrl: "",
+        profile: {
+          headline: "",
+          targetRole: "Full Stack Developer",
+          bio: "",
+        },
+        createdAt: now,
+        updatedAt: now,
+        lastLoginAt: now,
+      };
+
+      await dbService.users.insertOne(newUser);
+      await dbService.pendingRegistrations.deleteOne({ _id: pending._id });
+
+      return {
+        success: true,
+        message: "Email verified successfully! You can now sign in to your SkillTwin account.",
+      };
+    }
+
+    // 2. Legacy users check
+    const user = await dbService.users.findOne({ verificationTokenHash: hashedToken });
     if (!user) {
       return {
         success: false,
@@ -281,6 +424,33 @@ export class AuthService {
     const user = await dbService.users.findOne({ email: normalizedEmail });
 
     if (!user) {
+      // Check if registration is still pending verification
+      const pending = await dbService.pendingRegistrations.findOne({ email: normalizedEmail });
+      if (pending) {
+        // Send a fresh OTP so the user can complete verification
+        const otp = generateOtp();
+        const otpHashed = hashToken(otp);
+        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+        await dbService.pendingRegistrations.updateOne(
+          { _id: pending._id },
+          {
+            verificationOtpHash: otpHashed,
+            verificationOtpExpiresAt: otpExpiresAt,
+            updatedAt: new Date(),
+          }
+        );
+
+        await emailService.sendVerificationOtpEmail(pending.email, pending.name, otp);
+
+        return {
+          success: false,
+          message: "Please verify your email before signing in. We have sent a 6-digit verification code to your email.",
+          requiresVerification: true,
+          email: pending.email,
+        };
+      }
+
       return {
         success: false,
         message: "Invalid email or password.",

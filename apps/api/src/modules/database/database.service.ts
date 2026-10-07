@@ -7,6 +7,7 @@ import type {
   JobAnalysisDoc,
   GapAnalysisDoc,
   ResumeOptimizationDoc,
+  PendingRegistrationDoc,
 } from "./database.types.js";
 
 export interface ICollection<T extends { _id: string }> {
@@ -207,6 +208,7 @@ export class DatabaseService {
 
   // Collections
   public users: ICollection<UserDoc>;
+  public pendingRegistrations: ICollection<PendingRegistrationDoc>;
   public resumes: ICollection<ResumeDoc>;
   public skillProfiles: ICollection<SkillProfileDoc>;
   public jobAnalyses: ICollection<JobAnalysisDoc>;
@@ -216,6 +218,7 @@ export class DatabaseService {
   constructor() {
     // Default to in-memory collections initially with proper index constraints
     this.users = new InMemoryCollection<UserDoc>(["email"]);
+    this.pendingRegistrations = new InMemoryCollection<PendingRegistrationDoc>(["email"]);
     this.resumes = new InMemoryCollection<ResumeDoc>();
     this.skillProfiles = new InMemoryCollection<SkillProfileDoc>(["userId"]);
     this.jobAnalyses = new InMemoryCollection<JobAnalysisDoc>();
@@ -240,6 +243,7 @@ export class DatabaseService {
 
       // Wrap collections with MongoDB collections
       this.users = new MongoCollectionWrapper<UserDoc>(this.db, "users");
+      this.pendingRegistrations = new MongoCollectionWrapper<PendingRegistrationDoc>(this.db, "pendingRegistrations");
       this.resumes = new MongoCollectionWrapper<ResumeDoc>(this.db, "resumes");
       this.skillProfiles = new MongoCollectionWrapper<SkillProfileDoc>(this.db, "skillProfiles");
       this.jobAnalyses = new MongoCollectionWrapper<JobAnalysisDoc>(this.db, "jobAnalyses");
@@ -263,6 +267,10 @@ export class DatabaseService {
       await this.db.collection("users").createIndex({ verificationTokenHash: 1 }, { sparse: true });
       await this.db.collection("users").createIndex({ resetPasswordTokenHash: 1 }, { sparse: true });
       await this.db.collection("users").createIndex({ "providers.provider": 1, "providers.providerId": 1 }, { sparse: true });
+
+      // 1b. Pending registrations: unique email + TTL index (auto-expire in 24 hours)
+      await this.db.collection("pendingRegistrations").createIndex({ email: 1 }, { unique: true });
+      await this.db.collection("pendingRegistrations").createIndex({ createdAt: 1 }, { expireAfterSeconds: 86400 });
 
       // 2. Resume: userId + createdAt
       await this.db.collection("resumes").createIndex({ userId: 1, createdAt: -1 });
@@ -292,6 +300,7 @@ export class DatabaseService {
 
   async clearAll(): Promise<void> {
     await this.users.clear();
+    await this.pendingRegistrations.clear();
     await this.resumes.clear();
     await this.skillProfiles.clear();
     await this.jobAnalyses.clear();

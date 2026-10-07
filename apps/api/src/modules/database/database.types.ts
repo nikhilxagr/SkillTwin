@@ -97,3 +97,16 @@ export interface ResumeOptimizationDoc {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface PendingRegistrationDoc {
+  _id: string;
+  email: string;
+  name: string;
+  passwordHash: string;
+  verificationTokenHash: string;
+  verificationTokenExpiresAt: Date;
+  verificationOtpHash: string;
+  verificationOtpExpiresAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
