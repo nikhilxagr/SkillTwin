@@ -377,7 +377,7 @@ export const JobAnalysisView: React.FC<JobAnalysisViewProps> = ({
             No competencies match the selected filters.
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: "12px" }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {filteredSkills.map((skill, idx) => {
               const isRequired = skill.importance === "Required";
               return (
@@ -452,7 +452,7 @@ export const JobAnalysisView: React.FC<JobAnalysisViewProps> = ({
         }
         description="Explicit technologies identified in the job posting and mapped into categorical taxonomies."
       >
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Programming Languages */}
           <div style={{ padding: "14px", background: "var(--bg-elevated)", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "8px" }}>
@@ -592,7 +592,7 @@ export const JobAnalysisView: React.FC<JobAnalysisViewProps> = ({
       </Card>
 
       {/* Responsibilities & Qualifications Split Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: "20px" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Core Responsibilities */}
         <Card
           title={

@@ -634,16 +634,9 @@ export const ResumeOptimizerView: React.FC<ResumeOptimizerViewProps> = ({
           </div>
 
           {/* Main Comparative Split: Left: Locked Original Resume, Right: Recommendations */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(300px, 1fr) minmax(420px, 1.8fr)",
-              gap: "24px",
-              alignItems: "start",
-            }}
-          >
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
             {/* Left Column: Original Resume (Untouched & Locked) */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div className="xl:col-span-5 flex flex-col gap-4">
               <div
                 style={{
                   padding: "16px 18px",
@@ -781,7 +774,7 @@ export const ResumeOptimizerView: React.FC<ResumeOptimizerViewProps> = ({
             </div>
 
             {/* Right Column: Recommendations Workspace */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div className="xl:col-span-7 flex flex-col gap-4">
               {/* Tabs */}
               <div className="tabs-header" style={{ overflowX: "auto", whiteSpace: "nowrap" }}>
                 <button
@@ -917,7 +910,7 @@ export const ResumeOptimizerView: React.FC<ResumeOptimizerViewProps> = ({
                           </div>
 
                           {/* Current vs Recommended */}
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div style={{ padding: "10px 12px", background: "var(--bg-subtle)", borderRadius: "6px", border: "1px solid var(--border-subtle)" }}>
                               <span style={{ fontSize: "10.5px", color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 700, display: "block", marginBottom: "4px" }}>
                                 📌 Current
@@ -1078,7 +1071,7 @@ export const ResumeOptimizerView: React.FC<ResumeOptimizerViewProps> = ({
                           </div>
 
                           {/* Current vs Recommended */}
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1.3fr", gap: "12px" }}>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div style={{ padding: "10px 12px", background: "var(--bg-subtle)", borderRadius: "6px", border: "1px solid var(--border-subtle)" }}>
                               <span style={{ fontSize: "10.5px", color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 700, display: "block", marginBottom: "4px" }}>
                                 📌 Current
@@ -1135,7 +1128,7 @@ export const ResumeOptimizerView: React.FC<ResumeOptimizerViewProps> = ({
                           {renderHighlightBadge(optimization.sectionOrdering.highlightTag)}
                         </div>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div style={{ padding: "10px 12px", background: "var(--bg-subtle)", borderRadius: "6px", border: "1px solid var(--border-subtle)" }}>
                             <span style={{ fontSize: "10.5px", color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 700, display: "block", marginBottom: "4px" }}>
                               📌 Current Order
@@ -1224,7 +1217,7 @@ export const ResumeOptimizerView: React.FC<ResumeOptimizerViewProps> = ({
                             </div>
                           </div>
 
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                             <div style={{ padding: "8px 12px", background: "var(--bg-subtle)", borderRadius: "6px", border: "1px solid var(--border-subtle)" }}>
                               <span style={{ fontSize: "10.5px", color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 700, display: "block", marginBottom: "2px" }}>
                                 📌 Current
@@ -1262,7 +1255,7 @@ export const ResumeOptimizerView: React.FC<ResumeOptimizerViewProps> = ({
                       <strong>Layout Style: </strong>{optimization.skillsSectionRecommendation.layoutStyle}
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px" }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                       {optimization.skillsSectionRecommendation.categories.map((cat, idx) => (
                         <div
                           key={idx}

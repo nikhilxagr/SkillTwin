@@ -13,9 +13,22 @@ import {
   FileText,
   BarChart2,
   RefreshCw,
+  Link2,
+  Unlink,
+  ExternalLink,
 } from "lucide-react";
-import type { SafeUser, UpdateProfileRequest } from "@skilltwin/contracts";
-import { updateUserProfile, getUserProfile } from "../../api/client.js";
+import type { SafeUser, UpdateProfileRequest, OAuthProvider } from "@skilltwin/contracts";
+import {
+  updateUserProfile,
+  getUserProfile,
+  disconnectProvider,
+  getOAuthLinkUrl,
+} from "../../api/client.js";
+import {
+  GoogleIcon,
+  GithubIcon,
+  LinkedinIcon,
+} from "../auth/SocialAuthButtons.js";
 
 interface ProfileViewProps {
   currentUser: SafeUser | null;
@@ -34,6 +47,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [headline, setHeadline] = useState(currentUser?.profile?.headline || "");
   const [bio, setBio] = useState(currentUser?.profile?.bio || "");
   const [saving, setSaving] = useState(false);
+  const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
@@ -44,6 +58,42 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       setBio(currentUser.profile?.bio || "");
     }
   }, [currentUser]);
+
+  // Check URL query and hash for OAuth connection notifications
+  useEffect(() => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const hashQuery = window.location.hash.includes("?")
+        ? window.location.hash.split("?")[1]
+        : "";
+      const hashParams = new URLSearchParams(hashQuery);
+
+      const successMsg = searchParams.get("oauth_success") || hashParams.get("oauth_success");
+      const errorMsg = searchParams.get("oauth_error") || hashParams.get("oauth_error");
+
+      if (successMsg) {
+        setMessage({ text: decodeURIComponent(successMsg), type: "success" });
+      } else if (errorMsg) {
+        setMessage({ text: decodeURIComponent(errorMsg), type: "error" });
+      }
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  const handleDisconnect = async (provider: OAuthProvider) => {
+    setDisconnecting(provider);
+    setMessage(null);
+    try {
+      const result = await disconnectProvider(provider);
+      onUpdateUser(result.user);
+      setMessage({ text: result.message, type: "success" });
+    } catch (err: any) {
+      setMessage({ text: err.message || `Failed to disconnect ${provider} account.`, type: "error" });
+    } finally {
+      setDisconnecting(null);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -254,6 +304,141 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         </div>
       </div>
 
+      {/* Connected Social Accounts & Linked Identities (Phase 14) */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm" data-testid="connected-accounts-card">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-5 border-b border-slate-100">
+          <div>
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <Link2 size={18} className="text-brand-blue" />
+              <span>Connected Accounts & Social Login</span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Link your social accounts to access your SkillTwin workspace with Google, GitHub, or LinkedIn. All authentication identities map to your single internal SkillTwin account.
+            </p>
+          </div>
+          <span className="text-[11px] font-semibold text-slate-500 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-full shrink-0">
+            {currentUser?.connectedProviders?.length || 0} of 3 Linked
+          </span>
+        </div>
+
+        <div className="divide-y divide-slate-100 mt-2">
+          {[
+            {
+              id: "google" as OAuthProvider,
+              name: "Google",
+              icon: <GoogleIcon className="w-5 h-5 shrink-0" />,
+              description: "Sign in with your Google workspace or personal account",
+            },
+            {
+              id: "github" as OAuthProvider,
+              name: "GitHub",
+              icon: <GithubIcon className="w-5 h-5 shrink-0 text-slate-900" />,
+              description: "Authentication only. Separate from future code repository analysis.",
+            },
+            {
+              id: "linkedin" as OAuthProvider,
+              name: "LinkedIn",
+              icon: <LinkedinIcon className="w-5 h-5 shrink-0 text-[#0A66C2]" />,
+              description: "Authentication only. Separate from future LinkedIn profile sync.",
+            },
+          ].map((item) => {
+            const linked = currentUser?.connectedProviders?.find((p) => p.provider === item.id);
+            const isOnlyLogin =
+              Boolean(linked) &&
+              !currentUser?.hasPassword &&
+              (currentUser?.connectedProviders?.length || 0) <= 1;
+
+            return (
+              <div
+                key={item.id}
+                className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                data-testid={`provider-row-${item.id}`}
+              >
+                <div className="flex items-start gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 shadow-xs">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-bold text-slate-900">{item.name}</span>
+                      {linked ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                          <CheckCircle2 size={12} />
+                          <span>Connected</span>
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">
+                          Not Connected
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
+                    {linked && (
+                      <div className="text-[11px] text-slate-600 mt-1 font-mono">
+                        {linked.email ? (
+                          <span className="font-medium text-slate-700">{linked.email}</span>
+                        ) : linked.displayName ? (
+                          <span className="font-medium text-slate-700">{linked.displayName}</span>
+                        ) : null}
+                        {linked.connectedAt && (
+                          <span className="text-slate-400 font-sans ml-2">
+                            • Linked on {new Date(linked.connectedAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="sm:self-center shrink-0">
+                  {linked ? (
+                    <div className="flex items-center gap-2">
+                      {isOnlyLogin ? (
+                        <span
+                          className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg font-medium"
+                          title="This is your sole login method. You cannot disconnect it until you set a password or connect another provider."
+                        >
+                          Primary Login Method
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleDisconnect(item.id)}
+                          disabled={disconnecting === item.id}
+                          className="text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                          data-testid={`disconnect-provider-${item.id}-btn`}
+                        >
+                          {disconnecting === item.id ? (
+                            <>
+                              <RefreshCw size={13} className="animate-spin" />
+                              <span>Disconnecting...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Unlink size={13} />
+                              <span>Disconnect</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <a
+                      href={getOAuthLinkUrl(item.id)}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 px-3 py-1.5 rounded-lg shadow-2xs transition-all"
+                      data-testid={`connect-provider-${item.id}-btn`}
+                    >
+                      <Link2 size={13} className="text-brand-blue" />
+                      <span>Connect {item.name}</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Account Security & Fast Workspace Jumps */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Security Overview Card */}
@@ -267,6 +452,18 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <span>Email Verification</span>
               <span className="font-semibold text-emerald-700">
                 {currentUser?.emailVerified ? "Verified (Active)" : "Pending Verification"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
+              <span>Password Status</span>
+              <span className="font-semibold text-slate-800">
+                {currentUser?.hasPassword ? "Configured" : "None (OAuth Managed)"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
+              <span>Connected Social Logins</span>
+              <span className="font-semibold text-slate-800">
+                {currentUser?.connectedProviders?.length || 0} active
               </span>
             </div>
             <div className="flex items-center justify-between py-1.5 border-b border-slate-100">

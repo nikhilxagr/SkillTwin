@@ -68,7 +68,7 @@ export const Shell: React.FC<ShellProps> = ({
   };
 
   return (
-    <div className="app-shell flex flex-col md:flex-row min-h-screen bg-surface-subtle">
+    <div className="app-shell flex flex-col md:flex-row min-h-screen bg-surface-subtle w-full max-w-full overflow-x-hidden">
       <Sidebar
         currentScreen={currentScreen}
         onNavigate={onNavigate}
@@ -78,7 +78,15 @@ export const Shell: React.FC<ShellProps> = ({
         isMobileOpen={isMobileOpen}
         onMobileClose={() => setIsMobileOpen(false)}
       />
-      <div className="main-wrapper flex-1 flex flex-col min-w-0 pb-16 md:pb-0">
+      {/* Mobile Drawer Backdrop */}
+      {isMobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/40 z-40 backdrop-blur-xs transition-opacity"
+          onClick={() => setIsMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      <div className="main-wrapper flex-1 flex flex-col min-w-0 w-full max-w-full pb-20 md:pb-0">
         <Header
           activeRole={activeRole}
           hasResume={hasResume}
@@ -89,13 +97,13 @@ export const Shell: React.FC<ShellProps> = ({
           onLogout={onLogout}
           onNavigate={onNavigate}
         />
-        <main className="content-container flex-1 p-4 md:p-7 max-w-7xl w-full mx-auto">
+        <main className="content-container flex-1 p-3 sm:p-5 md:p-7 max-w-7xl w-full mx-auto box-border">
           {children}
         </main>
       </div>
 
       {/* Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-border-subtle z-30 px-2 py-1.5 flex justify-around items-center shadow-lg">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-border-subtle z-40 px-1 py-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] flex justify-around items-center shadow-lg">
         <button
           onClick={() => onNavigate("dashboard")}
           className={`flex flex-col items-center gap-0.5 p-1 text-[10px] font-medium ${

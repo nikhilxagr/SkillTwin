@@ -197,25 +197,26 @@ export const ResumeUploadView: React.FC<ResumeUploadViewProps> = ({
       )}
 
       {/* Upload Panel */}
-      <div style={{ display: "grid", gridTemplateColumns: currentResume ? "1.2fr 1fr" : "1fr", gap: "20px" }}>
-        <Card
-          title={
-            <div style={{ display: "flex", gap: "12px" }}>
-              <button
-                className={`tab-btn ${activeTab === "upload" ? "active" : ""}`}
-                onClick={() => setActiveTab("upload")}
-              >
-                File Upload (PDF / Text)
-              </button>
-              <button
-                className={`tab-btn ${activeTab === "paste" ? "active" : ""}`}
-                onClick={() => setActiveTab("paste")}
-              >
-                Direct Text Paste
-              </button>
-            </div>
-          }
-        >
+      <div className={`grid grid-cols-1 ${currentResume ? "lg:grid-cols-12" : ""} gap-5`}>
+        <div className={currentResume ? "lg:col-span-7" : "w-full"}>
+          <Card
+            title={
+              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                <button
+                  className={`tab-btn ${activeTab === "upload" ? "active" : ""}`}
+                  onClick={() => setActiveTab("upload")}
+                >
+                  File Upload (PDF / Text)
+                </button>
+                <button
+                  className={`tab-btn ${activeTab === "paste" ? "active" : ""}`}
+                  onClick={() => setActiveTab("paste")}
+                >
+                  Direct Text Paste
+                </button>
+              </div>
+            }
+          >
           {activeTab === "upload" ? (
             <div>
               <div
@@ -333,26 +334,18 @@ export const ResumeUploadView: React.FC<ResumeUploadViewProps> = ({
             </div>
           )}
         </Card>
+      </div>
 
-        {/* Ingestion Status Summary (when active) */}
-        {currentResume && (
+      {/* Ingestion Status Summary (when active) */}
+      {currentResume && (
+        <div className="lg:col-span-5">
           <Card
             title="Active Ingestion Summary"
             action={<Badge variant="match">Extracted</Badge>}
             description={currentResume.fileName}
           >
             <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "10px",
-                  padding: "14px",
-                  background: "var(--bg-elevated)",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border-subtle)",
-                }}
-              >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3.5 bg-slate-50 rounded-lg border border-border-subtle">
                 <div>
                   <span style={{ fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase" }}>
                     Candidate
@@ -413,7 +406,8 @@ export const ResumeUploadView: React.FC<ResumeUploadViewProps> = ({
               </div>
             </div>
           </Card>
-        )}
+        </div>
+      )}
       </div>
     </div>
   );

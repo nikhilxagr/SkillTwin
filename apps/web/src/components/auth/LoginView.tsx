@@ -1,14 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Mail,
   Lock,
   ArrowRight,
+  ArrowLeft,
   AlertCircle,
   RefreshCw,
-  Info,
   ShieldAlert,
+  KeyRound,
+  CheckCircle2,
 } from "lucide-react";
-import { loginUser, resendVerificationEmail } from "../../api/client.js";
+import { loginUser, verifyEmailOtp, resendEmailOtp } from "../../api/client.js";
+import { SocialAuthButtons } from "./SocialAuthButtons.js";
 import type { SafeUser } from "@skilltwin/contracts";
 
 interface LoginViewProps {
@@ -19,11 +22,41 @@ interface LoginViewProps {
 export const LoginView: React.FC<LoginViewProps> = ({ onNavigate, onLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [requiresVerification, setRequiresVerification] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [resending, setResending] = useState(false);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(0);
+
+  // Cooldown timer for resend
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setTimeout(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [countdown]);
+
+  // Check URL query and hash for OAuth error redirects
+  useEffect(() => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const hashQuery = window.location.hash.includes("?")
+        ? window.location.hash.split("?")[1]
+        : "";
+      const hashParams = new URLSearchParams(hashQuery);
+
+      const oauthErr = searchParams.get("oauth_error") || hashParams.get("oauth_error");
+      if (oauthErr) {
+        setError(decodeURIComponent(oauthErr));
+      }
+    } catch {
+      // Ignore URL parse error
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +86,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onNavigate, onLoginSuccess
     } catch (err: any) {
       if (err.requiresVerification) {
         setRequiresVerification(true);
-        setError("Please verify your email before signing in.");
+        setCountdown(60);
+        setResendStatus("A 6-digit verification code has been dispatched to your email.");
       } else {
         setError(err.message || "Invalid email or password.");
       }
@@ -62,23 +96,159 @@ export const LoginView: React.FC<LoginViewProps> = ({ onNavigate, onLoginSuccess
     }
   };
 
-  const handleResend = async () => {
-    if (!email.trim()) return;
-    setResending(true);
-    setResendStatus(null);
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    const cleanOtp = otp.trim().replace(/\D/g, "");
+    if (cleanOtp.length !== 6) {
+      setError("Please enter the complete 6-digit verification code.");
+      return;
+    }
+
+    setVerifyingOtp(true);
     try {
-      const res = await resendVerificationEmail(email.trim().toLowerCase());
-      setResendStatus(res.message || "Verification email sent.");
+      const result = await verifyEmailOtp(email.trim().toLowerCase(), cleanOtp);
+      if (result.user) {
+        onLoginSuccess(result.user);
+      }
     } catch (err: any) {
-      setResendStatus(err.message || "Failed to resend. Please try again.");
+      setError(err.message || "Invalid or expired verification code. Please check your email.");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (countdown > 0 || !email.trim()) return;
+    setResending(true);
+    setError(null);
+    setResendStatus(null);
+
+    try {
+      const res = await resendEmailOtp(email.trim().toLowerCase());
+      setResendStatus(res.message || "A new 6-digit verification code has been sent.");
+      setCountdown(60);
+    } catch (err: any) {
+      setError(err.message || "Failed to resend. Please try again.");
     } finally {
       setResending(false);
     }
   };
 
+  // If account is unverified, show OTP verification prompt directly
+  if (requiresVerification) {
+    return (
+      <div className="min-h-[85vh] flex items-center justify-center px-4 py-8" data-testid="login-otp-view">
+        <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-5 sm:p-8 shadow-sm text-center animate-fade-in">
+          <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-full mx-auto flex items-center justify-center mb-5 border border-amber-100">
+            <KeyRound size={28} />
+          </div>
+
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight mb-2">
+            Verify Email to Sign In
+          </h2>
+          <p className="text-xs text-slate-600 mb-6 leading-relaxed">
+            Your account is not verified yet. We have sent a 6-digit verification code to{" "}
+            <strong className="text-slate-900">{email}</strong>.
+          </p>
+
+          {error && (
+            <div className="mb-4 p-3.5 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2.5 text-xs text-red-700 text-left animate-fade-in">
+              <AlertCircle size={16} className="text-red-600 shrink-0 mt-0.5" />
+              <div className="font-medium">{error}</div>
+            </div>
+          )}
+
+          {resendStatus && !error && (
+            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-center gap-2 text-xs text-emerald-800 font-medium">
+              <CheckCircle2 size={15} className="text-emerald-600" />
+              <span>{resendStatus}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div>
+              <label htmlFor="login-otp-input" className="block text-xs font-semibold text-slate-700 mb-2">
+                Enter 6-Digit Code
+              </label>
+              <input
+                id="login-otp-input"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                  setOtp(val);
+                }}
+                placeholder="••••••"
+                autoFocus
+                required
+                className="w-full py-3.5 px-4 text-center text-3xl font-mono font-bold tracking-[0.4em] bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 focus:bg-white transition-all"
+                data-testid="login-otp-input"
+              />
+              <p className="text-[11px] text-slate-400 mt-2">
+                Check your inbox and spam folders for the Nodemailer OTP.
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={verifyingOtp || otp.length !== 6}
+              className="w-full py-3 px-4 bg-brand-blue hover:bg-brand-blue-hover text-white text-sm font-bold rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              data-testid="verify-login-otp-btn"
+            >
+              {verifyingOtp ? (
+                <>
+                  <RefreshCw size={16} className="animate-spin" />
+                  <span>Verifying code...</span>
+                </>
+              ) : (
+                <>
+                  <span>Verify OTP & Sign In</span>
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+            <button
+              type="button"
+              onClick={() => {
+                setRequiresVerification(false);
+                setError(null);
+                setOtp("");
+              }}
+              className="text-slate-500 hover:text-slate-800 flex items-center gap-1 font-medium"
+            >
+              <ArrowLeft size={13} />
+              <span>Back to sign in</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending || countdown > 0}
+              className="text-brand-blue font-bold hover:underline disabled:opacity-50 disabled:no-underline flex items-center gap-1.5"
+            >
+              {resending && <RefreshCw size={12} className="animate-spin" />}
+              <span>
+                {countdown > 0 ? `Resend in ${countdown}s` : "Resend code"}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-8" data-testid="login-page">
-      <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+      <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-5 sm:p-8 shadow-sm">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 text-brand-blue font-bold text-sm mb-2">
@@ -101,33 +271,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onNavigate, onLoginSuccess
           </div>
         )}
 
-        {/* Unverified Email Warning Callout */}
-        {requiresVerification && (
-          <div className="mb-5 p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-2.5 text-xs text-amber-900 animate-fade-in" data-testid="unverified-callout">
-            <div className="flex items-center gap-2 font-bold text-amber-800">
-              <ShieldAlert size={16} />
-              <span>Email Verification Required</span>
-            </div>
-            <p className="text-amber-800 leading-relaxed">
-              Your account has been registered but not yet activated. Please check your inbox for the activation link.
-            </p>
-            {resendStatus && (
-              <div className="p-2 bg-amber-100 rounded text-amber-950 font-medium">
-                {resendStatus}
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={handleResend}
-              disabled={resending}
-              className="px-3 py-1.5 bg-amber-200 hover:bg-amber-300 text-amber-900 font-semibold rounded-lg text-xs transition-colors flex items-center gap-1.5"
-              data-testid="resend-verification-login-btn"
-            >
-              {resending && <RefreshCw size={12} className="animate-spin" />}
-              <span>Resend verification email</span>
-            </button>
-          </div>
-        )}
+        {/* Social Authentication Buttons */}
+        <SocialAuthButtons mode="login" disabled={loading} />
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">

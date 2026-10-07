@@ -7,7 +7,9 @@ export type BadgeVariant =
   | "weak"
   | "optional"
   | "neutral"
-  | "primary";
+  | "primary"
+  | "warning"
+  | "info";
 
 export interface BadgeProps {
   variant?: BadgeVariant;

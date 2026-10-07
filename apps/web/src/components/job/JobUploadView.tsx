@@ -141,31 +141,32 @@ export const JobUploadView: React.FC<JobUploadViewProps> = ({
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: currentJob ? "1.2fr 1fr" : "1fr", gap: "20px" }}>
+      <div className={`grid grid-cols-1 ${currentJob ? "lg:grid-cols-12" : ""} gap-5`}>
         {/* Input Panel */}
-        <Card
-          title={
-            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-              <button
-                className={`tab-btn ${activeTab === "upload" ? "active" : ""}`}
-                onClick={() => setActiveTab("upload")}
-              >
-                File Upload (PDF / TXT)
-              </button>
-              <button
-                className={`tab-btn ${activeTab === "paste" ? "active" : ""}`}
-                onClick={() => setActiveTab("paste")}
-              >
-                Direct Text Paste
-              </button>
-            </div>
-          }
-        >
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {/* Role Title and Company Inputs */}
-            <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "12px" }}>
-              <div>
-                <label style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
+        <div className={currentJob ? "lg:col-span-7" : ""}>
+          <Card
+            title={
+              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                <button
+                  className={`tab-btn ${activeTab === "upload" ? "active" : ""}`}
+                  onClick={() => setActiveTab("upload")}
+                >
+                  File Upload (PDF / TXT)
+                </button>
+                <button
+                  className={`tab-btn ${activeTab === "paste" ? "active" : ""}`}
+                  onClick={() => setActiveTab("paste")}
+                >
+                  Direct Text Paste
+                </button>
+              </div>
+            }
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {/* Role Title and Company Inputs */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
                   Target Job Title
                 </label>
                 <input
@@ -296,14 +297,7 @@ export const JobUploadView: React.FC<JobUploadViewProps> = ({
                   </div>
                 )}
 
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: "16px",
-                  }}
-                >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
                   <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
                     ✓ Automated text extraction & skill alias normalization
                   </span>
@@ -357,26 +351,18 @@ export const JobUploadView: React.FC<JobUploadViewProps> = ({
             )}
           </div>
         </Card>
+      </div>
 
-        {/* Current Active JD Preview (if loaded) */}
-        {currentJob && (
+      {/* Current Active JD Preview (if loaded) */}
+      {currentJob && (
+        <div className="lg:col-span-5">
           <Card
             title="Active Target Benchmark"
             description={`${currentJob.title} ${currentJob.company ? `@ ${currentJob.company}` : ""}`}
             action={<Badge variant="match">Analyzed</Badge>}
           >
             <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "10px",
-                  padding: "14px",
-                  background: "var(--bg-elevated)",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border-subtle)",
-                }}
-              >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3.5 bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-subtle)]">
                 <div>
                   <span style={{ fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase" }}>
                     Experience Requirement
@@ -418,7 +404,7 @@ export const JobUploadView: React.FC<JobUploadViewProps> = ({
                 Taxonomy mapping ready with canonical normalized skills and requirements breakdown.
               </div>
 
-              <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
+              <div className="flex flex-wrap gap-2.5 mt-2">
                 <Button
                   variant="primary"
                   size="sm"
@@ -437,7 +423,8 @@ export const JobUploadView: React.FC<JobUploadViewProps> = ({
               </div>
             </div>
           </Card>
-        )}
+        </div>
+      )}
       </div>
     </div>
   );

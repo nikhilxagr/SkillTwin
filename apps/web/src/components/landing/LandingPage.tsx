@@ -23,45 +23,58 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
   return (
-    <div className="min-h-screen bg-surface-canvas text-content-primary px-6 pb-20">
+    <div className="min-h-screen bg-surface-canvas text-content-primary w-full max-w-full overflow-x-hidden px-4 sm:px-6 pb-20">
       {/* Top Navbar */}
-      <nav className="max-w-6xl mx-auto mb-16 py-5 border-b border-border-subtle flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded bg-brand-blue flex items-center justify-center text-white">
+      <nav className="max-w-6xl mx-auto mb-10 md:mb-16 py-4 md:py-5 border-b border-border-subtle flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="w-7 h-7 rounded bg-brand-blue flex items-center justify-center text-white shrink-0">
             <Terminal size={15} />
           </div>
-          <span className="text-lg font-bold tracking-tight text-brand-navy">
+          <span className="text-base sm:text-lg font-bold tracking-tight text-brand-navy shrink-0">
             Skill<span className="text-brand-blue">Twin</span>
           </span>
-          <Badge variant="neutral">Developer Career Intelligence</Badge>
+          <span className="hidden lg:inline-flex">
+            <Badge variant="neutral">Developer Career Intelligence</Badge>
+          </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={onEnterApp}>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onEnterApp}
+            className="px-2.5 sm:px-3 text-xs sm:text-sm"
+          >
             Sign In
           </Button>
-          <Button variant="primary" size="sm" onClick={onEnterApp}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onEnterApp}
+            className="px-3 sm:px-4 text-xs sm:text-sm"
+          >
             Get Started
           </Button>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-4xl mx-auto mb-16 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-light border border-blue-200 text-xs font-semibold text-brand-blue mb-5">
-          <ShieldCheck size={13} /> Evidence-First Career Intelligence
+      <section className="max-w-4xl mx-auto mb-12 md:mb-16 text-center px-1 sm:px-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-light border border-blue-200 text-xs font-semibold text-brand-blue mb-4 sm:mb-5">
+          <ShieldCheck size={13} className="shrink-0" />
+          <span>Evidence-First Career Intelligence</span>
         </div>
 
-        <div className="text-xs uppercase tracking-widest font-bold text-content-secondary mb-2">
+        <div className="text-[11px] sm:text-xs uppercase tracking-widest font-bold text-content-secondary mb-2">
           SkillTwin
         </div>
 
-        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-brand-navy mb-4 leading-tight">
-          Understand your skills. <br />
+        <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-brand-navy mb-4 leading-tight break-words">
+          Understand your skills. <br className="hidden sm:inline" />
           <span className="text-brand-blue">Match them to the right opportunities.</span>
         </h1>
 
-        <p className="text-lg text-content-secondary max-w-2xl mx-auto mb-8 leading-relaxed">
+        <p className="text-sm sm:text-base md:text-lg text-content-secondary max-w-2xl mx-auto mb-8 leading-relaxed">
           Quantify your actual skills with evidence. SkillTwin evaluates claimed versus demonstrated
           technical abilities, benchmarks them against real job descriptions, and gives you transparent,
           non-hallucinatory guidance.
@@ -73,7 +86,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             size="lg"
             onClick={onEnterApp}
             icon={<ArrowRight size={15} />}
-            className="px-6 py-3 text-sm font-semibold"
+            className="w-full sm:w-auto px-6 py-3 text-sm font-semibold justify-center"
           >
             Get Started
           </Button>
@@ -81,17 +94,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       </section>
 
       {/* Simple Product Workflow */}
-      <section className="max-w-6xl mx-auto mb-20">
+      <section className="max-w-6xl mx-auto mb-16 md:mb-20">
         <div className="text-center mb-8">
           <h2 className="text-xs font-bold uppercase tracking-widest text-content-secondary mb-1">
             Product Workflow
           </h2>
-          <p className="text-xl font-bold text-brand-navy">
+          <p className="text-lg sm:text-xl font-bold text-brand-navy">
             How SkillTwin Evaluates Career Readiness
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           {/* Step 1: Resume */}
           <div className="bg-surface-canvas border border-border-subtle rounded-lg p-5 flex flex-col justify-between shadow-subtle hover:border-brand-blue transition-colors">
             <div>
@@ -108,7 +121,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </div>
             <div className="mt-4 pt-3 border-t border-border-subtle text-xs text-content-muted flex items-center justify-between">
               <span>Evidence parsing</span>
-              <ArrowRight size={12} className="hidden md:inline text-border-strong" />
+              <ArrowRight size={12} className="hidden lg:inline text-border-strong" />
             </div>
           </div>
 
@@ -128,7 +141,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </div>
             <div className="mt-4 pt-3 border-t border-border-subtle text-xs text-content-muted flex items-center justify-between">
               <span>Skill Matrix</span>
-              <ArrowRight size={12} className="hidden md:inline text-border-strong" />
+              <ArrowRight size={12} className="hidden lg:inline text-border-strong" />
             </div>
           </div>
 
@@ -148,7 +161,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </div>
             <div className="mt-4 pt-3 border-t border-border-subtle text-xs text-content-muted flex items-center justify-between">
               <span>Requirements</span>
-              <ArrowRight size={12} className="hidden md:inline text-border-strong" />
+              <ArrowRight size={12} className="hidden lg:inline text-border-strong" />
             </div>
           </div>
 
@@ -168,12 +181,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </div>
             <div className="mt-4 pt-3 border-t border-border-subtle text-xs text-content-muted flex items-center justify-between">
               <span>5-Tier Analysis</span>
-              <ArrowRight size={12} className="hidden md:inline text-border-strong" />
+              <ArrowRight size={12} className="hidden lg:inline text-border-strong" />
             </div>
           </div>
 
           {/* Step 5: Recommendations */}
-          <div className="bg-surface-canvas border border-border-subtle rounded-lg p-5 flex flex-col justify-between shadow-subtle hover:border-brand-blue transition-colors">
+          <div className="bg-surface-canvas border border-border-subtle rounded-lg p-5 flex flex-col justify-between shadow-subtle hover:border-brand-blue transition-colors sm:col-span-2 lg:col-span-1">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <span className="font-mono text-xs font-bold text-brand-blue bg-brand-light px-2 py-0.5 rounded">
@@ -238,7 +251,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       </section>
 
       {/* Interactive Micro-Preview */}
-      <section className="max-w-6xl mx-auto bg-surface-canvas border border-border-subtle rounded-lg p-6 shadow-card">
+      <section className="max-w-6xl mx-auto bg-surface-canvas border border-border-subtle rounded-lg p-5 sm:p-6 shadow-card">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
           <div>
             <h4 className="text-base font-bold text-brand-navy">Evidence Assessment Framework</h4>
@@ -246,7 +259,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
               Deterministic skill matching and critical gap identification
             </p>
           </div>
-          <Button variant="secondary" size="sm" onClick={onEnterApp}>
+          <Button variant="secondary" size="sm" onClick={onEnterApp} className="w-full sm:w-auto justify-center">
             Analyze Your Resume
           </Button>
         </div>

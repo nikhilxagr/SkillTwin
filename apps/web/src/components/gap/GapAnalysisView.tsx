@@ -132,8 +132,8 @@ export const GapAnalysisView: React.FC<GapAnalysisViewProps> = ({
 
       {/* Alignment Scorecard */}
       <Card>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: "24px", alignItems: "center" }}>
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+          <div className="md:col-span-5">
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
               <span style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
                 Role Alignment Score
@@ -154,6 +154,7 @@ export const GapAnalysisView: React.FC<GapAnalysisViewProps> = ({
           </div>
 
           <div
+            className="md:col-span-7"
             style={{
               padding: "16px",
               background: "var(--bg-elevated)",

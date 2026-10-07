@@ -558,7 +558,7 @@ export const EvidencePageView: React.FC<EvidencePageViewProps> = ({
                   <tr
                     key={item.canonicalName}
                     className={`hover:bg-slate-50/60 transition-colors ${
-                      item.status === "discrepancy" ? "bg-amber-50/30" : ""
+                      item.status === "DISCREPANCY" ? "bg-amber-50/30" : ""
                     }`}
                     data-testid={`matrix-row-${item.canonicalName.toLowerCase().replace(/[^a-z0-9]/g, "-")}`}
                   >

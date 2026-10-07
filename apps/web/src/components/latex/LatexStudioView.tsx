@@ -260,7 +260,7 @@ export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
         </div>
 
         {/* ATS Compliance Highlights Bar */}
-        <div className="mt-4 pt-3.5 border-t border-border-subtle grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-content-secondary">
+        <div className="mt-4 pt-3.5 border-t border-border-subtle grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs text-content-secondary">
           <div className="flex items-center gap-1.5">
             <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
             <span>Single-column ATS format</span>
@@ -281,9 +281,9 @@ export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
       </div>
 
       {/* Main Overleaf-Style Split Screen */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[750px] min-h-[600px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:h-[750px]">
         {/* LEFT COLUMN: LaTeX Source Code Editor */}
-        <div className="bg-white border border-border-subtle rounded-xl flex flex-col shadow-sm overflow-hidden">
+        <div className="bg-white border border-border-subtle rounded-xl flex flex-col shadow-sm overflow-hidden h-[480px] lg:h-full">
           {/* Editor Header */}
           <div className="px-4 py-2.5 bg-slate-900 text-white flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
@@ -341,7 +341,7 @@ export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
         </div>
 
         {/* RIGHT COLUMN: Live PDF Preview & Compilation Feedback */}
-        <div className="bg-white border border-border-subtle rounded-xl flex flex-col shadow-sm overflow-hidden">
+        <div className="bg-white border border-border-subtle rounded-xl flex flex-col shadow-sm overflow-hidden h-[540px] lg:h-full">
           {/* Preview Header */}
           <div className="px-4 py-2.5 bg-slate-50 border-b border-border-subtle flex items-center justify-between text-xs">
             <div className="flex items-center gap-2 font-medium text-content-primary">

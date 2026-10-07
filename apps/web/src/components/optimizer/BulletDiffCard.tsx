@@ -167,13 +167,7 @@ export const BulletDiffCard: React.FC<BulletDiffCardProps> = ({
       </div>
 
       {/* Structured Current vs Recommended Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: "12px",
-        }}
-      >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* CURRENT */}
         <div
           style={{

@@ -629,16 +629,9 @@ export const JobSpecificResumeView: React.FC<JobSpecificResumeViewProps> = ({
       {/* MODE 1: SIDE-BY-SIDE COMPARISON: MASTER VS TAILORED     */}
       {/* ======================================================== */}
       {activeViewMode === "comparison" && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(320px, 1fr) minmax(380px, 1.35fr)",
-            gap: "24px",
-            alignItems: "start",
-          }}
-        >
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
           {/* ==================== LEFT: MASTER RESUME ==================== */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div className="xl:col-span-5 flex flex-col gap-4">
             <div
               style={{
                 padding: "16px",
@@ -770,7 +763,7 @@ export const JobSpecificResumeView: React.FC<JobSpecificResumeViewProps> = ({
           </div>
 
           {/* ==================== RIGHT: JOB-SPECIFIC VERSION ==================== */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div className="xl:col-span-7 flex flex-col gap-4">
             <div
               style={{
                 padding: "16px",
@@ -1272,7 +1265,7 @@ export const JobSpecificResumeView: React.FC<JobSpecificResumeViewProps> = ({
                         </div>
 
                         {/* Bullet Comparison */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "10px" }}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                           <div style={{ padding: "8px", background: "var(--bg-subtle)", borderRadius: "4px", fontSize: "12px", color: "var(--text-muted)" }}>
                             <span style={{ fontSize: "10px", textTransform: "uppercase", fontWeight: 700, display: "block", marginBottom: "2px" }}>
                               Original Master Phrasing

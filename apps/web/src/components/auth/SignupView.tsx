@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   User,
   Mail,
@@ -6,30 +6,69 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
+  ArrowLeft,
   RefreshCw,
   ShieldCheck,
+  KeyRound,
 } from "lucide-react";
-import { signupUser, resendVerificationEmail } from "../../api/client.js";
+import { signupUser, verifyEmailOtp, resendEmailOtp } from "../../api/client.js";
+import { SocialAuthButtons } from "./SocialAuthButtons.js";
+import type { SafeUser } from "@skilltwin/contracts";
 
 interface SignupViewProps {
   onNavigate: (screen: string) => void;
-  onSignupSuccess?: (email: string) => void;
+  onSignupSuccess?: (user: SafeUser) => void;
 }
 
-export const SignupView: React.FC<SignupViewProps> = ({ onNavigate }) => {
+export const SignupView: React.FC<SignupViewProps> = ({ onNavigate, onSignupSuccess }) => {
+  // Step: "form" for account details, "otp" for 6-digit email verification code
+  const [step, setStep] = useState<"form" | "otp">("form");
+
+  // Form fields
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  // OTP field
+  const [otp, setOtp] = useState("");
+
+  // Status & loading
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [verificationSent, setVerificationSent] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [resending, setResending] = useState(false);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
-  const [verificationUrl, setVerificationUrl] = useState<string | null>(null);
-  const [verificationToken, setVerificationToken] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(0);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Cooldown timer for resend
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setTimeout(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [countdown]);
+
+  // Check URL query and hash for OAuth error redirects
+  useEffect(() => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const hashQuery = window.location.hash.includes("?")
+        ? window.location.hash.split("?")[1]
+        : "";
+      const hashParams = new URLSearchParams(hashQuery);
+
+      const oauthErr = searchParams.get("oauth_error") || hashParams.get("oauth_error");
+      if (oauthErr) {
+        setError(decodeURIComponent(oauthErr));
+      }
+    } catch {
+      // Ignore URL parse error
+    }
+  }, []);
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -56,15 +95,16 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate }) => {
 
     setLoading(true);
     try {
-      const res = await signupUser({
+      await signupUser({
         name: name.trim(),
         email: email.trim().toLowerCase(),
         password,
         confirmPassword,
       });
-      if (res.verificationUrl) setVerificationUrl(res.verificationUrl);
-      if (res.verificationToken) setVerificationToken(res.verificationToken);
-      setVerificationSent(true);
+      // Move directly to OTP verification step
+      setStep("otp");
+      setCountdown(60);
+      setResendStatus("A 6-digit code has been sent to your email.");
     } catch (err: any) {
       setError(err.message || "Failed to create account. Please try again.");
     } finally {
@@ -72,89 +112,192 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate }) => {
     }
   };
 
-  const handleResend = async () => {
-    if (!email.trim()) return;
-    setResending(true);
-    setResendStatus(null);
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    const cleanOtp = otp.trim().replace(/\D/g, "");
+    if (cleanOtp.length !== 6) {
+      setError("Please enter the complete 6-digit verification code.");
+      return;
+    }
+
+    setVerifyingOtp(true);
     try {
-      const res = await resendVerificationEmail(email.trim().toLowerCase());
-      if (res.verificationUrl) setVerificationUrl(res.verificationUrl);
-      if (res.verificationToken) setVerificationToken(res.verificationToken);
-      setResendStatus(res.message || "Verification email resent.");
+      const result = await verifyEmailOtp(email.trim().toLowerCase(), cleanOtp);
+      if (result.user && onSignupSuccess) {
+        onSignupSuccess(result.user);
+      } else {
+        onNavigate("login");
+      }
     } catch (err: any) {
-      setResendStatus(err.message || "Failed to resend. Please try again later.");
+      setError(err.message || "Invalid or expired verification code. Please check your email.");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (countdown > 0 || !email.trim()) return;
+    setResending(true);
+    setError(null);
+    setResendStatus(null);
+
+    try {
+      const res = await resendEmailOtp(email.trim().toLowerCase());
+      setResendStatus(res.message || "A new 6-digit verification code has been dispatched.");
+      setCountdown(60);
+    } catch (err: any) {
+      setError(err.message || "Failed to resend code. Please try again later.");
     } finally {
       setResending(false);
     }
   };
 
-  // Verification Pending Screen
-  if (verificationSent) {
-    const activeVerifyLink = verificationUrl || (verificationToken ? `/#/verify-email?token=${verificationToken}` : null);
-
+  // ==========================================
+  // OTP Verification Screen
+  // ==========================================
+  if (step === "otp") {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4 py-12" data-testid="verification-pending-view">
-        <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-8 shadow-sm text-center animate-fade-in">
+      <div className="min-h-[85vh] flex items-center justify-center px-4 py-12" data-testid="otp-verification-view">
+        <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-5 sm:p-8 shadow-sm text-center animate-fade-in">
+          {/* Header icon */}
           <div className="w-14 h-14 bg-blue-50 text-brand-blue rounded-full mx-auto flex items-center justify-center mb-5 border border-blue-100">
-            <Mail size={28} />
+            <KeyRound size={28} />
           </div>
+
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight mb-2">
-            Check your email
+            Verify your email
           </h2>
-          <p className="text-sm text-slate-600 mb-6 leading-relaxed">
-            Account created. We’ve sent a verification link to <strong className="text-slate-900">{email}</strong>.
-            Confirm your email address to activate your SkillTwin account.
+          <p className="text-xs text-slate-600 mb-6 leading-relaxed">
+            We’ve sent a 6-digit verification code to{" "}
+            <strong className="text-slate-900">{email}</strong> via Nodemailer.
+            Please enter it below to activate your account.
           </p>
 
-          {resendStatus && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800 font-medium">
-              {resendStatus}
+          {/* Status / Error Alerts */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2.5 text-xs text-red-700 text-left animate-fade-in" data-testid="otp-error-alert">
+              <AlertCircle size={16} className="text-red-600 shrink-0 mt-0.5" />
+              <div className="font-medium">{error}</div>
             </div>
           )}
 
-          <div className="space-y-3">
-            {activeVerifyLink && (
-              <a
-                href={activeVerifyLink}
-                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
-                data-testid="instant-verify-btn"
+          {resendStatus && !error && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-center gap-2 text-xs text-blue-800 font-medium">
+              <CheckCircle2 size={15} className="text-blue-600" />
+              <span>{resendStatus}</span>
+            </div>
+          )}
+
+          {/* OTP Input Form */}
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div>
+              <label htmlFor="otp-input" className="block text-xs font-semibold text-slate-700 mb-2">
+                Enter 6-Digit Code
+              </label>
+              <input
+                id="otp-input"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                  setOtp(val);
+                }}
+                placeholder="••••••"
+                autoFocus
+                required
+                className="w-full py-3.5 px-4 text-center text-3xl font-mono font-bold tracking-[0.4em] bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 focus:bg-white transition-all"
+                data-testid="otp-input"
+              />
+              <p className="text-[11px] text-slate-400 mt-2">
+                Code expires in 10 minutes. Check your inbox and spam folder.
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={verifyingOtp || otp.length !== 6}
+              className="w-full py-3 px-4 bg-brand-blue hover:bg-brand-blue-hover text-white text-sm font-bold rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              data-testid="submit-otp-btn"
+            >
+              {verifyingOtp ? (
+                <>
+                  <RefreshCw size={16} className="animate-spin" />
+                  <span>Verifying code...</span>
+                </>
+              ) : (
+                <>
+                  <span>Verify OTP & Enter Workspace</span>
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Resend actions */}
+          <div className="mt-6 pt-5 border-t border-slate-100 space-y-3">
+            <div className="flex items-center justify-between text-xs text-slate-600">
+              <span>Didn’t receive the code?</span>
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={resending || countdown > 0}
+                className="text-brand-blue font-bold hover:underline disabled:opacity-50 disabled:no-underline flex items-center gap-1.5"
+                data-testid="resend-otp-btn"
               >
-                <CheckCircle2 size={16} />
-                <span>Verify & Activate Account Now</span>
-              </a>
-            )}
+                {resending && <RefreshCw size={13} className="animate-spin" />}
+                <span>
+                  {countdown > 0 ? `Resend code in ${countdown}s` : "Resend code"}
+                </span>
+              </button>
+            </div>
 
-            <button
-              onClick={handleResend}
-              disabled={resending}
-              className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-              data-testid="resend-verification-btn"
-            >
-              {resending && <RefreshCw size={15} className="animate-spin" />}
-              <span>Resend verification email</span>
-            </button>
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("form");
+                  setError(null);
+                  setResendStatus(null);
+                }}
+                className="text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1 font-medium transition-colors"
+                data-testid="back-to-signup-btn"
+              >
+                <ArrowLeft size={13} />
+                <span>Change email address</span>
+              </button>
 
-            <button
-              onClick={() => onNavigate("login")}
-              className="w-full py-2.5 px-4 bg-brand-blue hover:bg-brand-blue-hover text-white text-sm font-semibold rounded-lg shadow-sm transition-colors"
-              data-testid="go-to-login-btn"
-            >
-              Back to Sign In
-            </button>
+              <button
+                type="button"
+                onClick={() => onNavigate("login")}
+                className="text-xs text-brand-blue hover:underline font-semibold"
+                data-testid="go-to-login-btn"
+              >
+                Back to Sign in
+              </button>
+            </div>
           </div>
 
-          <div className="mt-6 pt-5 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-center gap-1.5">
+          <div className="mt-5 pt-4 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-center gap-1.5">
             <ShieldCheck size={14} className="text-emerald-600" />
-            <span>Secure cryptographically verified email activation</span>
+            <span>Nodemailer SMTP OTP verification</span>
           </div>
         </div>
       </div>
     );
   }
 
+  // ==========================================
+  // Registration Form
+  // ==========================================
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-8" data-testid="signup-page">
-      <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+      <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-5 sm:p-8 shadow-sm">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 text-brand-blue font-bold text-sm mb-2">
@@ -165,7 +308,7 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate }) => {
             Create your developer profile.
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Quantify your actual engineering skills with verifiable evidence.
+            Quantify your engineering skills with verified real-world evidence.
           </p>
         </div>
 
@@ -177,8 +320,11 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate }) => {
           </div>
         )}
 
+        {/* Social Registration Buttons */}
+        <SocialAuthButtons mode="signup" disabled={loading} />
+
         {/* Signup Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="space-y-4">
           <div>
             <label htmlFor="signup-name-input" className="block text-xs font-semibold text-slate-700 mb-1">
               Full Name
@@ -264,11 +410,11 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigate }) => {
             {loading ? (
               <>
                 <RefreshCw size={16} className="animate-spin" />
-                <span>Creating account...</span>
+                <span>Creating account & sending OTP...</span>
               </>
             ) : (
               <>
-                <span>Create account</span>
+                <span>Create account & Send OTP</span>
                 <ArrowRight size={16} />
               </>
             )}

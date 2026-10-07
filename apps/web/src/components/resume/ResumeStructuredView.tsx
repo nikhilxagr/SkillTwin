@@ -91,9 +91,9 @@ export const ResumeStructuredView: React.FC<ResumeStructuredViewProps> = ({
       </div>
 
       {activeTab === "entities" ? (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: "20px" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           {/* Left Column: Profile & Claimed Skills */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          <div className="lg:col-span-5 flex flex-col gap-5">
             <Card title="Candidate Profile" icon={<User size={16} />}>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div>
@@ -176,7 +176,7 @@ export const ResumeStructuredView: React.FC<ResumeStructuredViewProps> = ({
           </div>
 
           {/* Right Column: Projects & Experience */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          <div className="lg:col-span-7 flex flex-col gap-5">
             <Card
               title={`Detected Projects (${resume.projects.length})`}
               description="Primary source for demonstrated skill evidence."

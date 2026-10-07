@@ -190,7 +190,7 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
 
           {/* Search & Level Filters */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
-            <div style={{ position: "relative", minWidth: "260px", flex: 1 }}>
+            <div className="relative flex-1 min-w-[200px] w-full sm:w-auto">
               <Search
                 size={14}
                 style={{
