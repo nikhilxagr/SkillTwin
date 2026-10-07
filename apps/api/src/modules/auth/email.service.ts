@@ -28,24 +28,36 @@ export class EmailService {
    */
   private initTransporter(): void {
     if (config.SMTP_USER && config.SMTP_PASS) {
-      const host = config.SMTP_HOST || (config.SMTP_USER.includes("@gmail.com") ? "smtp.gmail.com" : "smtp.mailgun.org");
-      const port = config.SMTP_PORT || (config.SMTP_SECURE ? 465 : 587);
+      const isGmail = config.SMTP_USER.includes("@gmail.com") || config.SMTP_HOST === "smtp.gmail.com";
 
-      this.transporter = nodemailer.createTransport({
-        host,
-        port,
-        secure: config.SMTP_SECURE || port === 465,
-        auth: {
-          user: config.SMTP_USER,
-          pass: config.SMTP_PASS,
-        },
-        tls: {
-          rejectUnauthorized: false,
-        },
-      });
+      if (isGmail) {
+        this.transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: config.SMTP_USER,
+            pass: config.SMTP_PASS,
+          },
+        });
+      } else {
+        const host = config.SMTP_HOST || "smtp.mailgun.org";
+        const port = config.SMTP_PORT || (config.SMTP_SECURE ? 465 : 587);
+
+        this.transporter = nodemailer.createTransport({
+          host,
+          port,
+          secure: config.SMTP_SECURE || port === 465,
+          auth: {
+            user: config.SMTP_USER,
+            pass: config.SMTP_PASS,
+          },
+          tls: {
+            rejectUnauthorized: false,
+          },
+        });
+      }
 
       logger.info(
-        { host, port, user: config.SMTP_USER },
+        { user: config.SMTP_USER, mode: isGmail ? "gmail" : "smtp" },
         "[EmailService] Nodemailer SMTP transporter initialized"
       );
     } else {
