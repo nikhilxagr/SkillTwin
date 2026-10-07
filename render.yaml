@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm install -g pnpm@9.15.4 && pnpm install --frozen-lockfile && pnpm --filter @skilltwin/contracts build && pnpm --filter @skilltwin/api build
+    buildCommand: npx --yes pnpm@9.15.4 install --frozen-lockfile && npx --yes pnpm@9.15.4 --filter @skilltwin/contracts build && npx --yes pnpm@9.15.4 --filter @skilltwin/api build
     startCommand: node apps/api/dist/server.js
     healthCheckPath: /health
     autoDeploy: true
