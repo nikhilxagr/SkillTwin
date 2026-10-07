@@ -28,13 +28,13 @@ services:
       - key: EMAIL_FROM
         value: SkillTwin <noreply@skilltwin.dev>
       - key: SMTP_HOST
-        sync: false
+        value: smtp.gmail.com
       - key: SMTP_PORT
         value: 587
       - key: SMTP_SECURE
         value: false
       - key: SMTP_USER
-        sync: false
+        value: nikhilagrahari517@gmail.com
       - key: SMTP_PASS
         sync: false
       - key: GOOGLE_CLIENT_ID
