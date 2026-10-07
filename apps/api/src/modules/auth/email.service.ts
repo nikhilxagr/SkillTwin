@@ -105,57 +105,148 @@ If you did not request this verification code, please ignore this email.
 support@skilltwin.dev
 `.trim();
 
-    const htmlContent = `
-<!DOCTYPE html>
-<html>
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${subject}</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; color: #0f172a; margin: 0; padding: 24px; }
-    .container { max-width: 520px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-    .header { padding: 28px 32px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 8px; }
-    .brand { font-size: 20px; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; }
-    .brand span { color: #2563eb; }
-    .content { padding: 36px 32px; }
-    h1 { font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; }
-    p { font-size: 14px; line-height: 1.6; color: #475569; margin: 12px 0; }
-    .otp-box { margin: 28px 0; background: #f8fafc; border: 2px dashed #93c5fd; border-radius: 12px; padding: 20px; text-align: center; }
-    .otp-code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #1d4ed8; margin: 0; }
-    .otp-label { font-size: 11px; text-transform: uppercase; tracking-wider; font-weight: 700; color: #64748b; margin-top: 6px; }
-    .footer { padding: 20px 32px; background: #f8fafc; border-top: 1px solid #f1f5f9; font-size: 12px; color: #64748b; line-height: 1.5; }
-    .badge { display: inline-block; padding: 4px 10px; background: #dbeafe; color: #1e40af; border-radius: 6px; font-size: 11px; font-weight: 600; margin-bottom: 16px; }
-  </style>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="brand">Skill<span>Twin</span></div>
-    </div>
-    <div class="content">
-      <div class="badge">Verification Required</div>
-      <h1>Verify your email address</h1>
-      <p>Hello <strong>${name}</strong>,</p>
-      <p>Enter the following 6-digit verification code to confirm your email and activate your developer account:</p>
-      
-      <div class="otp-box">
-        <div class="otp-code">${otp}</div>
-        <div class="otp-label">Single-Use Verification Code</div>
-      </div>
+<body style="margin:0;padding:0;background-color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0f172a;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
 
-      <p style="font-size: 13px; color: #64748b;">
-        ⏱️ This code expires in <strong>10 minutes</strong> and can only be used once.
-      </p>
-    </div>
-    <div class="footer">
-      <p style="margin: 0 0 6px;">Need assistance? Contact support@skilltwin.dev</p>
-      <p style="margin: 0;">Security note: Never share this OTP code with anyone. SkillTwin will never ask for your code.</p>
-    </div>
-  </div>
+          <!-- HEADER: Brand -->
+          <tr>
+            <td align="center" style="padding-bottom:24px;">
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <div style="display:inline-flex;align-items:center;gap:10px;">
+                      <div style="width:40px;height:40px;background:linear-gradient(135deg,#3b82f6,#6366f1);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                        <span style="color:#fff;font-size:20px;font-weight:900;line-height:40px;display:block;text-align:center;">S</span>
+                      </div>
+                      <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.03em;">Skill<span style="color:#60a5fa;">Twin</span></span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- MAIN CARD -->
+          <tr>
+            <td style="background:#1e293b;border-radius:20px;overflow:hidden;border:1px solid #334155;">
+
+              <!-- Gradient top bar -->
+              <div style="height:4px;background:linear-gradient(90deg,#3b82f6,#6366f1,#8b5cf6);"></div>
+
+              <!-- Card body -->
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding:36px 40px 28px;">
+
+                    <!-- Status badge -->
+                    <table cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+                      <tr>
+                        <td style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);border-radius:100px;padding:5px 14px;">
+                          <span style="color:#60a5fa;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">&#9679; Email Verification</span>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Headline -->
+                    <h1 style="margin:0 0 10px;font-size:26px;font-weight:800;color:#f1f5f9;letter-spacing:-0.02em;line-height:1.2;">Verify your email address</h1>
+                    <p style="margin:0 0 28px;font-size:15px;color:#94a3b8;line-height:1.6;">Hey <strong style="color:#e2e8f0;">${name}</strong> 👋 — Welcome to SkillTwin! Use the code below to activate your developer account.</p>
+
+                    <!-- OTP Display -->
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(99,102,241,0.1));border:1px solid rgba(99,102,241,0.3);border-radius:16px;padding:32px 24px;text-align:center;">
+
+                          <p style="margin:0 0 16px;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#64748b;">Your One-Time Code</p>
+
+                          <!-- Individual digit boxes -->
+                          <table cellpadding="0" cellspacing="0" style="margin:0 auto 16px;">
+                            <tr>
+                              ${otp.split("").map(digit => `<td style="width:52px;height:64px;background:#0f172a;border:2px solid #3b82f6;border-radius:12px;margin:0 4px;text-align:center;vertical-align:middle;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:32px;font-weight:900;color:#60a5fa;letter-spacing:0;padding:0 4px;">${digit}</td>`).join("")}
+                            </tr>
+                          </table>
+
+                          <p style="margin:0;font-size:12px;color:#64748b;">
+                            &#9201; Expires in <strong style="color:#f59e0b;">10 minutes</strong> &nbsp;&bull;&nbsp; Single-use only
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Instructions -->
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+                      <tr>
+                        <td style="background:rgba(248,250,252,0.04);border-radius:12px;padding:20px 24px;">
+                          <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#cbd5e1;text-transform:uppercase;letter-spacing:0.05em;">How to verify:</p>
+                          <table cellpadding="0" cellspacing="0" width="100%">
+                            <tr>
+                              <td style="padding:5px 0;font-size:13px;color:#94a3b8;">
+                                <span style="color:#3b82f6;font-weight:700;margin-right:10px;">1.</span>Return to the SkillTwin verification screen
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="padding:5px 0;font-size:13px;color:#94a3b8;">
+                                <span style="color:#3b82f6;font-weight:700;margin-right:10px;">2.</span>Enter the 6-digit code shown above
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="padding:5px 0;font-size:13px;color:#94a3b8;">
+                                <span style="color:#3b82f6;font-weight:700;margin-right:10px;">3.</span>Your account will be activated instantly
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+
+                  </td>
+                </tr>
+
+                <!-- Security Warning -->
+                <tr>
+                  <td style="padding:0 40px 32px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:14px 18px;">
+                          <p style="margin:0;font-size:12px;color:#fbbf24;line-height:1.6;">
+                            <strong>&#9888; Security Notice:</strong> SkillTwin will never ask you to share this code. If you didn't create an account, you can safely ignore this email.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="padding:28px 16px 0;text-align:center;">
+              <p style="margin:0 0 6px;font-size:12px;color:#475569;">
+                Sent to <span style="color:#94a3b8;">${toEmail}</span> &middot; <a href="https://yourskilltwin.vercel.app" style="color:#3b82f6;text-decoration:none;">yourskilltwin.vercel.app</a>
+              </p>
+              <p style="margin:0;font-size:11px;color:#334155;">
+                &copy; 2026 SkillTwin &mdash; AI Developer Career Intelligence Platform
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
-</html>
-`.trim();
+</html>`.trim();
 
     const record: SentEmailRecord = {
       id: `email-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
