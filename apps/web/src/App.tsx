@@ -309,6 +309,15 @@ export const App: React.FC = () => {
       if (typeof window !== "undefined") {
         const route = parseHash(window.location.hash);
         setCurrentScreen(route);
+
+        if (window.location.hash.includes("oauth=") || window.location.hash.includes("oauth_success")) {
+          getCurrentUser().then((user) => {
+            if (user) {
+              setCurrentUser(user);
+              loadUserData();
+            }
+          });
+        }
       }
     };
 
@@ -608,7 +617,7 @@ export const App: React.FC = () => {
         resume,
         matrix,
         job,
-        gapReport: gapReport || undefined,
+        gapReport: (gapReport || undefined) as any,
         customCount: options?.customCount || 5,
       });
 
@@ -840,8 +849,10 @@ export const App: React.FC = () => {
     return (
       <SignupView
         onNavigate={(screen) => handleNavigate(screen as ActiveScreen)}
-        onSignupSuccess={() => {
-          handleNavigate("verify_email");
+        onSignupSuccess={(user) => {
+          setCurrentUser(user);
+          loadUserData();
+          handleNavigate("dashboard");
         }}
       />
     );

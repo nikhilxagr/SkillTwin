@@ -7,15 +7,28 @@ import type {
   ResumeOptimizationReport,
 } from "@skilltwin/contracts";
 
+export type OAuthProviderType = "google" | "github" | "linkedin";
+
+export interface OAuthIdentityDoc {
+  provider: OAuthProviderType;
+  providerId: string;
+  email?: string;
+  displayName?: string;
+  avatarUrl?: string;
+  connectedAt: Date;
+}
+
 export interface UserDoc {
   _id: string;
   name: string;
   email: string;
-  passwordHash: string;
+  passwordHash?: string | null;
   emailVerified: boolean;
   emailVerifiedAt: Date | null;
   verificationTokenHash: string | null;
   verificationTokenExpiresAt: Date | null;
+  verificationOtpHash?: string | null;
+  verificationOtpExpiresAt?: Date | null;
   resetPasswordTokenHash: string | null;
   resetPasswordTokenExpiresAt: Date | null;
   avatarUrl: string;
@@ -24,6 +37,7 @@ export interface UserDoc {
     targetRole: string;
     bio: string;
   };
+  providers?: OAuthIdentityDoc[];
   createdAt: Date;
   updatedAt: Date;
   lastLoginAt: Date | null;

@@ -121,8 +121,14 @@ export class JobService {
       ...aiData.categorizedSkills.cloudDevOps,
       ...(aiData.categorizedSkills.cloud || []),
       ...(aiData.categorizedSkills.devops || []),
+      ...requiredSkills
+        .filter((s) => s.category === "Cloud/DevOps" || s.category === "DevOps" || s.category === "Cloud")
+        .map((s) => s.canonicalName),
+      ...preferredSkills
+        .filter((s) => s.category === "Cloud/DevOps" || s.category === "DevOps" || s.category === "Cloud")
+        .map((s) => s.canonicalName),
     ];
-    const normCloud = skillNormalizer.normalizeSkillList(rawCloudDevOps).matches.map((m) => m.canonicalName);
+    const normCloud = Array.from(new Set(skillNormalizer.normalizeSkillList(rawCloudDevOps).matches.map((m) => m.canonicalName)));
 
     const rawSecurity = [
       ...aiData.categorizedSkills.cybersecurity,

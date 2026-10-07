@@ -31,9 +31,25 @@ export class InMemoryCollection<T extends { _id: string }> implements ICollectio
     this.uniqueKeys = uniqueKeys;
   }
 
-  private matches(item: T, filter: Partial<T>): boolean {
+  private matches(item: T, filter: any): boolean {
+    if (!filter || Object.keys(filter).length === 0) return true;
+
+    // Check if there are nested "providers.xxx" query filters
+    const providerFilterKeys = Object.keys(filter).filter((k) => k.startsWith("providers."));
+    if (providerFilterKeys.length > 0) {
+      const providers: any[] = (item as any).providers || [];
+      const hasMatchingProvider = providers.some((p) => {
+        return providerFilterKeys.every((k) => {
+          const subKey = k.replace("providers.", "");
+          return p && p[subKey] === filter[k];
+        });
+      });
+      if (!hasMatchingProvider) return false;
+    }
+
     for (const [key, value] of Object.entries(filter)) {
-      if (item[key as keyof T] !== value) {
+      if (key.startsWith("providers.")) continue;
+      if ((item as any)[key] !== value) {
         return false;
       }
     }
@@ -246,6 +262,7 @@ export class DatabaseService {
       await this.db.collection("users").createIndex({ email: 1 }, { unique: true });
       await this.db.collection("users").createIndex({ verificationTokenHash: 1 }, { sparse: true });
       await this.db.collection("users").createIndex({ resetPasswordTokenHash: 1 }, { sparse: true });
+      await this.db.collection("users").createIndex({ "providers.provider": 1, "providers.providerId": 1 }, { sparse: true });
 
       // 2. Resume: userId + createdAt
       await this.db.collection("resumes").createIndex({ userId: 1, createdAt: -1 });

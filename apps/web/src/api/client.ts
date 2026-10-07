@@ -14,6 +14,8 @@ import type {
   LoginRequest,
   ResetPasswordRequest,
   UpdateProfileRequest,
+  OAuthProvider,
+  LinkedProvider,
 } from "@skilltwin/contracts";
 
 const RAW_API_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:4000";
@@ -849,7 +851,7 @@ export async function getLatexStatus(): Promise<any> {
  * PHASE 13: Authentication & Profile APIs
  */
 
-export async function signupUser(data: SignupRequest): Promise<{ success: boolean; message: string; verificationToken?: string; verificationUrl?: string }> {
+export async function signupUser(data: SignupRequest): Promise<{ success: boolean; message: string; email?: string; requiresVerification?: boolean }> {
   const response = await fetch(`${API_BASE_URL}/api/v1/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -874,10 +876,42 @@ export async function loginUser(data: LoginRequest): Promise<{ success: boolean;
   if (!response.ok || body.success === false) {
     const err = new ApiError(body.message || "Invalid email or password.", undefined, response.status);
     (err as any).requiresVerification = body.requiresVerification;
+    (err as any).email = body.email || data.email;
     throw err;
   }
   if (body.token) {
     setStoredToken(body.token);
+  }
+  return body;
+}
+
+export async function verifyEmailOtp(email: string, otp: string): Promise<{ success: boolean; message: string; user?: SafeUser; token?: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/verify-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, otp }),
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok || body.success === false) {
+    throw new ApiError(body.message || "OTP verification failed.", undefined, response.status);
+  }
+  if (body.token) {
+    setStoredToken(body.token);
+  }
+  return body;
+}
+
+export async function resendEmailOtp(email: string): Promise<{ success: boolean; message: string; email?: string; requiresVerification?: boolean }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/resend-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok || body.success === false) {
+    throw new ApiError(body.message || "Failed to resend verification OTP.", undefined, response.status);
   }
   return body;
 }
@@ -911,7 +945,7 @@ export async function getCurrentUser(): Promise<SafeUser | null> {
     }
     const body = await response.json();
     return body.user || null;
-  } catch (err) {
+  } catch {
     return null;
   }
 }
@@ -924,20 +958,6 @@ export async function verifyEmailToken(token: string): Promise<{ success: boolea
   const body = await response.json();
   if (!response.ok || body.success === false) {
     throw new ApiError(body.message || "Email verification failed.", undefined, response.status);
-  }
-  return body;
-}
-
-export async function resendVerificationEmail(email: string): Promise<{ success: boolean; message: string; verificationToken?: string; verificationUrl?: string }> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/auth/resend-verification`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
-    credentials: "include",
-  });
-  const body = await response.json();
-  if (!response.ok || body.success === false) {
-    throw new ApiError(body.message || "Failed to resend verification email.", undefined, response.status);
   }
   return body;
 }
@@ -998,6 +1018,60 @@ export async function updateUserProfile(data: UpdateProfileRequest): Promise<Saf
     throw new ApiError(body.message || "Failed to update profile.", undefined, response.status);
   }
   return body.user;
+}
+
+/**
+ * PHASE 14: Get OAuth Login URL for a provider (Google, GitHub, LinkedIn)
+ */
+export function getOAuthLoginUrl(provider: OAuthProvider): string {
+  return `${API_BASE_URL}/api/auth/${provider}`;
+}
+
+/**
+ * PHASE 14: Get OAuth Account Link URL for a provider
+ */
+export function getOAuthLinkUrl(provider: OAuthProvider): string {
+  return `${API_BASE_URL}/api/auth/${provider}?action=link`;
+}
+
+/**
+ * PHASE 14: Retrieve connected social providers for current user
+ */
+export async function getConnectedProviders(): Promise<{
+  success: boolean;
+  providers: LinkedProvider[];
+  hasPassword: boolean;
+}> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/providers`, {
+    method: "GET",
+    headers: { ...getAuthHeaders() },
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok || body.success === false) {
+    throw new ApiError(body.message || "Failed to load connected accounts.", undefined, response.status);
+  }
+  return body;
+}
+
+/**
+ * PHASE 14: Disconnect an OAuth provider
+ */
+export async function disconnectProvider(provider: OAuthProvider): Promise<{
+  success: boolean;
+  message: string;
+  user: SafeUser;
+}> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/providers/${provider}`, {
+    method: "DELETE",
+    headers: { ...getAuthHeaders() },
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok || body.success === false) {
+    throw new ApiError(body.message || `Failed to disconnect ${provider} account.`, undefined, response.status);
+  }
+  return body;
 }
 
 
