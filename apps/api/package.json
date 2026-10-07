@@ -23,6 +23,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.7.0",
     "multer": "^2.0.2",
+    "nodemailer": "^10.0.15",
     "pdf-parse": "^1.1.1",
     "pino": "^9.6.0",
     "zod": "^3.24.1"
@@ -35,6 +36,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
     "@types/node": "^22.10.5",
+    "@types/nodemailer": "^8.0.2",
     "@types/pdf-parse": "^1.1.5",
     "@types/supertest": "^6.0.2",
     "supertest": "^7.0.0",

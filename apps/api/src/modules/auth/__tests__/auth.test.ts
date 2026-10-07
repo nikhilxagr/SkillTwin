@@ -37,7 +37,7 @@ describe("Phase 13: Secure Authentication, Email Verification & Multi-User Owner
     expect(userInDb).not.toBeNull();
     expect(userInDb?.emailVerified).toBe(false);
     expect(userInDb?.passwordHash).not.toBe("SecurePassword123!");
-    expect(userInDb?.passwordHash.startsWith("$2")).toBe(true);
+    expect(userInDb?.passwordHash?.startsWith("$2")).toBe(true);
 
     // 2. Attempt login before verification -> MUST BE REJECTED with 403
     const unverifiedLogin = await request(app)
@@ -302,5 +302,72 @@ describe("Phase 13: Secure Authentication, Email Verification & Multi-User Owner
     expect(updateRes.status).toBe(200);
     expect(updateRes.body.user.profile.targetRole).toBe("Staff Software Engineer");
     expect(updateRes.body.user.profile.headline).toBe("Distributed Systems & Cloud Architect");
+  });
+
+  it("verifies user email via 6-digit OTP code and issues authenticated session cookie", async () => {
+    // 1. Sign up new user
+    const signupRes = await request(app)
+      .post("/api/v1/auth/signup")
+      .send({
+        name: "OTP Tester",
+        email: "otptest@skilltwin.dev",
+        password: "SecurePassword123!",
+        confirmPassword: "SecurePassword123!",
+      });
+
+    expect(signupRes.status).toBe(201);
+    expect(signupRes.body.requiresVerification).toBe(true);
+
+    // Get the generated OTP from emailService
+    const sentEmail = emailService.getLatestEmailFor("otptest@skilltwin.dev");
+    expect(sentEmail).toBeDefined();
+    expect(sentEmail?.otp).toBeDefined();
+    expect(sentEmail?.otp).toMatch(/^\d{6}$/);
+    const otp = sentEmail!.otp!;
+
+    // 2. Submitting invalid OTP fails
+    const invalidRes = await request(app)
+      .post("/api/v1/auth/verify-otp")
+      .send({
+        email: "otptest@skilltwin.dev",
+        otp: "000000",
+      });
+    expect(invalidRes.status).toBe(400);
+    expect(invalidRes.body.success).toBe(false);
+
+    // 3. Submitting correct 6-digit OTP succeeds and sets session cookie
+    const verifyRes = await request(app)
+      .post("/api/v1/auth/verify-otp")
+      .send({
+        email: "otptest@skilltwin.dev",
+        otp,
+      });
+
+    expect(verifyRes.status).toBe(200);
+    expect(verifyRes.body.success).toBe(true);
+    expect(verifyRes.body.user).toBeDefined();
+    expect(verifyRes.body.user.emailVerified).toBe(true);
+    expect(verifyRes.headers["set-cookie"]).toBeDefined();
+
+    // 4. Test resend OTP on another unverified user
+    await request(app)
+      .post("/api/v1/auth/signup")
+      .send({
+        name: "Resend Tester",
+        email: "resendtest@skilltwin.dev",
+        password: "SecurePassword123!",
+        confirmPassword: "SecurePassword123!",
+      });
+
+    const resendRes = await request(app)
+      .post("/api/v1/auth/resend-otp")
+      .send({ email: "resendtest@skilltwin.dev" });
+
+    expect(resendRes.status).toBe(200);
+    expect(resendRes.body.success).toBe(true);
+
+    const resentEmail = emailService.getLatestEmailFor("resendtest@skilltwin.dev");
+    expect(resentEmail?.otp).toBeDefined();
+    expect(resentEmail?.otp).toMatch(/^\d{6}$/);
   });
 });

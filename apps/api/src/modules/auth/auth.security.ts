@@ -66,6 +66,16 @@ export function verifySessionJwt(token: string): { id: string; email: string } |
  * Convert UserDoc to SafeUser (NEVER leaks password hash or tokens)
  */
 export function toSafeUser(user: UserDoc): SafeUser {
+  const hasPassword = Boolean(user.passwordHash && user.passwordHash.length > 0);
+  const connectedProviders = (user.providers || []).map((p) => ({
+    provider: p.provider,
+    providerId: p.providerId,
+    email: p.email,
+    displayName: p.displayName,
+    avatarUrl: p.avatarUrl,
+    connectedAt: p.connectedAt instanceof Date ? p.connectedAt.toISOString() : String(p.connectedAt),
+  }));
+
   return {
     id: user._id,
     name: user.name,
@@ -81,5 +91,7 @@ export function toSafeUser(user: UserDoc): SafeUser {
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
     lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
+    hasPassword,
+    connectedProviders,
   };
 }

@@ -142,15 +142,16 @@ describe("SkillTwin Clean Production Shell & UI Views", () => {
       email: "nikhil@skilltwin.dev",
       name: "Nikhil Agrahari",
       emailVerified: true,
+      avatarUrl: "",
       profile: {
+        headline: "Senior Software Engineer",
         targetRole: "Full Stack Engineer",
-        targetCompany: "CloudScale Inc",
-        githubUsername: "nikhilxagr",
-        experienceYears: 4,
         bio: "Senior engineer focusing on scalable systems.",
       },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      hasPassword: true,
+      connectedProviders: [],
     };
 
     render(
