@@ -109,29 +109,73 @@ export class LatexService {
   }
 
   /**
-   * Compiles using free open-source latexonline.cc service.
+   * Packs a single file into a standard POSIX ustar tar archive in memory.
+   * This allows uploading LaTeX documents via POST multipart form data without
+   * hitting URL/URI length limits on proxies and web servers (fixes HTTP 414).
+   */
+  private createTarBuffer(filename: string, contentStr: string): Buffer {
+    const content = Buffer.from(contentStr, "utf-8");
+    const header = Buffer.alloc(512, 0);
+
+    header.write(filename, 0, 100, "utf-8");
+    header.write("0000644\0", 100, 8, "utf-8");
+    header.write("0000000\0", 108, 8, "utf-8");
+    header.write("0000000\0", 116, 8, "utf-8");
+    header.write(content.length.toString(8).padStart(11, "0") + " ", 124, 12, "utf-8");
+    header.write(Math.floor(Date.now() / 1000).toString(8).padStart(11, "0") + " ", 136, 12, "utf-8");
+    header.write("        ", 148, 8, "utf-8");
+    header.write("0", 156, 1, "utf-8");
+    header.write("ustar\0", 257, 6, "utf-8");
+    header.write("00", 263, 2, "utf-8");
+
+    let checksum = 0;
+    for (let i = 0; i < 512; i++) {
+      checksum += header[i];
+    }
+    const checksumOctal = checksum.toString(8).padStart(6, "0") + "\0 ";
+    header.write(checksumOctal, 148, 8, "utf-8");
+
+    const padLen = (512 - (content.length % 512)) % 512;
+    const padding = Buffer.alloc(padLen, 0);
+    const endMarker = Buffer.alloc(1024, 0);
+
+    return Buffer.concat([header, content, padding, endMarker]);
+  }
+
+  /**
+   * Compiles using free open-source latexonline.cc service via POST data upload.
+   * Sending the file via POST tarball prevents Nginx 414 Request-URI Too Large errors on large documents.
    */
   private async compileViaLatexOnline(texSource: string, engine = "pdflatex"): Promise<string> {
-    const url = new URL("https://latexonline.cc/compile");
-    url.searchParams.set("text", texSource);
-    if (engine && engine !== "pdflatex") {
-      url.searchParams.set("command", engine);
-    }
+    const target = "main.tex";
+    const tarBuffer = this.createTarBuffer(target, texSource);
+
+    const formData = new FormData();
+    formData.append("file", new Blob([new Uint8Array(tarBuffer)]), "document.tar");
+
+    const cmd = engine && engine !== "pdflatex" ? engine : "pdflatex";
+    const compileUrl = `https://latexonline.cc/data?target=${target}&command=${cmd}`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
-      const response = await fetch(url.toString(), {
-        method: "GET",
+      const response = await fetch(compileUrl, {
+        method: "POST",
+        body: formData,
         signal: controller.signal,
       });
 
       if (!response.ok) {
-        const errorLog = await response.text();
+        const errorText = await response.text();
+        const isHtml = errorText.trim().startsWith("<") && errorText.includes("</html>");
+        if (isHtml) {
+          throw new Error(`Compiler service returned HTTP ${response.status}`);
+        }
+
         const err: any = new Error(`LaTeX compilation failed (HTTP ${response.status})`);
         err.isCompilerError = true;
-        err.log = errorLog.slice(0, 3000);
+        err.log = errorText.slice(0, 3000);
         throw err;
       }
 

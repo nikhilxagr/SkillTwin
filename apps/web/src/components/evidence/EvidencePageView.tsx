@@ -131,13 +131,13 @@ export const EvidencePageView: React.FC<EvidencePageViewProps> = ({
                 GitHub Username or Organization
               </label>
               <div className="relative">
-                <GitBranch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-content-tertiary" />
+                <GitBranch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-content-tertiary pointer-events-none" />
                 <input
                   type="text"
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
                   placeholder="Enter GitHub username..."
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-border-subtle rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue bg-white"
+                  className="w-full !pl-9 pr-3 py-2 text-sm border border-border-subtle rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue bg-white"
                   data-testid="github-username-input"
                 />
               </div>
@@ -149,13 +149,13 @@ export const EvidencePageView: React.FC<EvidencePageViewProps> = ({
                   Personal Access Token (Optional)
                 </label>
                 <div className="relative">
-                  <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-content-tertiary" />
+                  <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-content-tertiary pointer-events-none" />
                   <input
                     type="password"
                     value={tokenInput}
                     onChange={(e) => setTokenInput(e.target.value)}
                     placeholder="ghp_... (for private repos or rate limits)"
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-border-subtle rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue bg-white"
+                    className="w-full !pl-9 pr-3 py-2 text-sm border border-border-subtle rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue bg-white"
                   />
                 </div>
               </div>
@@ -521,13 +521,13 @@ export const EvidencePageView: React.FC<EvidencePageViewProps> = ({
 
             {/* Search Box */}
             <div className="relative">
-              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-content-tertiary" />
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-content-tertiary pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search skill..."
-                className="pl-8 pr-3 py-1 text-xs border border-border-subtle rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-blue bg-white w-36 md:w-44"
+                className="!pl-8 pr-3 py-1 text-xs border border-border-subtle rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-blue bg-white w-36 md:w-44"
               />
             </div>
           </div>

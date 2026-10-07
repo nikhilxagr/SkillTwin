@@ -647,8 +647,8 @@ code, pre, .font-mono {
   background: var(--color-light-blue);
 }
 
-/* Inputs */
-input[type="text"], textarea, select {
+/* Inputs: Using :where() ensures 0 specificity so Tailwind utilities (e.g., pl-10, pr-3.5, py-2) are never overridden */
+:where(input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
   font-family: var(--font-sans);
   background: #ffffff;
   color: var(--text-primary);
@@ -659,7 +659,7 @@ input[type="text"], textarea, select {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-input[type="text"]:focus, textarea:focus, select:focus {
+:where(input:not([type="checkbox"]):not([type="radio"]):focus, textarea:focus, select:focus) {
   outline: none;
   border-color: var(--color-primary-blue);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);

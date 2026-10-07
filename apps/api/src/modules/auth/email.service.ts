@@ -122,18 +122,24 @@ support@skilltwin.dev
       <td align="center">
         <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
 
-          <!-- HEADER: Brand -->
+          <!-- HEADER: Brand (Table-based layout for 100% email client & mobile responsiveness) -->
           <tr>
             <td align="center" style="padding-bottom:24px;">
-              <table cellpadding="0" cellspacing="0">
+              <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
                 <tr>
-                  <td>
-                    <div style="display:inline-flex;align-items:center;gap:10px;">
-                      <div style="width:40px;height:40px;background:linear-gradient(135deg,#3b82f6,#6366f1);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-                        <span style="color:#fff;font-size:20px;font-weight:900;line-height:40px;display:block;text-align:center;">S</span>
-                      </div>
-                      <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.03em;">Skill<span style="color:#60a5fa;">Twin</span></span>
-                    </div>
+                  <!-- Logo Icon Badge -->
+                  <td align="center" valign="middle" style="width:42px;height:42px;background-color:#2563eb;background:linear-gradient(135deg,#3b82f6,#6366f1);border-radius:12px;padding:0;">
+                    <table cellpadding="0" cellspacing="0" border="0" width="42" height="42">
+                      <tr>
+                        <td align="center" valign="middle" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:22px;font-weight:900;color:#ffffff;line-height:42px;mso-line-height-rule:exactly;text-align:center;">
+                          S
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <!-- Brand Typography -->
+                  <td valign="middle" style="padding-left:12px;vertical-align:middle;text-align:left;">
+                    <span style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:24px;font-weight:800;color:#ffffff;letter-spacing:-0.03em;line-height:1;display:inline-block;">Skill<span style="color:#60a5fa;">Twin</span></span>
                   </td>
                 </tr>
               </table>
@@ -352,7 +358,22 @@ support@skilltwin.dev
 <body>
   <div class="container">
     <div class="header">
-      <div class="brand">Skill<span>Twin</span></div>
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center" valign="middle" style="width:36px;height:36px;background-color:#2563eb;background:linear-gradient(135deg,#3b82f6,#6366f1);border-radius:10px;text-align:center;">
+            <table cellpadding="0" cellspacing="0" border="0" width="36" height="36">
+              <tr>
+                <td align="center" valign="middle" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:18px;font-weight:900;color:#ffffff;line-height:36px;mso-line-height-rule:exactly;text-align:center;">
+                  S
+                </td>
+              </tr>
+            </table>
+          </td>
+          <td valign="middle" style="padding-left:10px;vertical-align:middle;text-align:left;">
+            <span style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:20px;font-weight:800;color:#0f172a;letter-spacing:-0.03em;line-height:1;display:inline-block;">Skill<span style="color:#2563eb;">Twin</span></span>
+          </td>
+        </tr>
+      </table>
     </div>
     <div class="content">
       <h2>Reset your password</h2>

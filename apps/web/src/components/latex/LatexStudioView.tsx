@@ -108,7 +108,13 @@ export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
       setPdfBlobUrl(url);
     } catch (err: any) {
       console.error("Compilation error:", err);
-      setErrorLog(err.log || err.message || "Compilation failed. Check LaTeX syntax.");
+      let rawLog = err.log || err.message || "Compilation failed. Check LaTeX syntax.";
+      if (typeof rawLog === "string" && rawLog.includes("<html") && rawLog.includes("414")) {
+        rawLog = "Request size exceeded URI limits. Switched to direct POST multipart compilation.";
+      } else if (typeof rawLog === "string" && rawLog.startsWith("<") && rawLog.includes("</")) {
+        rawLog = rawLog.replace(/<[^>]*>?/gm, " ").replace(/\s+/g, " ").trim();
+      }
+      setErrorLog(rawLog);
     } finally {
       setIsCompiling(false);
     }
