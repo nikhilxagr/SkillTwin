@@ -36,16 +36,17 @@ export class OAuthService {
    * Resolve callback URL for a given provider
    */
   getCallbackUrl(provider: OAuthProviderType): string {
+    let url = "";
     if (provider === "google" && config.GOOGLE_CALLBACK_URL) {
-      return config.GOOGLE_CALLBACK_URL;
+      url = config.GOOGLE_CALLBACK_URL;
+    } else if (provider === "github" && config.GITHUB_CALLBACK_URL) {
+      url = config.GITHUB_CALLBACK_URL;
+    } else if (provider === "linkedin" && config.LINKEDIN_CALLBACK_URL) {
+      url = config.LINKEDIN_CALLBACK_URL;
+    } else {
+      url = `${config.API_BASE_URL}/api/auth/${provider}/callback`;
     }
-    if (provider === "github" && config.GITHUB_CALLBACK_URL) {
-      return config.GITHUB_CALLBACK_URL;
-    }
-    if (provider === "linkedin" && config.LINKEDIN_CALLBACK_URL) {
-      return config.LINKEDIN_CALLBACK_URL;
-    }
-    return `${config.API_BASE_URL}/api/auth/${provider}/callback`;
+    return url.trim().replace(/%20/g, "-").replace(/\s+/g, "-");
   }
 
   /**

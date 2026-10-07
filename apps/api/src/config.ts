@@ -43,7 +43,7 @@ if (!process.env.SMTP_PASS && process.env.EMAIL_PASS) {
 const environmentSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   API_PORT: z.coerce.number().int().positive().default(4000),
-  API_BASE_URL: z.string().optional().default("http://localhost:4000").transform((val) => val.replace(/\/+$/, "")),
+  API_BASE_URL: z.string().optional().default("http://localhost:4000").transform((val) => val.trim().replace(/%20/g, "-").replace(/\s+/g, "-").replace(/\/+$/, "")),
   WEB_ORIGIN: z.string().url().default("http://localhost:5173").transform((val) => val.replace(/\/+$/, "")),
   GEMINI_API_KEY: z.string().optional().default(""),
   MONGODB_URI: z.string().optional().default(""),
@@ -58,13 +58,13 @@ const environmentSchema = z.object({
   // OAuth credentials
   GOOGLE_CLIENT_ID: z.string().optional().default(""),
   GOOGLE_CLIENT_SECRET: z.string().optional().default(""),
-  GOOGLE_CALLBACK_URL: z.string().optional().default(""),
+  GOOGLE_CALLBACK_URL: z.string().optional().default("").transform((val) => val ? val.trim().replace(/%20/g, "-").replace(/\s+/g, "-").replace(/\/+$/, "") : ""),
   GITHUB_CLIENT_ID: z.string().optional().default(""),
   GITHUB_CLIENT_SECRET: z.string().optional().default(""),
-  GITHUB_CALLBACK_URL: z.string().optional().default(""),
+  GITHUB_CALLBACK_URL: z.string().optional().default("").transform((val) => val ? val.trim().replace(/%20/g, "-").replace(/\s+/g, "-").replace(/\/+$/, "") : ""),
   LINKEDIN_CLIENT_ID: z.string().optional().default(""),
   LINKEDIN_CLIENT_SECRET: z.string().optional().default(""),
-  LINKEDIN_CALLBACK_URL: z.string().optional().default(""),
+  LINKEDIN_CALLBACK_URL: z.string().optional().default("").transform((val) => val ? val.trim().replace(/%20/g, "-").replace(/\s+/g, "-").replace(/\/+$/, "") : ""),
   MOCK_OAUTH: z.coerce.boolean().default(false),
 });
 

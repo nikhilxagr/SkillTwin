@@ -18,6 +18,12 @@ import type {
   LinkedProvider,
 } from "@skilltwin/contracts";
 
+function sanitizeUrl(raw: string): string {
+  if (!raw) return "";
+  const clean = raw.trim().replace(/%20/g, "-").replace(/\s+/g, "-");
+  return clean.replace(/\/+$/, "");
+}
+
 const defaultApiUrl =
   typeof window !== "undefined" &&
   window.location.hostname !== "localhost" &&
@@ -26,7 +32,7 @@ const defaultApiUrl =
     : "http://localhost:4000";
 
 const RAW_API_URL = (import.meta as any).env?.VITE_API_URL || defaultApiUrl;
-export const API_BASE_URL = String(RAW_API_URL).replace(/\/+$/, "");
+export const API_BASE_URL = sanitizeUrl(String(RAW_API_URL));
 
 export const TOKEN_STORAGE_KEY = "skilltwin_token";
 
