@@ -165,50 +165,30 @@ support@skilltwin.dev
                     <h1 style="margin:0 0 10px;font-size:26px;font-weight:800;color:#f1f5f9;letter-spacing:-0.02em;line-height:1.2;">Verify your email address</h1>
                     <p style="margin:0 0 28px;font-size:15px;color:#94a3b8;line-height:1.6;">Hey <strong style="color:#e2e8f0;">${name}</strong> 👋 — Welcome to SkillTwin! Use the code below to activate your developer account.</p>
 
-                    <!-- OTP Display Card -->
+                    <!-- OTP Display Card (Single OTP Only) -->
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(99,102,241,0.1));border:1px solid rgba(99,102,241,0.3);border-radius:16px;padding:30px 22px 26px;text-align:center;">
+                        <td style="background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(99,102,241,0.1));border:1px solid rgba(99,102,241,0.3);border-radius:16px;padding:32px 24px 28px;text-align:center;">
 
                           <p style="margin:0 0 16px;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#64748b;">Your One-Time Code</p>
 
-                          <!-- Individual digit boxes -->
+                          <!-- Single OTP Display: 6 Digit Boxes (Selectable on Mobile & Web) -->
+                          <table cellpadding="0" cellspacing="0" style="margin:0 auto 20px;">
+                            <tr>
+                              ${otp.split("").map(digit => `<td style="width:52px;height:64px;background:#0f172a;border:2px solid #3b82f6;border-radius:12px;margin:0 4px;text-align:center;vertical-align:middle;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:32px;font-weight:900;color:#60a5fa;letter-spacing:0;padding:0 4px;user-select:all;-webkit-user-select:all;-moz-user-select:all;">${digit}</td>`).join("")}
+                            </tr>
+                          </table>
+
+                          <!-- Right Down Button: Copy & Verify OTP -->
                           <table cellpadding="0" cellspacing="0" style="margin:0 auto 16px;">
                             <tr>
-                              ${otp.split("").map(digit => `<td style="width:52px;height:64px;background:#0f172a;border:2px solid #3b82f6;border-radius:12px;margin:0 4px;text-align:center;vertical-align:middle;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:32px;font-weight:900;color:#60a5fa;letter-spacing:0;padding:0 4px;">${digit}</td>`).join("")}
-                            </tr>
-                          </table>
-
-                          <!-- DIRECT COPY OTP SECTION (FOR PHONE & WEB) -->
-                          <table cellpadding="0" cellspacing="0" style="margin:0 auto 10px;background:#090d16;border:1px dashed #3b82f6;border-radius:12px;padding:10px 18px;">
-                            <tr>
-                              <td align="center">
-                                <span style="font-size:11px;color:#94a3b8;font-weight:700;margin-right:8px;text-transform:uppercase;letter-spacing:0.05em;vertical-align:middle;">
-                                  &#128203; Direct Copy OTP:
-                                </span>
-                                <span style="display:inline-block;padding:3px 12px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.4);border-radius:8px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:22px;font-weight:900;color:#38bdf8;letter-spacing:5px;vertical-align:middle;user-select:all;-webkit-user-select:all;-moz-user-select:all;-ms-user-select:all;">
-                                  ${otp}
-                                </span>
-                              </td>
-                            </tr>
-                          </table>
-                          <p style="margin:0 0 18px;font-size:11px;color:#64748b;text-align:center;">
-                            &#10024; Tap or click the code above to easily copy on phone &amp; web
-                          </p>
-
-                          <!-- DIRECT 1-CLICK VERIFY BUTTON (FOR PHONE & WEB) -->
-                          <table cellpadding="0" cellspacing="0" style="margin:0 auto 6px;">
-                            <tr>
                               <td align="center" style="background:linear-gradient(135deg,#2563eb,#4f46e5);border-radius:12px;box-shadow:0 4px 16px rgba(37,99,235,0.4);">
-                                <a href="${directVerifyUrl}" target="_blank" style="display:inline-block;padding:13px 32px;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:-0.01em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-                                  &#9889; Direct Verify &amp; Auto-Fill in 1-Click &rarr;
+                                <a href="${directVerifyUrl}" target="_blank" style="display:inline-block;padding:13px 34px;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:-0.01em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+                                  &#128203; Copy &amp; Verify Code &rarr;
                                 </a>
                               </td>
                             </tr>
                           </table>
-                          <p style="margin:6px 0 16px;font-size:11px;color:#64748b;text-align:center;">
-                            Automatically opens &amp; verifies on your mobile phone or web browser
-                          </p>
 
                           <p style="margin:0;font-size:12px;color:#64748b;">
                             &#9201; Expires in <strong style="color:#f59e0b;">10 minutes</strong> &nbsp;&bull;&nbsp; Single-use only

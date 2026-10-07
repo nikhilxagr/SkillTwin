@@ -76,6 +76,13 @@ export const VerifyEmailView: React.FC<VerifyEmailViewProps> = ({
 
     // Direct 1-click verification from email link
     if (activeEmail && activeOtp && (autoVerify || activeOtp.length === 6)) {
+      try {
+        if (navigator?.clipboard?.writeText) {
+          navigator.clipboard.writeText(activeOtp);
+        }
+      } catch {
+        // Ignore clipboard permission
+      }
       executeOtpAutoVerification(decodeURIComponent(activeEmail), activeOtp);
     } else if (activeToken) {
       executeTokenVerification(activeToken);
