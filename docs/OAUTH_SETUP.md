@@ -54,17 +54,17 @@ SkillTwin uses a **single user identity model**:
 4. Set **Name**: `SkillTwin Web Client`.
 5. Under **Authorized JavaScript origins**, add:
    - `http://localhost:5173` (Frontend dev server)
-   - `https://your-frontend.vercel.app` (Production frontend)
+   - `https://yourskilltwin.vercel.app` (Production frontend)
 6. Under **Authorized redirect URIs**, add:
    - `http://localhost:4000/api/auth/google/callback` (Backend local dev)
-   - `https://your-backend-api.onrender.com/api/auth/google/callback` (Production backend)
+   - `https://skilltwin-api-hafc.onrender.com/api/auth/google/callback` (Production backend)
 7. Click **Create** and copy your **Client ID** and **Client Secret**.
 
 ### Step 4: Add to Environment Variables
 ```env
 GOOGLE_CLIENT_ID="<your-google-client-id>.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="<your-google-client-secret>"
-GOOGLE_CALLBACK_URL="http://localhost:4000/api/auth/google/callback"
+GOOGLE_CALLBACK_URL="https://skilltwin-api-hafc.onrender.com/api/auth/google/callback"
 ```
 
 ---
@@ -83,11 +83,11 @@ GOOGLE_CALLBACK_URL="http://localhost:4000/api/auth/google/callback"
 - **Application name**: `SkillTwin Career Platform`
 - **Homepage URL**:
   - Local: `http://localhost:5173`
-  - Production: `https://your-frontend.vercel.app`
+  - Production: `https://yourskilltwin.vercel.app`
 - **Application description**: `Developer career intelligence and resume tailoring platform`
 - **Authorization callback URL**:
   - Local: `http://localhost:4000/api/auth/github/callback`
-  - Production: `https://your-backend-api.onrender.com/api/auth/github/callback`
+  - Production: `https://skilltwin-api-hafc.onrender.com/api/auth/github/callback`
 
 ### Step 3: Generate Client Secret
 1. Click **Register application**.
@@ -99,7 +99,7 @@ GOOGLE_CALLBACK_URL="http://localhost:4000/api/auth/google/callback"
 ```env
 GITHUB_CLIENT_ID="<your-github-client-id>"
 GITHUB_CLIENT_SECRET="<your-github-client-secret>"
-GITHUB_CALLBACK_URL="http://localhost:4000/api/auth/github/callback"
+GITHUB_CALLBACK_URL="https://skilltwin-api-hafc.onrender.com/api/auth/github/callback"
 ```
 
 ---
@@ -128,14 +128,14 @@ GITHUB_CALLBACK_URL="http://localhost:4000/api/auth/github/callback"
 3. Scroll down to **Authorized redirect URLs for your app** and click the edit icon (+).
 4. Add the callback URL:
    - Local: `http://localhost:4000/api/auth/linkedin/callback`
-   - Production: `https://your-backend-api.onrender.com/api/auth/linkedin/callback`
+   - Production: `https://skilltwin-api-hafc.onrender.com/api/auth/linkedin/callback`
 5. Click **Update**.
 
 ### Step 4: Add to Environment Variables
 ```env
 LINKEDIN_CLIENT_ID="<your-linkedin-client-id>"
 LINKEDIN_CLIENT_SECRET="<your-linkedin-client-secret>"
-LINKEDIN_CALLBACK_URL="http://localhost:4000/api/auth/linkedin/callback"
+LINKEDIN_CALLBACK_URL="https://skilltwin-api-hafc.onrender.com/api/auth/linkedin/callback"
 ```
 
 ---
@@ -170,12 +170,13 @@ To test the entire OAuth pipeline in local development without registering live 
 ## 7. Production Deployment Checklist
 
 1. **Render (Backend)**:
-   - Add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL`
-   - Add `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_CALLBACK_URL`
-   - Add `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `LINKEDIN_CALLBACK_URL`
-   - Set `API_BASE_URL` to your Render service URL (e.g. `https://skilltwin-api.onrender.com`).
+   - Set `WEB_ORIGIN="https://yourskilltwin.vercel.app"`
+   - Set `API_BASE_URL="https://skilltwin-api-hafc.onrender.com"`
+   - Add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL="https://skilltwin-api-hafc.onrender.com/api/auth/google/callback"`
+   - Add `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_CALLBACK_URL="https://skilltwin-api-hafc.onrender.com/api/auth/github/callback"`
+   - Add `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `LINKEDIN_CALLBACK_URL="https://skilltwin-api-hafc.onrender.com/api/auth/linkedin/callback"`
 2. **Third-Party Consoles**:
    - Ensure the production callback URLs in Google, GitHub, and LinkedIn match your live backend URL:
-     `https://<your-backend>/api/auth/<provider>/callback`
+     `https://skilltwin-api-hafc.onrender.com/api/auth/<provider>/callback`
 3. **Vercel (Frontend)**:
-   - Ensure `VITE_API_URL` points to your backend URL.
+   - Ensure `VITE_API_URL="https://skilltwin-api-hafc.onrender.com"` is set in Vercel project environment variables.

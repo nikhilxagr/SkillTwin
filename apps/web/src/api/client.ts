@@ -18,7 +18,14 @@ import type {
   LinkedProvider,
 } from "@skilltwin/contracts";
 
-const RAW_API_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:4000";
+const defaultApiUrl =
+  typeof window !== "undefined" &&
+  window.location.hostname !== "localhost" &&
+  window.location.hostname !== "127.0.0.1"
+    ? "https://skilltwin-api-hafc.onrender.com"
+    : "http://localhost:4000";
+
+const RAW_API_URL = (import.meta as any).env?.VITE_API_URL || defaultApiUrl;
 export const API_BASE_URL = String(RAW_API_URL).replace(/\/+$/, "");
 
 export const TOKEN_STORAGE_KEY = "skilltwin_token";
