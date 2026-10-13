@@ -16,6 +16,8 @@ import type {
   UpdateProfileRequest,
   OAuthProvider,
   LinkedProvider,
+  PublicTwinProfile,
+  RecruiterMatchResponse,
 } from "@skilltwin/contracts";
 
 function sanitizeUrl(raw: string): string {
@@ -1083,6 +1085,65 @@ export async function disconnectProvider(provider: OAuthProvider): Promise<{
   const body = await response.json();
   if (!response.ok || body.success === false) {
     throw new ApiError(body.message || `Failed to disconnect ${provider} account.`, undefined, response.status);
+  }
+  return body;
+}
+
+/**
+ * FEATURE 1: Retrieve public verified digital twin dossier by username
+ * No authentication required.
+ */
+export async function getPublicTwinProfile(rawUsername: string): Promise<PublicTwinProfile> {
+  const cleanUsername = rawUsername.trim().toLowerCase().replace(/^@+/, "");
+  const response = await fetch(`${API_BASE_URL}/api/v1/public/twin/${encodeURIComponent(cleanUsername)}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  const body = await response.json();
+  if (!response.ok || body.success === false) {
+    throw new ApiError(body.message || `Profile '@${cleanUsername}' not found or is private.`, undefined, response.status);
+  }
+  return body.profile;
+}
+
+/**
+ * FEATURE 1: Interactive Recruiter Tool - Match Job Description against candidate's verified proof points
+ * No authentication required.
+ */
+export async function matchRecruiterJobDescription(
+  rawUsername: string,
+  jobDescriptionText: string,
+  roleTitle?: string
+): Promise<RecruiterMatchResponse> {
+  const cleanUsername = rawUsername.trim().toLowerCase().replace(/^@+/, "");
+  const response = await fetch(`${API_BASE_URL}/api/v1/public/twin/${encodeURIComponent(cleanUsername)}/match`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jobDescriptionText, roleTitle }),
+  });
+  const body = await response.json();
+  if (!response.ok || body.success === false) {
+    throw new ApiError(body.message || "Failed to execute recruiter JD match.", undefined, response.status);
+  }
+  return body.data;
+}
+
+/**
+ * Check if candidate's desired public username is available
+ */
+export async function checkUsernameAvailability(username: string): Promise<{
+  available: boolean;
+  message: string;
+}> {
+  const clean = username.trim().toLowerCase().replace(/^@+/, "");
+  const response = await fetch(`${API_BASE_URL}/api/v1/profile/check-username/${encodeURIComponent(clean)}`, {
+    method: "GET",
+    headers: { ...getAuthHeaders() },
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok) {
+    throw new ApiError(body.message || "Failed to check username availability.", undefined, response.status);
   }
   return body;
 }

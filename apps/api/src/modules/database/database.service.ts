@@ -217,7 +217,7 @@ export class DatabaseService {
 
   constructor() {
     // Default to in-memory collections initially with proper index constraints
-    this.users = new InMemoryCollection<UserDoc>(["email"]);
+    this.users = new InMemoryCollection<UserDoc>(["email", "username"]);
     this.pendingRegistrations = new InMemoryCollection<PendingRegistrationDoc>(["email"]);
     this.resumes = new InMemoryCollection<ResumeDoc>();
     this.skillProfiles = new InMemoryCollection<SkillProfileDoc>(["userId"]);
@@ -262,8 +262,9 @@ export class DatabaseService {
     if (!this.db) return;
 
     try {
-      // 1. User: unique email
+      // 1. User: unique email & unique username (sparse)
       await this.db.collection("users").createIndex({ email: 1 }, { unique: true });
+      await this.db.collection("users").createIndex({ username: 1 }, { unique: true, sparse: true });
       await this.db.collection("users").createIndex({ verificationTokenHash: 1 }, { sparse: true });
       await this.db.collection("users").createIndex({ resetPasswordTokenHash: 1 }, { sparse: true });
       await this.db.collection("users").createIndex({ "providers.provider": 1, "providers.providerId": 1 }, { sparse: true });

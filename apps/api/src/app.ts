@@ -26,6 +26,7 @@ import { githubRouter } from "./modules/github/github.controller.js";
 import { latexRouter } from "./modules/latex/latex.controller.js";
 import cookieParser from "cookie-parser";
 import { authRouter, profileRouter } from "./modules/auth/auth.controller.js";
+import { publicRouter } from "./modules/public-profile/public-profile.controller.js";
 
 export const app = express();
 const logger = pino();
@@ -74,6 +75,10 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/v1/profile", profileRouter);
 app.use("/api/profile", profileRouter);
+
+// Feature 1: Public Verified Twin Profile Dossier & Recruiter JD Matcher
+app.use("/api/v1/public", publicRouter);
+app.use("/api/public", publicRouter);
 
 // Phase 2: Resume Intelligence pipeline
 app.use("/api/v1/resumes", resumeRouter);

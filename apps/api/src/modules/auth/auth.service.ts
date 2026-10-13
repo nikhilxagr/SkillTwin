@@ -9,6 +9,7 @@ import {
   hashToken,
   createSessionJwt,
   toSafeUser,
+  slugifyUsername,
 } from "./auth.security.js";
 import { emailService } from "./email.service.js";
 import type {
@@ -18,6 +19,7 @@ import type {
   UpdateProfileRequest,
   SafeUser,
   AuthResponse,
+  UserPublicSettings,
 } from "@skilltwin/contracts";
 
 export interface LoginResult {
@@ -31,6 +33,36 @@ export interface LoginResult {
 
 export function generateOtp(): string {
   return crypto.randomInt(100000, 1000000).toString();
+}
+
+export async function generateAvailableUsername(name: string, email: string): Promise<string> {
+  const baseSlug = slugifyUsername(name, email);
+  let candidate = baseSlug;
+  const existing = await dbService.users.findOne({ username: candidate });
+  if (!existing) return candidate;
+
+  for (let i = 0; i < 5; i++) {
+    const candidateWithSuffix = `${baseSlug}${Math.floor(100 + Math.random() * 900)}`;
+    const check = await dbService.users.findOne({ username: candidateWithSuffix });
+    if (!check) return candidateWithSuffix;
+  }
+  return `${baseSlug}${Date.now().toString().slice(-4)}`;
+}
+
+export function createDefaultPublicSettings(username: string): UserPublicSettings {
+  return {
+    username,
+    isPublic: true,
+    allowRecruiterJdMatch: true,
+    showGithubEvidence: true,
+    showSkillMatrix: true,
+    showProjects: true,
+    contactEmailVisible: false,
+    customPitch: "",
+    linkedinUrl: "",
+    githubUrl: "",
+    portfolioUrl: "",
+  };
 }
 
 export class AuthService {
@@ -133,9 +165,11 @@ export class AuthService {
       // OTP MATCHES! Now and ONLY now, persist user in the database users table!
       const userId = `usr-${crypto.randomUUID()}`;
       const now = new Date();
+      const username = await generateAvailableUsername(pending.name, pending.email);
       const newUser: UserDoc = {
         _id: userId,
         name: pending.name,
+        username,
         email: pending.email,
         passwordHash: pending.passwordHash,
         emailVerified: true,
@@ -152,6 +186,7 @@ export class AuthService {
           targetRole: "Full Stack Developer",
           bio: "",
         },
+        publicSettings: createDefaultPublicSettings(username),
         createdAt: now,
         updatedAt: now,
         lastLoginAt: now,
@@ -341,9 +376,11 @@ export class AuthService {
       // Create verified user
       const userId = `usr-${crypto.randomUUID()}`;
       const now = new Date();
+      const username = await generateAvailableUsername(pending.name, pending.email);
       const newUser: UserDoc = {
         _id: userId,
         name: pending.name,
+        username,
         email: pending.email,
         passwordHash: pending.passwordHash,
         emailVerified: true,
@@ -360,6 +397,7 @@ export class AuthService {
           targetRole: "Full Stack Developer",
           bio: "",
         },
+        publicSettings: createDefaultPublicSettings(username),
         createdAt: now,
         updatedAt: now,
         lastLoginAt: now,
@@ -601,6 +639,35 @@ export class AuthService {
       updates.avatarUrl = data.avatarUrl;
     }
 
+    if (data.username !== undefined) {
+      const cleanUsername = data.username.trim().toLowerCase();
+      const existingWithUsername = await dbService.users.findOne({ username: cleanUsername });
+      if (existingWithUsername && existingWithUsername._id !== userId) {
+        throw new Error("This username is already taken. Please choose another.");
+      }
+      updates.username = cleanUsername;
+      updates.publicSettings = {
+        ...(user.publicSettings || createDefaultPublicSettings(cleanUsername)),
+        username: cleanUsername,
+      };
+    }
+
+    if (data.publicSettings !== undefined) {
+      updates.publicSettings = {
+        ...(user.publicSettings || createDefaultPublicSettings(user.username || "")),
+        ...data.publicSettings,
+      };
+      if (data.publicSettings.username) {
+        const cleanUsername = data.publicSettings.username.trim().toLowerCase();
+        const existingWithUsername = await dbService.users.findOne({ username: cleanUsername });
+        if (existingWithUsername && existingWithUsername._id !== userId) {
+          throw new Error("This username is already taken. Please choose another.");
+        }
+        updates.username = cleanUsername;
+        updates.publicSettings.username = cleanUsername;
+      }
+    }
+
     if (data.headline !== undefined || data.targetRole !== undefined || data.bio !== undefined) {
       updates.profile = {
         ...user.profile,
@@ -614,6 +681,27 @@ export class AuthService {
 
     const updated = await dbService.users.findOne({ _id: userId });
     return updated ? toSafeUser(updated) : null;
+  }
+
+  /**
+   * Check if a candidate's desired public username is available
+   */
+  async checkUsernameAvailability(
+    username: string,
+    currentUserId?: string
+  ): Promise<{ available: boolean; message: string }> {
+    const cleanUsername = username.trim().toLowerCase();
+    if (!/^[a-zA-Z0-9_-]{3,30}$/.test(cleanUsername)) {
+      return {
+        available: false,
+        message: "Username must be 3-30 characters and contain only letters, numbers, underscores, or hyphens.",
+      };
+    }
+    const existing = await dbService.users.findOne({ username: cleanUsername });
+    if (existing && existing._id !== currentUserId) {
+      return { available: false, message: "Username is already taken." };
+    }
+    return { available: true, message: "Username is available!" };
   }
 
   /**

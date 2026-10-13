@@ -4,6 +4,7 @@ import { config } from "../../config.js";
 import { dbService } from "../database/database.service.js";
 import type { UserDoc, OAuthIdentityDoc, OAuthProviderType } from "../database/database.types.js";
 import { createSessionJwt, toSafeUser } from "./auth.security.js";
+import { generateAvailableUsername, createDefaultPublicSettings } from "./auth.service.js";
 import type { SafeUser } from "@skilltwin/contracts";
 
 export interface NormalizedOAuthProfile {
@@ -548,9 +549,11 @@ export class OAuthService {
       connectedAt: new Date(),
     };
 
+    const username = await generateAvailableUsername(name || "Developer", email);
     const newUser: UserDoc = {
       _id: newUserId,
       name: name || "Developer",
+      username,
       email,
       passwordHash: null, // No password set initially for OAuth signups
       emailVerified: Boolean(emailVerified),
@@ -567,6 +570,7 @@ export class OAuthService {
         targetRole: "Full Stack Developer",
         bio: "",
       },
+      publicSettings: createDefaultPublicSettings(username),
       providers: [newIdentity],
       createdAt: new Date(),
       updatedAt: new Date(),

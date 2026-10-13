@@ -63,6 +63,21 @@ export function verifySessionJwt(token: string): { id: string; email: string } |
 }
 
 /**
+ * Create a sanitized username slug from name or email
+ */
+export function slugifyUsername(name: string, email: string): string {
+  const cleanName = (name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (cleanName.length >= 3) {
+    return cleanName.slice(0, 20);
+  }
+  const cleanEmail = (email || "").split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (cleanEmail.length >= 3) {
+    return cleanEmail.slice(0, 20);
+  }
+  return `dev${Math.floor(1000 + Math.random() * 9000)}`;
+}
+
+/**
  * Convert UserDoc to SafeUser (NEVER leaks password hash or tokens)
  */
 export function toSafeUser(user: UserDoc): SafeUser {
@@ -76,9 +91,25 @@ export function toSafeUser(user: UserDoc): SafeUser {
     connectedAt: p.connectedAt instanceof Date ? p.connectedAt.toISOString() : String(p.connectedAt),
   }));
 
+  const defaultUsername = user.username || "";
+  const publicSettings = user.publicSettings || {
+    username: defaultUsername,
+    isPublic: true,
+    allowRecruiterJdMatch: true,
+    showGithubEvidence: true,
+    showSkillMatrix: true,
+    showProjects: true,
+    contactEmailVisible: false,
+    customPitch: "",
+    linkedinUrl: "",
+    githubUrl: "",
+    portfolioUrl: "",
+  };
+
   return {
     id: user._id,
     name: user.name,
+    username: defaultUsername,
     email: user.email,
     emailVerified: user.emailVerified,
     emailVerifiedAt: user.emailVerifiedAt ? user.emailVerifiedAt.toISOString() : null,
@@ -88,6 +119,7 @@ export function toSafeUser(user: UserDoc): SafeUser {
       targetRole: user.profile?.targetRole || "Full Stack Developer",
       bio: user.profile?.bio || "",
     },
+    publicSettings,
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
     lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,

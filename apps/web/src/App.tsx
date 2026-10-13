@@ -20,6 +20,7 @@ import { VerifyEmailView } from "./components/auth/VerifyEmailView.js";
 import { ForgotPasswordView } from "./components/auth/ForgotPasswordView.js";
 import { ResetPasswordView } from "./components/auth/ResetPasswordView.js";
 import { ProfileView } from "./components/profile/ProfileView.js";
+import { PublicTwinView } from "./components/public/PublicTwinView.js";
 import {
   uploadResumeFile,
   uploadResumeText,
@@ -75,8 +76,25 @@ import {
   type SafeUser,
 } from "@skilltwin/contracts";
 
+const extractPublicUsername = (hash: string): string => {
+  const clean = hash.replace(/^#\/?/, "").split("?")[0].trim();
+  if (clean.startsWith("@")) {
+    return clean.slice(1);
+  }
+  if (clean.startsWith("p/")) {
+    return clean.slice(2);
+  }
+  if (clean.startsWith("twin/")) {
+    return clean.slice(5);
+  }
+  return "";
+};
+
 const parseHash = (hash: string): ActiveScreen => {
   const clean = hash.replace(/^#\/?/, "").split("?")[0].toLowerCase().trim();
+  if (clean.startsWith("@") || clean.startsWith("p/") || clean.startsWith("twin/")) {
+    return "public_twin";
+  }
   switch (clean) {
     case "login":
       return "login";
@@ -200,6 +218,8 @@ const screenToHash = (screen: ActiveScreen): string => {
       return "#/evidence";
     case "latex_studio":
       return "#/latex-studio";
+    case "public_twin":
+      return "#/";
   }
 };
 
@@ -207,6 +227,9 @@ export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [currentScreen, setCurrentScreen] = useState<ActiveScreen>("landing");
+  const [publicUsername, setPublicUsername] = useState<string>(() =>
+    extractPublicUsername(typeof window !== "undefined" ? window.location.hash : "")
+  );
   const [resume, setResume] = useState<ResumeExtraction | null>(null);
   const [matrix, setMatrix] = useState<SkillMatrix | null>(null);
   const [job, setJob] = useState<JobExtraction | null>(null);
@@ -275,6 +298,7 @@ export const App: React.FC = () => {
       "verify_email",
       "forgot_password",
       "reset_password",
+      "public_twin",
     ].includes(screen);
   };
 
@@ -307,10 +331,15 @@ export const App: React.FC = () => {
   useEffect(() => {
     const handleHashChange = () => {
       if (typeof window !== "undefined") {
-        const route = parseHash(window.location.hash);
+        const hash = window.location.hash;
+        const route = parseHash(hash);
+        const userSlug = extractPublicUsername(hash);
+        if (userSlug) {
+          setPublicUsername(userSlug);
+        }
         setCurrentScreen(route);
 
-        if (window.location.hash.includes("oauth=") || window.location.hash.includes("oauth_success")) {
+        if (hash.includes("oauth=") || hash.includes("oauth_success")) {
           getCurrentUser().then((user) => {
             if (user) {
               setCurrentUser(user);
@@ -323,6 +352,10 @@ export const App: React.FC = () => {
 
     if (typeof window !== "undefined" && window.location.hash) {
       const initial = parseHash(window.location.hash);
+      const userSlug = extractPublicUsername(window.location.hash);
+      if (userSlug) {
+        setPublicUsername(userSlug);
+      }
       if (initial !== "landing") {
         setCurrentScreen(initial);
       }
@@ -878,6 +911,20 @@ export const App: React.FC = () => {
     return (
       <ResetPasswordView
         onNavigate={(screen) => handleNavigate(screen as ActiveScreen)}
+      />
+    );
+  }
+
+  if (currentScreen === "public_twin") {
+    return (
+      <PublicTwinView
+        username={publicUsername || currentUser?.username || "developer"}
+        onNavigate={(screen) => handleNavigate(screen as ActiveScreen)}
+        isOwner={Boolean(
+          currentUser &&
+            (currentUser.username?.toLowerCase() === publicUsername?.toLowerCase() ||
+              currentUser.id === publicUsername)
+        )}
       />
     );
   }

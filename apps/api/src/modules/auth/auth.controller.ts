@@ -431,6 +431,12 @@ profileRouter.get("/", requireAuth, async (req: Request, res: Response) => {
   res.status(200).json({ success: true, user });
 });
 
+profileRouter.get("/check-username/:username", requireAuth, async (req: Request, res: Response) => {
+  const username = String(req.params.username || "");
+  const result = await authService.checkUsernameAvailability(username, req.userId);
+  res.status(200).json(result);
+});
+
 profileRouter.patch("/", requireAuth, async (req: Request, res: Response) => {
   const parseResult = updateProfileRequestSchema.safeParse(req.body);
   if (!parseResult.success) {
@@ -439,15 +445,22 @@ profileRouter.patch("/", requireAuth, async (req: Request, res: Response) => {
     return;
   }
 
-  const updatedUser = await authService.updateProfile(req.userId!, parseResult.data);
-  if (!updatedUser) {
-    res.status(404).json({ success: false, message: "User not found." });
-    return;
-  }
+  try {
+    const updatedUser = await authService.updateProfile(req.userId!, parseResult.data);
+    if (!updatedUser) {
+      res.status(404).json({ success: false, message: "User not found." });
+      return;
+    }
 
-  res.status(200).json({
-    success: true,
-    message: "Profile updated successfully.",
-    user: updatedUser,
-  });
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully.",
+      user: updatedUser,
+    });
+  } catch (err: any) {
+    res.status(400).json({
+      success: false,
+      message: err?.message || "Failed to update profile.",
+    });
+  }
 });

@@ -5,6 +5,7 @@ import type {
   JobAnalysis,
   GapAnalysisReport,
   ResumeOptimizationReport,
+  UserPublicSettings,
 } from "@skilltwin/contracts";
 
 export type OAuthProviderType = "google" | "github" | "linkedin";
@@ -21,6 +22,7 @@ export interface OAuthIdentityDoc {
 export interface UserDoc {
   _id: string;
   name: string;
+  username?: string;
   email: string;
   passwordHash?: string | null;
   emailVerified: boolean;
@@ -37,6 +39,7 @@ export interface UserDoc {
     targetRole: string;
     bio: string;
   };
+  publicSettings?: UserPublicSettings;
   providers?: OAuthIdentityDoc[];
   createdAt: Date;
   updatedAt: Date;

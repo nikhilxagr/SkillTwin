@@ -16,13 +16,22 @@ import {
   Link2,
   Unlink,
   ExternalLink,
+  Globe,
+  Copy,
+  Check,
+  Eye,
+  EyeOff,
+  Lock,
+  Share2,
+  Code2,
 } from "lucide-react";
-import type { SafeUser, UpdateProfileRequest, OAuthProvider } from "@skilltwin/contracts";
+import type { SafeUser, UpdateProfileRequest, OAuthProvider, UserPublicSettings } from "@skilltwin/contracts";
 import {
   updateUserProfile,
   getUserProfile,
   disconnectProvider,
   getOAuthLinkUrl,
+  checkUsernameAvailability,
 } from "../../api/client.js";
 import {
   GoogleIcon,
@@ -50,14 +59,81 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
+  // Public Digital Twin Handle & Privacy Settings
+  const [twinUsername, setTwinUsername] = useState(currentUser?.username || "");
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
+  const [usernameMsg, setUsernameMsg] = useState<string>("");
+
+  const [isPublic, setIsPublic] = useState<boolean>(currentUser?.publicSettings?.isPublic ?? true);
+  const [allowRecruiterJdMatch, setAllowRecruiterJdMatch] = useState<boolean>(currentUser?.publicSettings?.allowRecruiterJdMatch ?? true);
+  const [showGithubEvidence, setShowGithubEvidence] = useState<boolean>(currentUser?.publicSettings?.showGithubEvidence ?? true);
+  const [showSkillMatrix, setShowSkillMatrix] = useState<boolean>(currentUser?.publicSettings?.showSkillMatrix ?? true);
+  const [showProjects, setShowProjects] = useState<boolean>(currentUser?.publicSettings?.showProjects ?? true);
+  const [contactEmailVisible, setContactEmailVisible] = useState<boolean>(currentUser?.publicSettings?.contactEmailVisible ?? false);
+  const [customPitch, setCustomPitch] = useState<string>(currentUser?.publicSettings?.customPitch ?? "");
+  const [savingTwinSettings, setSavingTwinSettings] = useState(false);
+  const [twinSaveMessage, setTwinSaveMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+
   useEffect(() => {
     if (currentUser) {
       setName(currentUser.name);
       setTargetRole(currentUser.profile?.targetRole || "Full Stack Developer");
       setHeadline(currentUser.profile?.headline || "");
       setBio(currentUser.profile?.bio || "");
+      setTwinUsername(currentUser.username || "");
+      setIsPublic(currentUser.publicSettings?.isPublic ?? true);
+      setAllowRecruiterJdMatch(currentUser.publicSettings?.allowRecruiterJdMatch ?? true);
+      setShowGithubEvidence(currentUser.publicSettings?.showGithubEvidence ?? true);
+      setShowSkillMatrix(currentUser.publicSettings?.showSkillMatrix ?? true);
+      setShowProjects(currentUser.publicSettings?.showProjects ?? true);
+      setContactEmailVisible(currentUser.publicSettings?.contactEmailVisible ?? false);
+      setCustomPitch(currentUser.publicSettings?.customPitch ?? "");
     }
   }, [currentUser]);
+
+  // Username availability check with debounce
+  useEffect(() => {
+    const clean = twinUsername.trim().toLowerCase().replace(/^@+/, "");
+    if (!clean) {
+      setUsernameStatus("invalid");
+      setUsernameMsg("Username cannot be empty.");
+      return;
+    }
+
+    if (clean === (currentUser?.username || "").toLowerCase()) {
+      setUsernameStatus("available");
+      setUsernameMsg("Current username");
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_-]{3,30}$/.test(clean)) {
+      setUsernameStatus("invalid");
+      setUsernameMsg("Must be 3-30 letters, numbers, underscores or hyphens.");
+      return;
+    }
+
+    setUsernameStatus("checking");
+    setUsernameMsg("Checking availability...");
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await checkUsernameAvailability(clean);
+        if (res.available) {
+          setUsernameStatus("available");
+          setUsernameMsg("Handle is available!");
+        } else {
+          setUsernameStatus("taken");
+          setUsernameMsg(res.message || "Username is already taken.");
+        }
+      } catch (err: any) {
+        setUsernameStatus("taken");
+        setUsernameMsg(err.message || "Could not verify username.");
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [twinUsername, currentUser?.username]);
 
   // Check URL query and hash for OAuth connection notifications
   useEffect(() => {
@@ -125,6 +201,65 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     }
     setIsEditing(false);
     setMessage(null);
+  };
+
+  const handleSaveTwinSettings = async () => {
+    setSavingTwinSettings(true);
+    setTwinSaveMessage(null);
+    try {
+      const cleanUsername = twinUsername.trim().toLowerCase().replace(/^@+/, "");
+      if (!cleanUsername) {
+        throw new Error("Public username cannot be empty.");
+      }
+      const updates: UpdateProfileRequest = {
+        username: cleanUsername,
+        publicSettings: {
+          isPublic,
+          allowRecruiterJdMatch,
+          showGithubEvidence,
+          showSkillMatrix,
+          showProjects,
+          contactEmailVisible,
+          customPitch: customPitch.trim(),
+        },
+      };
+      const updated = await updateUserProfile(updates);
+      onUpdateUser(updated);
+      setTwinSaveMessage({ text: "Public Twin dossier settings updated successfully!", type: "success" });
+    } catch (err: any) {
+      setTwinSaveMessage({ text: err.message || "Failed to update Public Twin settings.", type: "error" });
+    } finally {
+      setSavingTwinSettings(false);
+    }
+  };
+
+  const handleCopyDossierLink = () => {
+    if (typeof window !== "undefined") {
+      const handle = (twinUsername || currentUser?.username || "profile").trim().toLowerCase().replace(/^@+/, "");
+      const fullUrl = `${window.location.origin}${window.location.pathname}#/@${handle}`;
+      navigator.clipboard.writeText(fullUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
+  };
+
+  const handlePreviewDossier = () => {
+    const handle = (twinUsername || currentUser?.username || "").trim().toLowerCase().replace(/^@+/, "");
+    if (typeof window !== "undefined") {
+      window.location.hash = `#/@${handle}`;
+    }
+    onNavigate("public_twin");
+  };
+
+  const handleShareLinkedIn = () => {
+    if (typeof window !== "undefined") {
+      const handle = (twinUsername || currentUser?.username || "profile").trim().toLowerCase().replace(/^@+/, "");
+      const fullUrl = encodeURIComponent(`${window.location.origin}${window.location.pathname}#/@${handle}`);
+      const title = encodeURIComponent(
+        `Check out my Verified Digital Twin Dossier on SkillTwin — with verifiable code proof and instant recruiter JD fit matching!`
+      );
+      window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${fullUrl}&title=${title}`, "_blank");
+    }
   };
 
   const initials = (name || currentUser?.name || "U")
@@ -301,6 +436,383 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Public Verified Twin Dossier & Handle (Feature 1) */}
+      <div
+        className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-sm transition-all"
+        data-testid="public-twin-settings-card"
+      >
+        {/* Card Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+          <div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Globe size={18} className="text-brand-blue" />
+                <span>Public "Verified Twin" Recruiter Dossier</span>
+              </h2>
+              {isPublic ? (
+                <span
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full"
+                  data-testid="twin-status-public"
+                >
+                  <Eye size={12} />
+                  <span>Publicly Discoverable</span>
+                </span>
+              ) : (
+                <span
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full"
+                  data-testid="twin-status-private"
+                >
+                  <Lock size={12} />
+                  <span>Private Dossier</span>
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+              Your public proof-of-work dossier turns your verified GitHub commits, projects, and skills into a shareable portfolio with an interactive recruiter job matching engine.
+            </p>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            <button
+              type="button"
+              onClick={handleCopyDossierLink}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition-colors"
+              data-testid="copy-twin-link-btn"
+            >
+              {copiedLink ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+              <span>{copiedLink ? "Copied!" : "Copy Link"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handlePreviewDossier}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100/80 text-brand-blue text-xs font-semibold rounded-lg border border-blue-200 transition-colors"
+              data-testid="preview-twin-btn"
+            >
+              <ExternalLink size={13} />
+              <span>Preview Dossier</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleShareLinkedIn}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 text-[#0A66C2] text-xs font-semibold rounded-lg border border-[#0A66C2]/30 transition-colors"
+              title="Share Public Dossier on LinkedIn"
+              data-testid="share-linkedin-twin-btn"
+            >
+              <Share2 size={13} />
+              <span>LinkedIn</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Feedback Alert for Public Twin */}
+        {twinSaveMessage && (
+          <div
+            className={`mt-4 p-3 rounded-lg text-xs font-medium ${
+              twinSaveMessage.type === "success"
+                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                : "bg-red-50 text-red-800 border border-red-200"
+            }`}
+            data-testid="twin-save-alert"
+          >
+            {twinSaveMessage.text}
+          </div>
+        )}
+
+        {/* Configuration Body */}
+        <div className="mt-6 space-y-6">
+          {/* Username Handle Config */}
+          <div>
+            <label htmlFor="twin-username-input" className="block text-xs font-semibold text-slate-700 mb-1">
+              Public Handle & Personalized URL
+            </label>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="relative flex-1 flex items-center rounded-lg border border-slate-200 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600/20 bg-white">
+                <span className="px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-50 border-r border-slate-200 select-none rounded-l-lg">
+                  skilltwin.dev/@
+                </span>
+                <input
+                  id="twin-username-input"
+                  type="text"
+                  value={twinUsername}
+                  onChange={(e) => setTwinUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
+                  placeholder="your-unique-handle"
+                  className="flex-1 px-3 py-2 text-sm text-slate-900 focus:outline-none rounded-r-lg font-mono"
+                  data-testid="twin-username-input"
+                />
+                <div className="pr-3 flex items-center gap-1.5 text-xs font-medium">
+                  {usernameStatus === "checking" && (
+                    <span className="text-slate-400 flex items-center gap-1 text-[11px]">
+                      <RefreshCw size={12} className="animate-spin" />
+                      <span>Checking...</span>
+                    </span>
+                  )}
+                  {usernameStatus === "available" && (
+                    <span className="text-emerald-600 flex items-center gap-1 text-[11px]" data-testid="username-available-badge">
+                      <CheckCircle2 size={12} />
+                      <span>{usernameMsg}</span>
+                    </span>
+                  )}
+                  {usernameStatus === "taken" && (
+                    <span className="text-rose-600 flex items-center gap-1 text-[11px]" data-testid="username-taken-badge">
+                      <AlertTriangle size={12} />
+                      <span>{usernameMsg}</span>
+                    </span>
+                  )}
+                  {usernameStatus === "invalid" && (
+                    <span className="text-amber-600 flex items-center gap-1 text-[11px]">
+                      <AlertTriangle size={12} />
+                      <span>{usernameMsg}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1.5">
+              Unique handle containing 3 to 30 characters (letters, numbers, hyphens, and underscores).
+            </p>
+          </div>
+
+          {/* Privacy & Feature Toggles Grid */}
+          <div>
+            <div className="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-3">
+              Dossier Privacy & Recruiter Tools
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {/* Toggle: Public Visibility */}
+              <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-3">
+                <div className="pr-2">
+                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <Globe size={14} className="text-brand-blue" />
+                    <span>Public Visibility</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                    Allow anyone with your link to view your verified portfolio. If disabled, profile shows a private notice.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={isPublic}
+                  onClick={() => setIsPublic(!isPublic)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                    isPublic ? "bg-brand-blue" : "bg-slate-300"
+                  }`}
+                  data-testid="toggle-public-visibility"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      isPublic ? "translate-x-4" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Toggle: Recruiter JD Matcher */}
+              <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-3">
+                <div className="pr-2">
+                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <Sparkles size={14} className="text-purple-600" />
+                    <span>Recruiter JD Match Simulator</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                    Allow hiring managers to paste their open Job Description and instantly match requirements against your verified skills.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={allowRecruiterJdMatch}
+                  onClick={() => setAllowRecruiterJdMatch(!allowRecruiterJdMatch)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-600 ${
+                    allowRecruiterJdMatch ? "bg-purple-600" : "bg-slate-300"
+                  }`}
+                  data-testid="toggle-recruiter-matcher"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      allowRecruiterJdMatch ? "translate-x-4" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Toggle: GitHub Evidence */}
+              <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-3">
+                <div className="pr-2">
+                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <Code2 size={14} className="text-slate-800" />
+                    <span>Verified GitHub Citations</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                    Show verified commit counts, PR citations, repository breakdown, and proof-of-work badges.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={showGithubEvidence}
+                  onClick={() => setShowGithubEvidence(!showGithubEvidence)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                    showGithubEvidence ? "bg-brand-blue" : "bg-slate-300"
+                  }`}
+                  data-testid="toggle-github-evidence"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      showGithubEvidence ? "translate-x-4" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Toggle: Skill Matrix */}
+              <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-3">
+                <div className="pr-2">
+                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <BarChart2 size={14} className="text-emerald-600" />
+                    <span>Skill Matrix & Competencies</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                    Show categorized skill proficiencies (Frontend, Backend, Cloud, DB) with verified proof badges.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={showSkillMatrix}
+                  onClick={() => setShowSkillMatrix(!showSkillMatrix)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-600 ${
+                    showSkillMatrix ? "bg-emerald-600" : "bg-slate-300"
+                  }`}
+                  data-testid="toggle-skill-matrix"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      showSkillMatrix ? "translate-x-4" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Toggle: Star Projects */}
+              <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-3">
+                <div className="pr-2">
+                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <FileText size={14} className="text-amber-600" />
+                    <span>Projects Showcase</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                    Showcase key software projects with repository stats, tech stack tags, and live code proofs.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={showProjects}
+                  onClick={() => setShowProjects(!showProjects)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-600 ${
+                    showProjects ? "bg-amber-600" : "bg-slate-300"
+                  }`}
+                  data-testid="toggle-projects"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      showProjects ? "translate-x-4" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Toggle: Contact Email Visibility */}
+              <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-3">
+                <div className="pr-2">
+                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <Mail size={14} className="text-blue-600" />
+                    <span>Display Contact Email to Recruiters</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                    Show your verified contact address directly on your public dossier header for hiring managers.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={contactEmailVisible}
+                  onClick={() => setContactEmailVisible(!contactEmailVisible)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                    contactEmailVisible ? "bg-brand-blue" : "bg-slate-300"
+                  }`}
+                  data-testid="toggle-contact-email"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      contactEmailVisible ? "translate-x-4" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Recruiter Custom Pitch */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="twin-custom-pitch" className="block text-xs font-semibold text-slate-700">
+                Recruiter Pitch & Current Availability Notice
+              </label>
+              <span className="text-[11px] text-slate-400 font-mono">
+                {customPitch.length}/500
+              </span>
+            </div>
+            <textarea
+              id="twin-custom-pitch"
+              rows={3}
+              maxLength={500}
+              value={customPitch}
+              onChange={(e) => setCustomPitch(e.target.value)}
+              placeholder="e.g. Open to Senior Full Stack & Distributed Systems roles. 5+ years building high-throughput TypeScript, Node.js and React systems. Preferred locations: NYC or Remote."
+              className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 resize-none leading-relaxed"
+              data-testid="twin-custom-pitch-input"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">
+              This custom elevator pitch is rendered prominently at the top of your public dossier for hiring managers.
+            </p>
+          </div>
+
+          {/* Save Button */}
+          <div className="pt-2 flex justify-end">
+            <button
+              type="button"
+              onClick={handleSaveTwinSettings}
+              disabled={savingTwinSettings || usernameStatus === "taken" || usernameStatus === "invalid"}
+              className="px-5 py-2.5 bg-brand-blue hover:bg-brand-blue-hover text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              data-testid="save-twin-settings-btn"
+            >
+              {savingTwinSettings ? (
+                <>
+                  <RefreshCw size={14} className="animate-spin" />
+                  <span>Saving Settings...</span>
+                </>
+              ) : (
+                <>
+                  <Save size={14} />
+                  <span>Save Twin Settings</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 

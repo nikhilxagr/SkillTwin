@@ -23,7 +23,8 @@ export type ActiveScreen =
   | "interview_simulator"
   | "project_recommendations"
   | "evidence"
-  | "latex_studio";
+  | "latex_studio"
+  | "public_twin";
 
 export interface NavigationItem {
   id: ActiveScreen;
