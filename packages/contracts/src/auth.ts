@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { publicSettingsSchema } from "./public-profile.js";
 
 export const userProfileSchema = z.object({
   headline: z.string().max(160).optional().default(""),
@@ -25,11 +26,13 @@ export type LinkedProvider = z.infer<typeof linkedProviderSchema>;
 export const safeUserSchema = z.object({
   id: z.string(),
   name: z.string(),
+  username: z.string().optional().default(""),
   email: z.string().email(),
   emailVerified: z.boolean(),
   emailVerifiedAt: z.string().nullable().optional(),
   avatarUrl: z.string().optional().default(""),
   profile: userProfileSchema,
+  publicSettings: publicSettingsSchema.optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
   lastLoginAt: z.string().nullable().optional(),
@@ -134,10 +137,18 @@ export const updateProfileRequestSchema = z.object({
     .min(2, "Name must be at least 2 characters")
     .max(100)
     .optional(),
+  username: z
+    .string()
+    .trim()
+    .min(3, "Username must be at least 3 characters")
+    .max(30, "Username cannot exceed 30 characters")
+    .regex(/^[a-zA-Z0-9_-]{3,30}$/, "Username can only contain alphanumeric characters, underscores, and hyphens")
+    .optional(),
   headline: z.string().max(160).optional(),
   targetRole: z.string().max(100).optional(),
   bio: z.string().max(1000).optional(),
   avatarUrl: z.string().optional(),
+  publicSettings: publicSettingsSchema.partial().optional(),
 });
 
 export type UpdateProfileRequest = z.infer<typeof updateProfileRequestSchema>;

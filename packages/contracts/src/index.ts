@@ -16,3 +16,4 @@ export * from "./github-evidence.js";
 export * from "./github-evidence-engine.js";
 export * from "./latex-resume.js";
 export * from "./auth.js";
+export * from "./public-profile.js";
