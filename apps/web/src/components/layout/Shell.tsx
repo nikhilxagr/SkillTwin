@@ -103,64 +103,64 @@ export const Shell: React.FC<ShellProps> = ({
       </div>
 
       {/* Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-border-subtle z-40 px-1 py-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] flex justify-around items-center shadow-lg">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-border-subtle z-40 px-1.5 py-1.5 pb-[max(0.45rem,env(safe-area-inset-bottom))] flex justify-around items-center shadow-lg">
         <button
           onClick={() => onNavigate("dashboard")}
-          className={`flex flex-col items-center gap-0.5 p-1 text-[10px] font-medium ${
-            isNavActive("dashboard") ? "text-brand-blue font-bold" : "text-content-secondary"
+          className={`flex flex-col items-center gap-1 py-1 px-1.5 text-xs font-semibold transition-colors ${
+            isNavActive("dashboard") ? "text-brand-blue" : "text-content-secondary"
           }`}
         >
-          <LayoutDashboard size={17} />
+          <LayoutDashboard size={19} />
           <span>Dashboard</span>
         </button>
 
         <button
           onClick={() => onNavigate("resume_upload")}
-          className={`flex flex-col items-center gap-0.5 p-1 text-[10px] font-medium ${
-            isNavActive("resume") ? "text-brand-blue font-bold" : "text-content-secondary"
+          className={`flex flex-col items-center gap-1 py-1 px-1.5 text-xs font-semibold transition-colors ${
+            isNavActive("resume") ? "text-brand-blue" : "text-content-secondary"
           }`}
         >
-          <FileText size={17} />
+          <FileText size={19} />
           <span>Resume</span>
         </button>
 
         <button
           onClick={() => onNavigate("skill_matrix")}
-          className={`flex flex-col items-center gap-0.5 p-1 text-[10px] font-medium ${
-            isNavActive("skills") ? "text-brand-blue font-bold" : "text-content-secondary"
+          className={`flex flex-col items-center gap-1 py-1 px-1.5 text-xs font-semibold transition-colors ${
+            isNavActive("skills") ? "text-brand-blue" : "text-content-secondary"
           }`}
         >
-          <BarChart2 size={17} />
+          <BarChart2 size={19} />
           <span>Skills</span>
         </button>
 
         <button
           onClick={() => onNavigate("jd_analysis")}
-          className={`flex flex-col items-center gap-0.5 p-1 text-[10px] font-medium ${
-            isNavActive("job_analysis") ? "text-brand-blue font-bold" : "text-content-secondary"
+          className={`flex flex-col items-center gap-1 py-1 px-1.5 text-xs font-semibold transition-colors ${
+            isNavActive("job_analysis") ? "text-brand-blue" : "text-content-secondary"
           }`}
         >
-          <Briefcase size={17} />
+          <Briefcase size={19} />
           <span>Job</span>
         </button>
 
         <button
           onClick={() => onNavigate("gap_analysis")}
-          className={`flex flex-col items-center gap-0.5 p-1 text-[10px] font-medium ${
-            isNavActive("gap_analysis") ? "text-brand-blue font-bold" : "text-content-secondary"
+          className={`flex flex-col items-center gap-1 py-1 px-1.5 text-xs font-semibold transition-colors ${
+            isNavActive("gap_analysis") ? "text-brand-blue" : "text-content-secondary"
           }`}
         >
-          <GitCompare size={17} />
+          <GitCompare size={19} />
           <span>Gaps</span>
         </button>
 
         <button
           onClick={() => onNavigate("resume_improvement")}
-          className={`flex flex-col items-center gap-0.5 p-1 text-[10px] font-medium ${
-            isNavActive("recommendations") ? "text-brand-blue font-bold" : "text-content-secondary"
+          className={`flex flex-col items-center gap-1 py-1 px-1.5 text-xs font-semibold transition-colors ${
+            isNavActive("recommendations") ? "text-brand-blue" : "text-content-secondary"
           }`}
         >
-          <FileCheck2 size={17} />
+          <FileCheck2 size={19} />
           <span>Advise</span>
         </button>
       </nav>

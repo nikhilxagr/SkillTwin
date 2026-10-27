@@ -94,9 +94,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <div
             style={{
-              width: "26px",
-              height: "26px",
-              borderRadius: "5px",
+              width: "30px",
+              height: "30px",
+              borderRadius: "7px",
               background: "var(--color-primary-blue)",
               display: "flex",
               alignItems: "center",
@@ -104,7 +104,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               color: "white",
             }}
           >
-            <Terminal size={14} />
+            <Terminal size={17} />
           </div>
           Skill<span>Twin</span>
         </div>
@@ -112,9 +112,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex items-center gap-2">
           <span
             style={{
-              fontSize: "10px",
+              fontSize: "11px",
+              fontWeight: 600,
               fontFamily: "var(--font-mono)",
-              padding: "2px 6px",
+              padding: "2px 7px",
               background: "var(--bg-elevated)",
               border: "1px solid var(--border-subtle)",
               borderRadius: "4px",
@@ -126,10 +127,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {isMobileOpen && onMobileClose && (
             <button
               onClick={onMobileClose}
-              className="p-1 rounded text-content-secondary hover:bg-surface-subtle md:hidden"
+              className="p-1.5 rounded-lg text-content-secondary hover:bg-surface-subtle md:hidden transition-colors"
               aria-label="Close Navigation"
             >
-              <X size={18} />
+              <X size={19} />
             </button>
           )}
         </div>
@@ -310,8 +311,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div style={{ overflow: "hidden" }}>
             <div
               style={{
-                fontSize: "13px",
-                fontWeight: 600,
+                fontSize: "14px",
+                fontWeight: 700,
                 color: "var(--text-primary)",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
@@ -322,14 +323,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <div
               style={{
-                fontSize: "11px",
+                fontSize: "12px",
+                fontWeight: 500,
                 color: "var(--color-match)",
                 display: "flex",
                 alignItems: "center",
-                gap: "4px",
+                gap: "5px",
               }}
             >
-              <ShieldCheck size={11} /> Evidence Verified
+              <ShieldCheck size={13} /> Evidence Verified
             </div>
           </div>
         </div>
