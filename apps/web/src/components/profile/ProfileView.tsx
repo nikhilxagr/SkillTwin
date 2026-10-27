@@ -280,26 +280,26 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight" data-testid="profile-name">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight" data-testid="profile-name">
                   {name || "Developer Profile"}
                 </h1>
                 {currentUser?.emailVerified ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200" data-testid="verified-badge">
-                    <CheckCircle2 size={13} />
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200" data-testid="verified-badge">
+                    <CheckCircle2 size={15} />
                     <span>Verified</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                    <AlertTriangle size={13} />
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                    <AlertTriangle size={15} />
                     <span>Unverified</span>
                   </span>
                 )}
               </div>
-              <p className="text-sm font-medium text-slate-500 mt-1" data-testid="profile-target-role">
+              <p className="text-base font-semibold text-slate-700 mt-1" data-testid="profile-target-role">
                 {targetRole}
               </p>
-              <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5" data-testid="profile-email">
-                <Mail size={13} />
+              <p className="text-sm text-slate-500 mt-1 flex items-center gap-1.5" data-testid="profile-email">
+                <Mail size={15} className="text-slate-400" />
                 <span>{currentUser?.email || "user@example.com"}</span>
               </p>
             </div>
@@ -309,28 +309,28 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             {!isEditing ? (
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                className="px-4 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center gap-2"
                 data-testid="edit-profile-btn"
               >
-                <Edit3 size={14} />
+                <Edit3 size={15} />
                 <span>Edit Profile</span>
               </button>
             ) : (
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCancel}
-                  className="px-3 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
+                  className="px-4 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
                 >
-                  <X size={14} />
+                  <X size={15} />
                   <span>Cancel</span>
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-4 py-2 bg-brand-blue hover:bg-brand-blue-hover text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-brand-blue hover:bg-brand-blue-hover text-white text-sm font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2"
                   data-testid="save-profile-btn"
                 >
-                  {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+                  {saving ? <RefreshCw size={15} className="animate-spin" /> : <Save size={15} />}
                   <span>Save Changes</span>
                 </button>
               </div>
@@ -341,7 +341,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         {/* Feedback Alert */}
         {message && (
           <div
-            className={`mt-4 p-3 rounded-lg text-xs font-medium ${
+            className={`mt-4 p-3 rounded-lg text-sm font-medium ${
               message.type === "success"
                 ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
                 : "bg-red-50 text-red-800 border border-red-200"
@@ -357,7 +357,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             <div className="space-y-4 animate-fade-in">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="profile-name-input" className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label htmlFor="profile-name-input" className="block text-sm font-bold text-slate-800 mb-1.5">
                     Full Name
                   </label>
                   <input
@@ -365,12 +365,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                    className="w-full px-4 py-2.5 text-base border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                     data-testid="profile-edit-name-input"
                   />
                 </div>
                 <div>
-                  <label htmlFor="profile-role-input" className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label htmlFor="profile-role-input" className="block text-sm font-bold text-slate-800 mb-1.5">
                     Target Engineering Role
                   </label>
                   <input
@@ -379,14 +379,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     value={targetRole}
                     onChange={(e) => setTargetRole(e.target.value)}
                     placeholder="e.g. Senior Full Stack Engineer"
-                    className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                    className="w-full px-4 py-2.5 text-base border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                     data-testid="profile-edit-role-input"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="profile-headline-input" className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="profile-headline-input" className="block text-sm font-bold text-slate-800 mb-1.5">
                   Professional Headline
                 </label>
                 <input
@@ -394,14 +394,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   type="text"
                   value={headline}
                   onChange={(e) => setHeadline(e.target.value)}
-                  placeholder="e.g. BCA Student | Full Stack Developer | React & Node.js"
-                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                  placeholder="e.g. Full Stack Developer | React & Node.js"
+                  className="w-full px-4 py-2.5 text-base border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                   data-testid="profile-edit-headline-input"
                 />
               </div>
 
               <div>
-                <label htmlFor="profile-bio-input" className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="profile-bio-input" className="block text-sm font-bold text-slate-800 mb-1.5">
                   Biography
                 </label>
                 <textarea
@@ -410,7 +410,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Write a concise overview of your technical background, core focus areas, and career goals."
-                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 resize-none"
+                  className="w-full px-4 py-2.5 text-base border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 resize-none leading-relaxed"
                   data-testid="profile-edit-bio-input"
                 />
               </div>
@@ -418,19 +418,19 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           ) : (
             <div className="space-y-4">
               <div>
-                <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                   Professional Headline
                 </div>
-                <p className="text-sm text-slate-800 font-medium" data-testid="profile-headline-display">
+                <p className="text-base text-slate-900 font-semibold" data-testid="profile-headline-display">
                   {headline || "No headline provided yet."}
                 </p>
               </div>
 
               <div>
-                <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                   Bio
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed max-w-2xl" data-testid="profile-bio-display">
+                <p className="text-sm text-slate-700 leading-relaxed max-w-2xl" data-testid="profile-bio-display">
                   {bio || "Add a short bio describing your core competencies, systems background, and engineering interests."}
                 </p>
               </div>
@@ -448,29 +448,29 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Globe size={18} className="text-brand-blue" />
+              <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 flex items-center gap-2.5">
+                <Globe size={20} className="text-brand-blue" />
                 <span>Public "Verified Twin" Recruiter Dossier</span>
               </h2>
               {isPublic ? (
                 <span
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full"
                   data-testid="twin-status-public"
                 >
-                  <Eye size={12} />
+                  <Eye size={13} />
                   <span>Publicly Discoverable</span>
                 </span>
               ) : (
                 <span
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full"
                   data-testid="twin-status-private"
                 >
-                  <Lock size={12} />
+                  <Lock size={13} />
                   <span>Private Dossier</span>
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+            <p className="text-sm text-slate-600 mt-1.5 max-w-2xl leading-relaxed">
               Your public proof-of-work dossier turns your verified GitHub commits, projects, and skills into a shareable portfolio with an interactive recruiter job matching engine.
             </p>
           </div>
@@ -480,31 +480,31 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             <button
               type="button"
               onClick={handleCopyDossierLink}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-lg shadow-2xs transition-colors"
               data-testid="copy-twin-link-btn"
             >
-              {copiedLink ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+              {copiedLink ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
               <span>{copiedLink ? "Copied!" : "Copy Link"}</span>
             </button>
 
             <button
               type="button"
               onClick={handlePreviewDossier}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100/80 text-brand-blue text-xs font-semibold rounded-lg border border-blue-200 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 hover:bg-blue-100/80 text-brand-blue text-sm font-semibold rounded-lg border border-blue-200 transition-colors"
               data-testid="preview-twin-btn"
             >
-              <ExternalLink size={13} />
+              <ExternalLink size={14} />
               <span>Preview Dossier</span>
             </button>
 
             <button
               type="button"
               onClick={handleShareLinkedIn}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 text-[#0A66C2] text-xs font-semibold rounded-lg border border-[#0A66C2]/30 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 text-[#0A66C2] text-sm font-semibold rounded-lg border border-[#0A66C2]/30 transition-colors"
               title="Share Public Dossier on LinkedIn"
               data-testid="share-linkedin-twin-btn"
             >
-              <Share2 size={13} />
+              <Share2 size={14} />
               <span>LinkedIn</span>
             </button>
           </div>
@@ -513,7 +513,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         {/* Feedback Alert for Public Twin */}
         {twinSaveMessage && (
           <div
-            className={`mt-4 p-3 rounded-lg text-xs font-medium ${
+            className={`mt-4 p-3.5 rounded-lg text-sm font-medium ${
               twinSaveMessage.type === "success"
                 ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
                 : "bg-red-50 text-red-800 border border-red-200"
@@ -528,12 +528,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         <div className="mt-6 space-y-6">
           {/* Username Handle Config */}
           <div>
-            <label htmlFor="twin-username-input" className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="twin-username-input" className="block text-sm font-bold text-slate-800 mb-1.5">
               Public Handle & Personalized URL
             </label>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <div className="relative flex-1 flex items-center rounded-lg border border-slate-200 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600/20 bg-white">
-                <span className="px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-50 border-r border-slate-200 select-none rounded-l-lg">
+                <span className="px-4 py-2.5 text-sm font-semibold text-slate-500 bg-slate-50 border-r border-slate-200 select-none rounded-l-lg">
                   skilltwin.dev/@
                 </span>
                 <input
@@ -542,56 +542,56 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   value={twinUsername}
                   onChange={(e) => setTwinUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
                   placeholder="your-unique-handle"
-                  className="flex-1 px-3 py-2 text-sm text-slate-900 focus:outline-none rounded-r-lg font-mono"
+                  className="flex-1 px-4 py-2.5 text-base text-slate-900 focus:outline-none rounded-r-lg font-mono"
                   data-testid="twin-username-input"
                 />
-                <div className="pr-3 flex items-center gap-1.5 text-xs font-medium">
+                <div className="pr-3.5 flex items-center gap-1.5 text-xs font-semibold">
                   {usernameStatus === "checking" && (
-                    <span className="text-slate-400 flex items-center gap-1 text-[11px]">
-                      <RefreshCw size={12} className="animate-spin" />
+                    <span className="text-slate-400 flex items-center gap-1 text-xs">
+                      <RefreshCw size={13} className="animate-spin" />
                       <span>Checking...</span>
                     </span>
                   )}
                   {usernameStatus === "available" && (
-                    <span className="text-emerald-600 flex items-center gap-1 text-[11px]" data-testid="username-available-badge">
-                      <CheckCircle2 size={12} />
+                    <span className="text-emerald-600 flex items-center gap-1 text-xs" data-testid="username-available-badge">
+                      <CheckCircle2 size={14} />
                       <span>{usernameMsg}</span>
                     </span>
                   )}
                   {usernameStatus === "taken" && (
-                    <span className="text-rose-600 flex items-center gap-1 text-[11px]" data-testid="username-taken-badge">
-                      <AlertTriangle size={12} />
+                    <span className="text-rose-600 flex items-center gap-1 text-xs" data-testid="username-taken-badge">
+                      <AlertTriangle size={14} />
                       <span>{usernameMsg}</span>
                     </span>
                   )}
                   {usernameStatus === "invalid" && (
-                    <span className="text-amber-600 flex items-center gap-1 text-[11px]">
-                      <AlertTriangle size={12} />
+                    <span className="text-amber-600 flex items-center gap-1 text-xs">
+                      <AlertTriangle size={14} />
                       <span>{usernameMsg}</span>
                     </span>
                   )}
                 </div>
               </div>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1.5">
+            <p className="text-xs text-slate-500 mt-1.5">
               Unique handle containing 3 to 30 characters (letters, numbers, hyphens, and underscores).
             </p>
           </div>
 
           {/* Privacy & Feature Toggles Grid */}
           <div>
-            <div className="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-3">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
               Dossier Privacy & Recruiter Tools
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Toggle: Public Visibility */}
-              <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-3">
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-4">
                 <div className="pr-2">
-                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                    <Globe size={14} className="text-brand-blue" />
+                  <div className="text-sm font-bold text-slate-950 flex items-center gap-2">
+                    <Globe size={16} className="text-brand-blue" />
                     <span>Public Visibility</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                     Allow anyone with your link to view your verified portfolio. If disabled, profile shows a private notice.
                   </p>
                 </div>
@@ -600,28 +600,28 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   role="switch"
                   aria-checked={isPublic}
                   onClick={() => setIsPublic(!isPublic)}
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 ${
                     isPublic ? "bg-brand-blue" : "bg-slate-300"
                   }`}
                   data-testid="toggle-public-visibility"
                 >
                   <span
                     aria-hidden="true"
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                      isPublic ? "translate-x-4" : "translate-x-0"
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      isPublic ? "translate-x-5" : "translate-x-0"
                     }`}
                   />
                 </button>
               </div>
 
               {/* Toggle: Recruiter JD Matcher */}
-              <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-3">
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-4">
                 <div className="pr-2">
-                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                    <Sparkles size={14} className="text-purple-600" />
+                  <div className="text-sm font-bold text-slate-950 flex items-center gap-2">
+                    <Sparkles size={16} className="text-purple-600" />
                     <span>Recruiter JD Match Simulator</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                     Allow hiring managers to paste their open Job Description and instantly match requirements against your verified skills.
                   </p>
                 </div>
@@ -630,28 +630,28 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   role="switch"
                   aria-checked={allowRecruiterJdMatch}
                   onClick={() => setAllowRecruiterJdMatch(!allowRecruiterJdMatch)}
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-600 ${
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-600 ${
                     allowRecruiterJdMatch ? "bg-purple-600" : "bg-slate-300"
                   }`}
                   data-testid="toggle-recruiter-matcher"
                 >
                   <span
                     aria-hidden="true"
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                      allowRecruiterJdMatch ? "translate-x-4" : "translate-x-0"
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      allowRecruiterJdMatch ? "translate-x-5" : "translate-x-0"
                     }`}
                   />
                 </button>
               </div>
 
               {/* Toggle: GitHub Evidence */}
-              <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-3">
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-4">
                 <div className="pr-2">
-                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                    <Code2 size={14} className="text-slate-800" />
+                  <div className="text-sm font-bold text-slate-950 flex items-center gap-2">
+                    <Code2 size={16} className="text-slate-800" />
                     <span>Verified GitHub Citations</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                     Show verified commit counts, PR citations, repository breakdown, and proof-of-work badges.
                   </p>
                 </div>
@@ -660,28 +660,28 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   role="switch"
                   aria-checked={showGithubEvidence}
                   onClick={() => setShowGithubEvidence(!showGithubEvidence)}
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 ${
                     showGithubEvidence ? "bg-brand-blue" : "bg-slate-300"
                   }`}
                   data-testid="toggle-github-evidence"
                 >
                   <span
                     aria-hidden="true"
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                      showGithubEvidence ? "translate-x-4" : "translate-x-0"
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      showGithubEvidence ? "translate-x-5" : "translate-x-0"
                     }`}
                   />
                 </button>
               </div>
 
               {/* Toggle: Skill Matrix */}
-              <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-3">
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-4">
                 <div className="pr-2">
-                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                    <BarChart2 size={14} className="text-emerald-600" />
+                  <div className="text-sm font-bold text-slate-950 flex items-center gap-2">
+                    <BarChart2 size={16} className="text-emerald-600" />
                     <span>Skill Matrix & Competencies</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                     Show categorized skill proficiencies (Frontend, Backend, Cloud, DB) with verified proof badges.
                   </p>
                 </div>
@@ -690,28 +690,28 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   role="switch"
                   aria-checked={showSkillMatrix}
                   onClick={() => setShowSkillMatrix(!showSkillMatrix)}
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-600 ${
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-600 ${
                     showSkillMatrix ? "bg-emerald-600" : "bg-slate-300"
                   }`}
                   data-testid="toggle-skill-matrix"
                 >
                   <span
                     aria-hidden="true"
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                      showSkillMatrix ? "translate-x-4" : "translate-x-0"
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      showSkillMatrix ? "translate-x-5" : "translate-x-0"
                     }`}
                   />
                 </button>
               </div>
 
               {/* Toggle: Star Projects */}
-              <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-3">
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-4">
                 <div className="pr-2">
-                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                    <FileText size={14} className="text-amber-600" />
+                  <div className="text-sm font-bold text-slate-950 flex items-center gap-2">
+                    <FileText size={16} className="text-amber-600" />
                     <span>Projects Showcase</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                     Showcase key software projects with repository stats, tech stack tags, and live code proofs.
                   </p>
                 </div>
@@ -720,28 +720,28 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   role="switch"
                   aria-checked={showProjects}
                   onClick={() => setShowProjects(!showProjects)}
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-600 ${
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-600 ${
                     showProjects ? "bg-amber-600" : "bg-slate-300"
                   }`}
                   data-testid="toggle-projects"
                 >
                   <span
                     aria-hidden="true"
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                      showProjects ? "translate-x-4" : "translate-x-0"
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      showProjects ? "translate-x-5" : "translate-x-0"
                     }`}
                   />
                 </button>
               </div>
 
               {/* Toggle: Contact Email Visibility */}
-              <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-3">
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-4">
                 <div className="pr-2">
-                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                    <Mail size={14} className="text-blue-600" />
+                  <div className="text-sm font-bold text-slate-950 flex items-center gap-2">
+                    <Mail size={16} className="text-blue-600" />
                     <span>Display Contact Email to Recruiters</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                     Show your verified contact address directly on your public dossier header for hiring managers.
                   </p>
                 </div>
@@ -750,15 +750,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   role="switch"
                   aria-checked={contactEmailVisible}
                   onClick={() => setContactEmailVisible(!contactEmailVisible)}
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 ${
                     contactEmailVisible ? "bg-brand-blue" : "bg-slate-300"
                   }`}
                   data-testid="toggle-contact-email"
                 >
                   <span
                     aria-hidden="true"
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                      contactEmailVisible ? "translate-x-4" : "translate-x-0"
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      contactEmailVisible ? "translate-x-5" : "translate-x-0"
                     }`}
                   />
                 </button>
@@ -768,11 +768,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
           {/* Recruiter Custom Pitch */}
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label htmlFor="twin-custom-pitch" className="block text-xs font-semibold text-slate-700">
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="twin-custom-pitch" className="block text-sm font-bold text-slate-800">
                 Recruiter Pitch & Current Availability Notice
               </label>
-              <span className="text-[11px] text-slate-400 font-mono">
+              <span className="text-xs text-slate-500 font-mono">
                 {customPitch.length}/500
               </span>
             </div>
@@ -783,10 +783,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               value={customPitch}
               onChange={(e) => setCustomPitch(e.target.value)}
               placeholder="e.g. Open to Senior Full Stack & Distributed Systems roles. 5+ years building high-throughput TypeScript, Node.js and React systems. Preferred locations: NYC or Remote."
-              className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 resize-none leading-relaxed"
+              className="w-full px-4 py-3 text-base border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 resize-none leading-relaxed"
               data-testid="twin-custom-pitch-input"
             />
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 mt-1.5">
               This custom elevator pitch is rendered prominently at the top of your public dossier for hiring managers.
             </p>
           </div>
@@ -797,17 +797,17 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               type="button"
               onClick={handleSaveTwinSettings}
               disabled={savingTwinSettings || usernameStatus === "taken" || usernameStatus === "invalid"}
-              className="px-5 py-2.5 bg-brand-blue hover:bg-brand-blue-hover text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 bg-brand-blue hover:bg-brand-blue-hover text-white text-sm font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               data-testid="save-twin-settings-btn"
             >
               {savingTwinSettings ? (
                 <>
-                  <RefreshCw size={14} className="animate-spin" />
+                  <RefreshCw size={15} className="animate-spin" />
                   <span>Saving Settings...</span>
                 </>
               ) : (
                 <>
-                  <Save size={14} />
+                  <Save size={15} />
                   <span>Save Twin Settings</span>
                 </>
               )}
@@ -817,23 +817,23 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       </div>
 
       {/* Connected Social Accounts & Linked Identities (Phase 14) */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm" data-testid="connected-accounts-card">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-5 border-b border-slate-100">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-sm" data-testid="connected-accounts-card">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-5 border-b border-slate-100">
           <div>
-            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Link2 size={18} className="text-brand-blue" />
+            <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2.5">
+              <Link2 size={20} className="text-brand-blue" />
               <span>Connected Accounts & Social Login</span>
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-sm text-slate-600 mt-1 leading-relaxed">
               Link your social accounts to access your SkillTwin workspace with Google, GitHub, or LinkedIn. All authentication identities map to your single internal SkillTwin account.
             </p>
           </div>
-          <span className="text-[11px] font-semibold text-slate-500 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-full shrink-0">
+          <span className="text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full shrink-0">
             {currentUser?.connectedProviders?.length || 0} of 3 Linked
           </span>
         </div>
 
-        <div className="divide-y divide-slate-100 mt-2">
+        <div className="divide-y divide-slate-100 mt-3">
           {[
             {
               id: "google" as OAuthProvider,
@@ -863,37 +863,37 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             return (
               <div
                 key={item.id}
-                className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                className="py-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 data-testid={`provider-row-${item.id}`}
               >
                 <div className="flex items-start gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 shadow-xs">
+                  <div className="w-11 h-11 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 shadow-xs">
                     {item.icon}
                   </div>
                   <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-bold text-slate-900">{item.name}</span>
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <span className="text-base font-bold text-slate-900">{item.name}</span>
                       {linked ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          <CheckCircle2 size={12} />
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                          <CheckCircle2 size={13} />
                           <span>Connected</span>
                         </span>
                       ) : (
-                        <span className="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-semibold text-slate-400 bg-slate-50 px-2.5 py-0.5 rounded-full">
                           Not Connected
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
+                    <p className="text-sm text-slate-600 mt-0.5">{item.description}</p>
                     {linked && (
-                      <div className="text-[11px] text-slate-600 mt-1 font-mono">
+                      <div className="text-xs text-slate-600 mt-1 font-mono">
                         {linked.email ? (
-                          <span className="font-medium text-slate-700">{linked.email}</span>
+                          <span className="font-semibold text-slate-700">{linked.email}</span>
                         ) : linked.displayName ? (
-                          <span className="font-medium text-slate-700">{linked.displayName}</span>
+                          <span className="font-semibold text-slate-700">{linked.displayName}</span>
                         ) : null}
                         {linked.connectedAt && (
-                          <span className="text-slate-400 font-sans ml-2">
+                          <span className="text-slate-500 font-sans ml-2">
                             • Linked on {new Date(linked.connectedAt).toLocaleDateString()}
                           </span>
                         )}
@@ -907,7 +907,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     <div className="flex items-center gap-2">
                       {isOnlyLogin ? (
                         <span
-                          className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg font-medium"
+                          className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg font-medium"
                           title="This is your sole login method. You cannot disconnect it until you set a password or connect another provider."
                         >
                           Primary Login Method
@@ -917,17 +917,17 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                           type="button"
                           onClick={() => handleDisconnect(item.id)}
                           disabled={disconnecting === item.id}
-                          className="text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                          className="text-sm font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 px-3.5 py-2 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
                           data-testid={`disconnect-provider-${item.id}-btn`}
                         >
                           {disconnecting === item.id ? (
                             <>
-                              <RefreshCw size={13} className="animate-spin" />
+                              <RefreshCw size={14} className="animate-spin" />
                               <span>Disconnecting...</span>
                             </>
                           ) : (
                             <>
-                              <Unlink size={13} />
+                              <Unlink size={14} />
                               <span>Disconnect</span>
                             </>
                           )}
@@ -937,10 +937,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   ) : (
                     <a
                       href={getOAuthLinkUrl(item.id)}
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 px-3 py-1.5 rounded-lg shadow-2xs transition-all"
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 px-3.5 py-2 rounded-lg shadow-2xs transition-all"
                       data-testid={`connect-provider-${item.id}-btn`}
                     >
-                      <Link2 size={13} className="text-brand-blue" />
+                      <Link2 size={14} className="text-brand-blue" />
                       <span>Connect {item.name}</span>
                     </a>
                   )}
@@ -954,35 +954,35 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       {/* Account Security & Fast Workspace Jumps */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Security Overview Card */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-          <div className="flex items-center gap-2 mb-3 text-slate-900 font-bold text-sm">
-            <ShieldCheck size={18} className="text-brand-blue" />
+        <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-3.5 text-slate-900 font-bold text-base">
+            <ShieldCheck size={20} className="text-brand-blue" />
             <span>Account Security & Verification</span>
           </div>
-          <div className="space-y-2.5 text-xs text-slate-600">
-            <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
+          <div className="space-y-3 text-sm text-slate-600">
+            <div className="flex items-center justify-between py-2 border-b border-slate-100">
               <span>Email Verification</span>
               <span className="font-semibold text-emerald-700">
                 {currentUser?.emailVerified ? "Verified (Active)" : "Pending Verification"}
               </span>
             </div>
-            <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
+            <div className="flex items-center justify-between py-2 border-b border-slate-100">
               <span>Password Status</span>
               <span className="font-semibold text-slate-800">
                 {currentUser?.hasPassword ? "Configured" : "None (OAuth Managed)"}
               </span>
             </div>
-            <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
+            <div className="flex items-center justify-between py-2 border-b border-slate-100">
               <span>Connected Social Logins</span>
               <span className="font-semibold text-slate-800">
                 {currentUser?.connectedProviders?.length || 0} active
               </span>
             </div>
-            <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
+            <div className="flex items-center justify-between py-2 border-b border-slate-100">
               <span>Session Type</span>
               <span className="font-semibold text-slate-800">HTTP-Only Secure Cookie</span>
             </div>
-            <div className="flex items-center justify-between py-1.5">
+            <div className="flex items-center justify-between py-2">
               <span>Account Isolation</span>
               <span className="font-semibold text-slate-800">Private User Workspace</span>
             </div>
@@ -990,31 +990,31 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         </div>
 
         {/* Quick Workspace Navigation */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-          <div className="text-slate-900 font-bold text-sm mb-3">
+        <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-sm">
+          <div className="text-slate-900 font-bold text-base mb-3.5">
             Quick Actions
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <button
               onClick={() => onNavigate("resume_upload")}
-              className="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 text-xs font-semibold text-slate-800 transition-colors flex items-center justify-between"
+              className="w-full text-left p-3.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 text-sm font-semibold text-slate-800 transition-colors flex items-center justify-between"
             >
-              <span className="flex items-center gap-2">
-                <FileText size={15} className="text-brand-blue" />
+              <span className="flex items-center gap-2.5">
+                <FileText size={16} className="text-brand-blue" />
                 <span>Upload / Update Master Resume</span>
               </span>
-              <span className="text-slate-400">→</span>
+              <span className="text-slate-400 font-bold">→</span>
             </button>
 
             <button
               onClick={() => onNavigate("skill_matrix")}
-              className="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 text-xs font-semibold text-slate-800 transition-colors flex items-center justify-between"
+              className="w-full text-left p-3.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 text-sm font-semibold text-slate-800 transition-colors flex items-center justify-between"
             >
-              <span className="flex items-center gap-2">
-                <BarChart2 size={15} className="text-emerald-600" />
+              <span className="flex items-center gap-2.5">
+                <BarChart2 size={16} className="text-emerald-600" />
                 <span>View Verified Skill Matrix</span>
               </span>
-              <span className="text-slate-400">→</span>
+              <span className="text-slate-400 font-bold">→</span>
             </button>
           </div>
         </div>

@@ -243,14 +243,14 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
             gap: "12px",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <button
               onClick={() => onNavigate("landing")}
               style={{
                 border: 0,
                 background: "transparent",
                 color: "#e9edf5",
-                fontSize: "19px",
+                fontSize: "21px",
                 fontWeight: 800,
                 cursor: "pointer",
                 letterSpacing: "-0.04em",
@@ -261,24 +261,24 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
             </button>
             <span
               style={{
-                padding: "3px 8px",
-                borderRadius: "4px",
-                fontSize: "10px",
+                padding: "4px 10px",
+                borderRadius: "6px",
+                fontSize: "11.5px",
                 background: "#15241f",
                 color: "#82d7ad",
                 border: "1px solid #264a3d",
                 fontWeight: 700,
                 textTransform: "uppercase",
-                letterSpacing: "0.05em",
+                letterSpacing: "0.06em",
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "5px",
+                gap: "6px",
               }}
             >
               <span
                 style={{
-                  width: "6px",
-                  height: "6px",
+                  width: "7px",
+                  height: "7px",
                   borderRadius: "50%",
                   background: "#82d7ad",
                 }}
@@ -292,11 +292,12 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
               onClick={handleCopyLink}
               className="outline-button"
               style={{
-                fontSize: "12px",
-                padding: "8px 14px",
+                fontSize: "13.5px",
+                padding: "9px 16px",
+                fontWeight: 600,
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "6px",
+                gap: "7px",
               }}
             >
               🔗 Copy URL
@@ -306,11 +307,12 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
               onClick={handleShareLinkedIn}
               className="outline-button"
               style={{
-                fontSize: "12px",
-                padding: "8px 14px",
+                fontSize: "13.5px",
+                padding: "9px 16px",
+                fontWeight: 600,
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "6px",
+                gap: "7px",
               }}
             >
               Share Dossier
@@ -320,7 +322,7 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
               <button
                 onClick={() => onNavigate("profile")}
                 className="primary-button small"
-                style={{ fontSize: "12px", padding: "8px 14px" }}
+                style={{ fontSize: "13.5px", padding: "9px 16px", fontWeight: 700 }}
               >
                 ✏️ Edit Settings
               </button>
@@ -328,7 +330,7 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
               <button
                 onClick={() => onNavigate("signup")}
                 className="primary-button small"
-                style={{ fontSize: "12px", padding: "8px 14px" }}
+                style={{ fontSize: "13.5px", padding: "9px 16px", fontWeight: 700 }}
               >
                 ⚡ Claim Your Twin
               </button>
@@ -360,14 +362,14 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
             }}
           >
             {/* Avatar & Core Identity */}
-            <div style={{ display: "flex", gap: "22px", alignItems: "flex-start" }}>
+            <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
               <div style={{ position: "relative" }}>
                 <img
                   src={profile.avatarUrl}
                   alt={profile.name}
                   style={{
-                    width: "88px",
-                    height: "88px",
+                    width: "92px",
+                    height: "92px",
                     borderRadius: "18px",
                     border: "2px solid #3d5175",
                     objectFit: "cover",
@@ -380,15 +382,15 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                     position: "absolute",
                     bottom: "-4px",
                     right: "-4px",
-                    width: "24px",
-                    height: "24px",
+                    width: "26px",
+                    height: "26px",
                     borderRadius: "50%",
                     background: "#16342b",
                     border: "2px solid #0a0d12",
                     display: "grid",
                     placeItems: "center",
                     color: "#8fe0b9",
-                    fontSize: "12px",
+                    fontSize: "13px",
                     fontWeight: 900,
                   }}
                 >
@@ -397,11 +399,11 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
               </div>
 
               <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
                   <h1
                     style={{
                       margin: 0,
-                      fontSize: "30px",
+                      fontSize: "34px",
                       letterSpacing: "-0.04em",
                       fontWeight: 800,
                       color: "#fff",
@@ -409,16 +411,16 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                   >
                     {profile.name}
                   </h1>
-                  <span style={{ color: "#7f8ca4", fontSize: "14px" }}>@{profile.username}</span>
+                  <span style={{ color: "#8a9ab2", fontSize: "15px", fontWeight: 500 }}>@{profile.username}</span>
                   <span
                     style={{
-                      padding: "3px 10px",
+                      padding: "4px 12px",
                       borderRadius: "12px",
-                      fontSize: "11px",
+                      fontSize: "13px",
                       background: "#1e293d",
                       color: "#a9bbff",
                       border: "1px solid #33466d",
-                      fontWeight: 600,
+                      fontWeight: 700,
                     }}
                   >
                     {profile.targetRole}
@@ -427,10 +429,11 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
 
                 <p
                   style={{
-                    margin: "8px 0 12px",
-                    color: "#b4c1d4",
-                    fontSize: "16px",
-                    lineHeight: "1.4",
+                    margin: "10px 0 12px",
+                    color: "#d2deed",
+                    fontSize: "18px",
+                    fontWeight: 500,
+                    lineHeight: "1.5",
                   }}
                 >
                   {profile.headline}
@@ -439,10 +442,10 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                 <p
                   style={{
                     margin: 0,
-                    color: "#8392a8",
-                    fontSize: "13px",
-                    maxWidth: "700px",
-                    lineHeight: "1.6",
+                    color: "#94a3b8",
+                    fontSize: "15px",
+                    maxWidth: "720px",
+                    lineHeight: "1.65",
                   }}
                 >
                   {profile.bio}
@@ -453,30 +456,30 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                   <div
                     style={{
                       marginTop: "16px",
-                      padding: "12px 16px",
-                      background: "rgba(157, 181, 255, 0.06)",
-                      border: "1px solid rgba(157, 181, 255, 0.2)",
-                      borderRadius: "8px",
-                      fontSize: "13px",
-                      color: "#c2ceff",
-                      lineHeight: "1.5",
+                      padding: "14px 18px",
+                      background: "rgba(157, 181, 255, 0.07)",
+                      border: "1px solid rgba(157, 181, 255, 0.22)",
+                      borderRadius: "10px",
+                      fontSize: "14.5px",
+                      color: "#c8d4ff",
+                      lineHeight: "1.6",
                     }}
                   >
-                    <strong>Developer Pitch:</strong> {profile.customPitch}
+                    <strong style={{ color: "#fff" }}>Developer Pitch:</strong> {profile.customPitch}
                   </div>
                 )}
               </div>
             </div>
 
             {/* Social & Contact Actions */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", minWidth: "180px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", minWidth: "190px" }}>
               {profile.socials.contactEmail && (
                 <a
                   href={`mailto:${profile.socials.contactEmail}?subject=${encodeURIComponent(
                     `Interview Opportunity via SkillTwin: ${profile.targetRole}`
                   )}`}
                   className="primary-button small"
-                  style={{ textAlign: "center", textDecoration: "none" }}
+                  style={{ textAlign: "center", textDecoration: "none", fontSize: "14px", padding: "10px 18px", fontWeight: 700 }}
                 >
                   ✉️ Contact Candidate
                 </a>
@@ -490,8 +493,9 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                     rel="noreferrer"
                     className="outline-button"
                     style={{
-                      padding: "8px 12px",
-                      fontSize: "12px",
+                      padding: "9px 14px",
+                      fontSize: "13px",
+                      fontWeight: 600,
                       textDecoration: "none",
                       flex: 1,
                       textAlign: "center",
@@ -507,8 +511,9 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                     rel="noreferrer"
                     className="outline-button"
                     style={{
-                      padding: "8px 12px",
-                      fontSize: "12px",
+                      padding: "9px 14px",
+                      fontSize: "13px",
+                      fontWeight: 600,
                       textDecoration: "none",
                       flex: 1,
                       textAlign: "center",
@@ -524,8 +529,9 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                     rel="noreferrer"
                     className="outline-button"
                     style={{
-                      padding: "8px 12px",
-                      fontSize: "12px",
+                      padding: "9px 14px",
+                      fontSize: "13px",
+                      fontWeight: 600,
                       textDecoration: "none",
                       flex: 1,
                       textAlign: "center",
@@ -545,7 +551,7 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
               paddingTop: "24px",
               borderTop: "1px solid #1f2c42",
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
               gap: "14px",
             }}
           >
@@ -553,19 +559,19 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
               style={{
                 background: "#0c1119",
                 border: "1px solid #1c2638",
-                borderRadius: "8px",
-                padding: "14px",
+                borderRadius: "10px",
+                padding: "16px",
                 display: "flex",
                 alignItems: "center",
-                gap: "12px",
+                gap: "14px",
               }}
             >
-              <div style={{ fontSize: "22px" }}>🛡️</div>
+              <div style={{ fontSize: "26px" }}>🛡️</div>
               <div>
-                <div style={{ fontSize: "11px", color: "#7f8ca4", textTransform: "uppercase" }}>
+                <div style={{ fontSize: "12px", color: "#8a9ab2", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   Candidate Identity
                 </div>
-                <div style={{ fontSize: "13px", color: "#8fe0b9", fontWeight: 700 }}>
+                <div style={{ fontSize: "15px", color: "#8fe0b9", fontWeight: 700, marginTop: "2px" }}>
                   Email & Domain Verified
                 </div>
               </div>
@@ -575,19 +581,19 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
               style={{
                 background: "#0c1119",
                 border: "1px solid #1c2638",
-                borderRadius: "8px",
-                padding: "14px",
+                borderRadius: "10px",
+                padding: "16px",
                 display: "flex",
                 alignItems: "center",
-                gap: "12px",
+                gap: "14px",
               }}
             >
-              <div style={{ fontSize: "22px" }}>🐙</div>
+              <div style={{ fontSize: "26px" }}>🐙</div>
               <div>
-                <div style={{ fontSize: "11px", color: "#7f8ca4", textTransform: "uppercase" }}>
+                <div style={{ fontSize: "12px", color: "#8a9ab2", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   Codebase Signals
                 </div>
-                <div style={{ fontSize: "13px", color: "#d9e0ed", fontWeight: 700 }}>
+                <div style={{ fontSize: "15px", color: "#d9e0ed", fontWeight: 700, marginTop: "2px" }}>
                   {profile.verifiedBadges.totalRepositoriesAnalyzed} Repositories Verified
                 </div>
               </div>
@@ -597,19 +603,19 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
               style={{
                 background: "#0c1119",
                 border: "1px solid #1c2638",
-                borderRadius: "8px",
-                padding: "14px",
+                borderRadius: "10px",
+                padding: "16px",
                 display: "flex",
                 alignItems: "center",
-                gap: "12px",
+                gap: "14px",
               }}
             >
-              <div style={{ fontSize: "22px" }}>📊</div>
+              <div style={{ fontSize: "26px" }}>📊</div>
               <div>
-                <div style={{ fontSize: "11px", color: "#7f8ca4", textTransform: "uppercase" }}>
+                <div style={{ fontSize: "12px", color: "#8a9ab2", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   Code Volume Analyzed
                 </div>
-                <div style={{ fontSize: "13px", color: "#d9e0ed", fontWeight: 700 }}>
+                <div style={{ fontSize: "15px", color: "#d9e0ed", fontWeight: 700, marginTop: "2px" }}>
                   {(profile.verifiedBadges.totalLinesOfCode || 28000).toLocaleString()} LOC
                 </div>
               </div>
@@ -619,19 +625,19 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
               style={{
                 background: "#0c1119",
                 border: "1px solid #1c2638",
-                borderRadius: "8px",
-                padding: "14px",
+                borderRadius: "10px",
+                padding: "16px",
                 display: "flex",
                 alignItems: "center",
-                gap: "12px",
+                gap: "14px",
               }}
             >
-              <div style={{ fontSize: "22px" }}>⚡</div>
+              <div style={{ fontSize: "26px" }}>⚡</div>
               <div>
-                <div style={{ fontSize: "11px", color: "#7f8ca4", textTransform: "uppercase" }}>
+                <div style={{ fontSize: "12px", color: "#8a9ab2", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   Production Readiness
                 </div>
-                <div style={{ fontSize: "13px", color: "#9db5ff", fontWeight: 700 }}>
+                <div style={{ fontSize: "15px", color: "#9db5ff", fontWeight: 700, marginTop: "2px" }}>
                   {profile.stats.readinessScore || 88}% Readiness Score
                 </div>
               </div>
@@ -654,34 +660,35 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
             <div
               style={{
                 color: "#9db5ff",
-                fontSize: "11px",
+                fontSize: "12.5px",
                 fontWeight: 700,
                 textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                marginBottom: "6px",
+                letterSpacing: "0.08em",
+                marginBottom: "8px",
               }}
             >
               Interactive Recruiter Tool
             </div>
             <h2
               style={{
-                margin: "0 0 6px",
-                fontSize: "24px",
+                margin: "0 0 8px",
+                fontSize: "27px",
+                fontWeight: 800,
                 letterSpacing: "-0.03em",
                 color: "#fff",
               }}
             >
               🎯 Test Candidate Fit Against Your Job Description
             </h2>
-            <p style={{ margin: 0, color: "#93a0b4", fontSize: "14px", lineHeight: "1.5" }}>
+            <p style={{ margin: 0, color: "#a3b3cc", fontSize: "15.5px", lineHeight: "1.6" }}>
               Paste your company's job description or choose a preset. SkillTwin will cross-reference your
               stack against {profile.name}'s verified GitHub repositories and codebase proof.
             </p>
           </div>
 
           {/* Preset Buttons */}
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "16px" }}>
-            <span style={{ fontSize: "12px", color: "#7f8ca4", alignSelf: "center", marginRight: "4px" }}>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "18px" }}>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "#8a9ab2", alignSelf: "center", marginRight: "4px" }}>
               Quick Presets:
             </span>
             {SAMPLE_JD_PRESETS.map((preset, idx) => (
@@ -693,9 +700,10 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                   background: selectedRoleTitle === preset.title ? "#26395b" : "#131a26",
                   color: selectedRoleTitle === preset.title ? "#c2ceff" : "#93a0b4",
                   border: selectedRoleTitle === preset.title ? "1px solid #9db5ff" : "1px solid #202d42",
-                  borderRadius: "6px",
-                  padding: "6px 12px",
-                  fontSize: "12px",
+                  borderRadius: "8px",
+                  padding: "8px 14px",
+                  fontSize: "13px",
+                  fontWeight: selectedRoleTitle === preset.title ? 600 : 500,
                   cursor: "pointer",
                 }}
               >
@@ -705,7 +713,7 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
           </div>
 
           {/* JD Input Area */}
-          <div style={{ marginBottom: "16px" }}>
+          <div style={{ marginBottom: "18px" }}>
             <textarea
               value={jdText}
               onChange={(e) => setJdText(e.target.value)}
@@ -715,30 +723,30 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                 width: "100%",
                 background: "#080c12",
                 border: "1px solid #28374d",
-                borderRadius: "8px",
-                padding: "14px",
+                borderRadius: "10px",
+                padding: "16px",
                 color: "#e9edf5",
-                fontSize: "13px",
+                fontSize: "14.5px",
                 fontFamily: "inherit",
-                lineHeight: "1.6",
+                lineHeight: "1.65",
                 boxSizing: "border-box",
                 outline: "none",
                 resize: "vertical",
               }}
             />
             {matchError && (
-              <div style={{ color: "#ffad9e", fontSize: "12px", marginTop: "6px" }}>
+              <div style={{ color: "#ffad9e", fontSize: "13px", marginTop: "6px" }}>
                 {matchError}
               </div>
             )}
           </div>
 
-          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
             <button
               onClick={handleRunMatch}
               disabled={matchingLoading || !jdText.trim()}
               className="primary-button"
-              style={{ padding: "11px 22px", fontSize: "13px" }}
+              style={{ padding: "12px 24px", fontSize: "14.5px", fontWeight: 700 }}
             >
               {matchingLoading ? "Analyzing Candidate Proof..." : "Verify Candidate Fit (1s)"}
             </button>
@@ -750,7 +758,7 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                   setSelectedRoleTitle("");
                 }}
                 className="outline-button"
-                style={{ padding: "10px 16px", fontSize: "12px" }}
+                style={{ padding: "11px 18px", fontSize: "13.5px" }}
               >
                 Clear
               </button>
@@ -761,11 +769,11 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
           {matchResult && (
             <div
               style={{
-                marginTop: "24px",
-                padding: "24px",
+                marginTop: "26px",
+                padding: "26px",
                 background: "#0a0f17",
                 border: "1px solid #2c4161",
-                borderRadius: "10px",
+                borderRadius: "12px",
               }}
             >
               <div
@@ -774,54 +782,55 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                   alignItems: "center",
                   justifyContent: "space-between",
                   flexWrap: "wrap",
-                  gap: "16px",
-                  marginBottom: "18px",
+                  gap: "18px",
+                  marginBottom: "20px",
                 }}
               >
                 <div>
-                  <div style={{ fontSize: "12px", color: "#7f8ca4", textTransform: "uppercase" }}>
+                  <div style={{ fontSize: "12.5px", fontWeight: 600, color: "#8a9ab2", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                     Verified Match Score
                   </div>
                   <div
                     style={{
-                      fontSize: "32px",
+                      fontSize: "38px",
                       fontWeight: 800,
                       color: matchResult.matchPercentage >= 75 ? "#8fe0b9" : "#f0ce83",
                       letterSpacing: "-0.04em",
+                      marginTop: "2px",
                     }}
                   >
                     {matchResult.matchPercentage}%{" "}
-                    <span style={{ fontSize: "16px", fontWeight: 600, color: "#9db5ff" }}>
+                    <span style={{ fontSize: "18px", fontWeight: 700, color: "#9db5ff" }}>
                       ({matchResult.matchLevel} Fit)
                     </span>
                   </div>
                 </div>
 
-                <div style={{ textAlign: "right", maxWidth: "450px" }}>
-                  <p style={{ margin: 0, fontSize: "13px", color: "#c2ceff", lineHeight: "1.5" }}>
+                <div style={{ textAlign: "right", maxWidth: "480px" }}>
+                  <p style={{ margin: 0, fontSize: "14.5px", color: "#c8d4ff", lineHeight: "1.6" }}>
                     {matchResult.summary}
                   </p>
                 </div>
               </div>
 
               {/* Strengths Highlights */}
-              <div style={{ marginBottom: "20px" }}>
-                <div style={{ fontSize: "12px", color: "#7f8ca4", fontWeight: 600, marginBottom: "8px" }}>
+              <div style={{ marginBottom: "22px" }}>
+                <div style={{ fontSize: "13.5px", color: "#8a9ab2", fontWeight: 700, marginBottom: "10px" }}>
                   Verified Candidate Strengths:
                 </div>
-                <div style={{ display: "grid", gap: "6px" }}>
+                <div style={{ display: "grid", gap: "8px" }}>
                   {matchResult.strengths.map((str, i) => (
                     <div
                       key={i}
                       style={{
-                        fontSize: "13px",
-                        color: "#d9e0ed",
+                        fontSize: "14.5px",
+                        color: "#e2e8f0",
                         display: "flex",
                         alignItems: "center",
-                        gap: "8px",
+                        gap: "10px",
                       }}
                     >
-                      <span style={{ color: "#8fe0b9", fontWeight: 700 }}>✓</span> {str}
+                      <span style={{ color: "#8fe0b9", fontWeight: 800 }}>✓</span> {str}
                     </div>
                   ))}
                 </div>
@@ -831,8 +840,8 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                  gap: "18px",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                  gap: "20px",
                 }}
               >
                 {/* Matching Skills */}
@@ -840,30 +849,31 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                   style={{
                     background: "#0d1421",
                     border: "1px solid #1c2b42",
-                    borderRadius: "8px",
-                    padding: "16px",
+                    borderRadius: "10px",
+                    padding: "18px",
                   }}
                 >
                   <div
                     style={{
                       color: "#8fe0b9",
-                      fontSize: "12px",
+                      fontSize: "13.5px",
                       fontWeight: 700,
                       textTransform: "uppercase",
-                      marginBottom: "12px",
+                      letterSpacing: "0.04em",
+                      marginBottom: "14px",
                     }}
                   >
                     Matching Skills with Evidence ({matchResult.matchingSkills.length})
                   </div>
-                  <div style={{ display: "grid", gap: "10px" }}>
+                  <div style={{ display: "grid", gap: "12px" }}>
                     {matchResult.matchingSkills.map((m, idx) => (
                       <div
                         key={idx}
                         style={{
                           background: "#10192a",
                           border: "1px solid #233450",
-                          borderRadius: "6px",
-                          padding: "10px 12px",
+                          borderRadius: "8px",
+                          padding: "12px 14px",
                         }}
                       >
                         <div
@@ -871,24 +881,25 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
-                            marginBottom: "4px",
+                            marginBottom: "5px",
                           }}
                         >
-                          <strong style={{ fontSize: "13px", color: "#fff" }}>{m.skill}</strong>
+                          <strong style={{ fontSize: "15px", color: "#fff", fontWeight: 700 }}>{m.skill}</strong>
                           <span
                             style={{
-                              fontSize: "10px",
-                              padding: "2px 6px",
+                              fontSize: "11px",
+                              padding: "3px 8px",
                               background: "#192842",
                               color: "#a9bbff",
                               borderRadius: "4px",
+                              fontWeight: 600,
                             }}
                           >
                             {m.category}
                           </span>
                         </div>
                         {m.verifiedEvidence && (
-                          <div style={{ fontSize: "11px", color: "#8ca2c4", lineHeight: "1.4" }}>
+                          <div style={{ fontSize: "13px", color: "#9db5ff", lineHeight: "1.5" }}>
                             {m.verifiedEvidence}
                           </div>
                         )}
@@ -902,23 +913,24 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                   style={{
                     background: "#0d1421",
                     border: "1px solid #1c2b42",
-                    borderRadius: "8px",
-                    padding: "16px",
+                    borderRadius: "10px",
+                    padding: "18px",
                   }}
                 >
                   <div
                     style={{
-                      color: "#7f8ca4",
-                      fontSize: "12px",
+                      color: "#8a9ab2",
+                      fontSize: "13.5px",
                       fontWeight: 700,
                       textTransform: "uppercase",
-                      marginBottom: "12px",
+                      letterSpacing: "0.04em",
+                      marginBottom: "14px",
                     }}
                   >
                     Unverified / Growth Areas ({matchResult.missingSkills.length})
                   </div>
                   {matchResult.missingSkills.length === 0 ? (
-                    <div style={{ color: "#8fe0b9", fontSize: "13px" }}>
+                    <div style={{ color: "#8fe0b9", fontSize: "14px" }}>
                       No missing requirements detected! Complete match with this job description.
                     </div>
                   ) : (
@@ -927,12 +939,12 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                         <span
                           key={idx}
                           style={{
-                            padding: "6px 12px",
+                            padding: "7px 14px",
                             background: "#151b26",
                             border: "1px solid #2a3447",
                             borderRadius: "6px",
-                            fontSize: "12px",
-                            color: "#8d9ba8",
+                            fontSize: "13.5px",
+                            color: "#94a3b8",
                           }}
                         >
                           {sk}
@@ -947,41 +959,41 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
         </section>
 
         {/* VERIFIED SKILLS MATRIX SECTION */}
-        <section style={{ marginBottom: "40px" }}>
+        <section style={{ marginBottom: "44px" }}>
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
               flexWrap: "wrap",
-              gap: "12px",
-              marginBottom: "18px",
+              gap: "14px",
+              marginBottom: "20px",
             }}
           >
             <div>
-              <h2 style={{ margin: "0 0 4px", fontSize: "22px", letterSpacing: "-0.03em" }}>
+              <h2 style={{ margin: "0 0 6px", fontSize: "25px", fontWeight: 800, letterSpacing: "-0.03em", color: "#fff" }}>
                 Verified Skill Competencies
               </h2>
-              <p style={{ margin: 0, color: "#7f8ca4", fontSize: "13px" }}>
+              <p style={{ margin: 0, color: "#8ca0b8", fontSize: "15px" }}>
                 Extracted and verified across repositories, unit tests, and production architectures.
               </p>
             </div>
 
             {/* Category Filter Pills */}
-            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               {categories.map((c) => (
                 <button
                   key={c.id}
                   onClick={() => setSelectedCategory(c.id)}
                   style={{
                     background: selectedCategory === c.id ? "#20304a" : "#101621",
-                    color: selectedCategory === c.id ? "#c2ceff" : "#7f8ca4",
+                    color: selectedCategory === c.id ? "#c2ceff" : "#8a9ab2",
                     border: selectedCategory === c.id ? "1px solid #9db5ff" : "1px solid #1c2637",
-                    borderRadius: "6px",
-                    padding: "6px 12px",
-                    fontSize: "12px",
+                    borderRadius: "8px",
+                    padding: "8px 16px",
+                    fontSize: "13.5px",
                     cursor: "pointer",
-                    fontWeight: selectedCategory === c.id ? 600 : 400,
+                    fontWeight: selectedCategory === c.id ? 700 : 500,
                   }}
                 >
                   {c.label}
@@ -993,8 +1005,8 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-              gap: "14px",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: "16px",
             }}
           >
             {filteredSkills.map((skill, idx) => (
@@ -1003,8 +1015,8 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                 style={{
                   background: "#10151f",
                   border: "1px solid #1e2a3c",
-                  borderRadius: "10px",
-                  padding: "18px",
+                  borderRadius: "12px",
+                  padding: "20px",
                   transition: "border-color 0.2s ease",
                 }}
               >
@@ -1013,19 +1025,19 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "start",
-                    marginBottom: "8px",
+                    marginBottom: "10px",
                   }}
                 >
-                  <h3 style={{ margin: 0, fontSize: "16px", color: "#fff", fontWeight: 700 }}>
+                  <h3 style={{ margin: 0, fontSize: "17.5px", color: "#fff", fontWeight: 700 }}>
                     {skill.name}
                   </h3>
                   <span
                     style={{
-                      fontSize: "10px",
+                      fontSize: "11.5px",
                       textTransform: "uppercase",
-                      padding: "3px 7px",
-                      borderRadius: "4px",
-                      fontWeight: 600,
+                      padding: "4px 9px",
+                      borderRadius: "6px",
+                      fontWeight: 700,
                       background:
                         skill.level === "advanced" || skill.level === "expert"
                           ? "#162b47"
@@ -1045,11 +1057,11 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: "5px",
-                      fontSize: "11px",
+                      gap: "6px",
+                      fontSize: "12.5px",
                       color: "#8fe0b9",
-                      fontWeight: 600,
-                      marginBottom: "6px",
+                      fontWeight: 700,
+                      marginBottom: "8px",
                     }}
                   >
                     <span>✓</span> Verified in GitHub Code
@@ -1060,9 +1072,9 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                   <p
                     style={{
                       margin: "4px 0 0",
-                      fontSize: "12px",
-                      color: "#7f8ca4",
-                      lineHeight: "1.5",
+                      fontSize: "13.5px",
+                      color: "#8da0b8",
+                      lineHeight: "1.55",
                     }}
                   >
                     {skill.evidenceSnippet}
@@ -1074,12 +1086,12 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
         </section>
 
         {/* FEATURED PROJECTS & REPOSITORIES SECTION */}
-        <section style={{ marginBottom: "40px" }}>
-          <div style={{ marginBottom: "18px" }}>
-            <h2 style={{ margin: "0 0 4px", fontSize: "22px", letterSpacing: "-0.03em" }}>
+        <section style={{ marginBottom: "44px" }}>
+          <div style={{ marginBottom: "20px" }}>
+            <h2 style={{ margin: "0 0 6px", fontSize: "25px", fontWeight: 800, letterSpacing: "-0.03em", color: "#fff" }}>
               Featured Repositories & Star Projects
             </h2>
-            <p style={{ margin: 0, color: "#7f8ca4", fontSize: "13px" }}>
+            <p style={{ margin: 0, color: "#8ca0b8", fontSize: "15px" }}>
               Production repositories inspected by the SkillTwin evidence engine.
             </p>
           </div>
@@ -1087,8 +1099,8 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
-              gap: "18px",
+              gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
+              gap: "20px",
             }}
           >
             {profile.featuredProjects.map((project, idx) => (
@@ -1097,8 +1109,8 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                 style={{
                   background: "#101622",
                   border: "1px solid #202c3e",
-                  borderRadius: "10px",
-                  padding: "22px",
+                  borderRadius: "12px",
+                  padding: "24px",
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
@@ -1110,10 +1122,10 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "flex-start",
-                      marginBottom: "8px",
+                      marginBottom: "10px",
                     }}
                   >
-                    <h3 style={{ margin: 0, fontSize: "17px", color: "#fff" }}>
+                    <h3 style={{ margin: 0, fontSize: "18.5px", color: "#fff", fontWeight: 700 }}>
                       {project.name}
                     </h3>
                     {project.repoUrl && (
@@ -1123,9 +1135,9 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                         rel="noreferrer"
                         style={{
                           color: "#9db5ff",
-                          fontSize: "12px",
+                          fontSize: "13.5px",
                           textDecoration: "none",
-                          fontWeight: 600,
+                          fontWeight: 700,
                         }}
                       >
                         GitHub ↗
@@ -1135,24 +1147,25 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
 
                   <p
                     style={{
-                      margin: "0 0 14px",
-                      color: "#93a0b4",
-                      fontSize: "13px",
-                      lineHeight: "1.6",
+                      margin: "0 0 16px",
+                      color: "#a3b3cc",
+                      fontSize: "14.5px",
+                      lineHeight: "1.65",
                     }}
                   >
                     {project.description}
                   </p>
 
                   {/* Languages Tags */}
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "14px" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
                     {project.languages.map((lang, lIdx) => (
                       <span
                         key={lIdx}
                         style={{
-                          padding: "3px 8px",
-                          borderRadius: "4px",
-                          fontSize: "11px",
+                          padding: "4px 10px",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: 600,
                           background: "#182234",
                           color: "#a9bbff",
                           border: "1px solid #28374d",
@@ -1165,19 +1178,19 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
 
                   {/* Architecture Highlights */}
                   {project.architectureHighlights && project.architectureHighlights.length > 0 && (
-                    <div style={{ display: "grid", gap: "4px", marginBottom: "14px" }}>
+                    <div style={{ display: "grid", gap: "6px", marginBottom: "16px" }}>
                       {project.architectureHighlights.map((arch, aIdx) => (
                         <div
                           key={aIdx}
                           style={{
-                            fontSize: "12px",
+                            fontSize: "13.5px",
                             color: "#8fe0b9",
                             display: "flex",
                             alignItems: "center",
-                            gap: "6px",
+                            gap: "8px",
                           }}
                         >
-                          <span>•</span> {arch}
+                          <span style={{ fontWeight: 800 }}>•</span> {arch}
                         </div>
                       ))}
                     </div>
@@ -1187,12 +1200,13 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
                 {project.verifiedMetrics && (
                   <div
                     style={{
-                      paddingTop: "12px",
+                      paddingTop: "14px",
                       borderTop: "1px solid #1a2536",
                       display: "flex",
                       justifyContent: "space-between",
-                      fontSize: "11px",
-                      color: "#7f8ca4",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "#8ca0b8",
                     }}
                   >
                     <span>{project.verifiedMetrics.commits} Verified Commits</span>
@@ -1209,28 +1223,28 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
           style={{
             background: "radial-gradient(ellipse at 50% 50%, #17243c 0%, #0d121c 100%)",
             border: "1px solid #2a3c5a",
-            borderRadius: "14px",
-            padding: "40px 30px",
+            borderRadius: "16px",
+            padding: "46px 32px",
             textAlign: "center",
-            marginTop: "48px",
+            marginTop: "52px",
           }}
         >
           <div
             style={{
               color: "#9db5ff",
-              fontSize: "12px",
+              fontSize: "13px",
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: "0.1em",
-              marginBottom: "8px",
+              marginBottom: "10px",
             }}
           >
             Proof-of-Work Platform for Engineers
           </div>
           <h2
             style={{
-              margin: "0 0 12px",
-              fontSize: "28px",
+              margin: "0 0 14px",
+              fontSize: "30px",
               fontWeight: 800,
               letterSpacing: "-0.04em",
               color: "#fff",
@@ -1240,29 +1254,29 @@ export const PublicTwinView: React.FC<PublicTwinViewProps> = ({
           </h2>
           <p
             style={{
-              margin: "0 auto 24px",
-              color: "#93a0b4",
-              fontSize: "15px",
-              maxWidth: "580px",
-              lineHeight: "1.6",
+              margin: "0 auto 26px",
+              color: "#a3b3cc",
+              fontSize: "16px",
+              maxWidth: "620px",
+              lineHeight: "1.65",
             }}
           >
             SkillTwin backs technical resumes with tangible code proof from GitHub, interactive recruiter
             matching, and realistic interview simulations.
           </p>
 
-          <div style={{ display: "flex", justifyContent: "center", gap: "12px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: "14px", flexWrap: "wrap" }}>
             <button
               onClick={() => onNavigate("signup")}
               className="primary-button"
-              style={{ padding: "12px 24px", fontSize: "14px" }}
+              style={{ padding: "13px 26px", fontSize: "15px", fontWeight: 700 }}
             >
               ⚡ Create Your Free Verified Twin
             </button>
             <button
               onClick={handleCopyLink}
               className="outline-button"
-              style={{ padding: "12px 20px", fontSize: "14px" }}
+              style={{ padding: "13px 22px", fontSize: "15px", fontWeight: 600 }}
             >
               Share This Dossier
             </button>
