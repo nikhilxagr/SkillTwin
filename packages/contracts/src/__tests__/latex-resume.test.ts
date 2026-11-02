@@ -81,6 +81,30 @@ describe("LaTeX Resume Generator & Contracts", () => {
     expect(escapeLatex("User #42")).toBe("User \\#42");
     expect(escapeLatex("snake_case_variable")).toBe("snake\\_case\\_variable");
     expect(escapeLatex("{brackets}")).toBe("\\{brackets\\}");
+    // Unicode normalization
+    expect(escapeLatex("“Hello ‘World’ & 2020 – 2024…”")).toBe('"Hello \'World\' \\& 2020 -- 2024..."');
+    expect(escapeLatex("Item • 99.9% < 100%")).toBe("Item * 99.9\\% \\textless{} 100\\%");
+  });
+
+  it("handles resumes with empty sections and avoids empty itemize environments", () => {
+    const minimalResume: ResumeExtraction = {
+      ...mockResume,
+      experience: [],
+      projects: [],
+      education: [],
+    };
+    const tex = generateLatexFromResume(minimalResume);
+    expect(tex).toContain("\\documentclass[letterpaper,11pt]{article}");
+    expect(tex).toContain("\\usepackage[utf8]{inputenc}");
+    expect(tex).toContain("\\usepackage[T1]{fontenc}");
+    // Should NOT have empty Experience or Projects section
+    expect(tex).not.toContain("\\section{Experience}");
+    expect(tex).not.toContain("\\section{Projects}");
+    // Should have education fallback or guarded education
+    expect(tex).toContain("\\section{Education}");
+    // Crucial: no empty \resumeSubHeadingListStart \resumeSubHeadingListEnd
+    expect(tex).not.toMatch(/\\resumeSubHeadingListStart\s*\\resumeSubHeadingListEnd/);
+    expect(tex).not.toMatch(/\\resumeItemListStart\s*\\resumeItemListEnd/);
   });
 
   it("generates 100% ATS-friendly Jake's Resume LaTeX document from ResumeExtraction", () => {

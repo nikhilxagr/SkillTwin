@@ -40,15 +40,27 @@ export const latexGenerateRequestSchema = z.object({
 export type LatexGenerateRequest = z.infer<typeof latexGenerateRequestSchema>;
 
 /**
- * Escapes reserved LaTeX characters to avoid compilation syntax errors.
+ * Escapes reserved LaTeX characters to avoid compilation syntax errors
+ * and normalizes common Unicode punctuation (smart quotes, dashes, bullets).
  */
 export function escapeLatex(text: string): string {
   if (!text) return "";
   return text
+    // Normalize quotes & punctuation commonly pasted from Word / Google Docs / LinkedIn
+    .replace(/[–—]/g, "--")
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/…/g, "...")
+    .replace(/•/g, "*")
+    .replace(/\u00a0/g, " ")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    // Reserved LaTeX special characters
     .replace(/\\/g, "\\textbackslash{}")
     .replace(/([&%$#_{}])/g, "\\$1")
     .replace(/~/g, "\\textasciitilde{}")
-    .replace(/\^/g, "\\textasciicircum{}");
+    .replace(/\^/g, "\\textasciicircum{}")
+    .replace(/</g, "\\textless{}")
+    .replace(/>/g, "\\textgreater{}");
 }
 
 /**
@@ -62,7 +74,7 @@ export function generateLatexFromResume(
     tailored?: JobSpecificTailoredResume | null;
   }
 ): string {
-  const profile = resume.profile;
+  const profile = resume.profile || ({} as any);
   const name = escapeLatex(profile.name || "Software Engineer");
   const email = profile.email || "";
   const location = escapeLatex(profile.location || "");
@@ -103,62 +115,96 @@ export function generateLatexFromResume(
   const finalTools = toolsList.length > 0 ? toolsList.join(", ") : "Git, Docker, MongoDB, PostgreSQL, REST APIs, Jest";
 
   // Experience entries
-  const experienceBlocks = (resume.experience || []).map((exp, idx) => {
-    const company = escapeLatex(exp.company || "Technology Company");
-    const role = escapeLatex(exp.role || "Software Engineer");
-    const duration = escapeLatex((exp as any).duration || (exp.startDate && exp.endDate ? `${exp.startDate} -- ${exp.endDate}` : exp.startDate || "2022 -- Present"));
-    const loc = escapeLatex(exp.location || "Remote / Hybrid");
+  let experienceSection = "";
+  if (resume.experience && resume.experience.length > 0) {
+    const experienceBlocks = resume.experience.map((exp, idx) => {
+      const company = escapeLatex(exp.company || "Technology Company");
+      const role = escapeLatex(exp.role || "Software Engineer");
+      const duration = escapeLatex((exp as any).duration || (exp.startDate && exp.endDate ? `${exp.startDate} -- ${exp.endDate}` : exp.startDate || "2022 -- Present"));
+      const loc = escapeLatex(exp.location || "Remote / Hybrid");
 
-    // If tailored bullets exist for this role or index, use them
-    let bullets = exp.bullets || [];
-    if (options?.tailored?.tailoredBullets && options.tailored.tailoredBullets.length > 0 && idx === 0) {
-      bullets = options.tailored.tailoredBullets.map((b: { tailoredBullet: string }) => b.tailoredBullet);
-    }
+      // If tailored bullets exist for this role or index, use them
+      let bullets = exp.bullets || [];
+      if (options?.tailored?.tailoredBullets && options.tailored.tailoredBullets.length > 0 && idx === 0) {
+        bullets = options.tailored.tailoredBullets.map((b: { tailoredBullet: string }) => b.tailoredBullet);
+      }
 
-    const items = bullets
-      .slice(0, 4)
-      .map((b) => `      \\resumeItem{${escapeLatex(b)}}`)
-      .join("\n");
+      const validBullets = (bullets.length > 0)
+        ? bullets
+        : ["Contributed to core product features and engineering deliverables."];
 
-    return `    \\resumeSubheading
+      const items = validBullets
+        .slice(0, 4)
+        .map((b) => `      \\resumeItem{${escapeLatex(b)}}`)
+        .join("\n");
+
+      return `    \\resumeSubheading
       {${role}}{${duration}}
       {${company}}{${loc}}
       \\resumeItemListStart
 ${items}
       \\resumeItemListEnd`;
-  }).join("\n\n");
+    }).join("\n\n");
+
+    experienceSection = `
+%-----------EXPERIENCE-----------
+\\section{Experience}
+  \\resumeSubHeadingListStart
+${experienceBlocks}
+  \\resumeSubHeadingListEnd
+`;
+  }
 
   // Project entries
-  const projectBlocks = (resume.projects || []).map((proj) => {
-    const pName = escapeLatex(proj.name || "Engineering Project");
-    const techStack = (proj.technologies || []).map(escapeLatex).join(", ");
-    const ghUrl = proj.githubUrl || "";
-    const pTitle = ghUrl
-      ? `\\textbf{${pName}} $|$ \\emph{${techStack}} $|$ \\href{${ghUrl}}{\\underline{Repository}}`
-      : `\\textbf{${pName}} $|$ \\emph{${techStack}}`;
+  let projectsSection = "";
+  if (resume.projects && resume.projects.length > 0) {
+    const projectBlocks = resume.projects.map((proj) => {
+      const pName = escapeLatex(proj.name || "Engineering Project");
+      const techStack = (proj.technologies || []).map(escapeLatex).join(", ");
+      const ghUrl = proj.githubUrl || "";
+      const pTitle = ghUrl
+        ? `\\textbf{${pName}} $|$ \\emph{${techStack}} $|$ \\href{${ghUrl}}{\\underline{Repository}}`
+        : `\\textbf{${pName}} $|$ \\emph{${techStack}}`;
 
-    const items = (proj.bullets || [proj.description || "Architected and delivered full-stack production application."])
-      .slice(0, 3)
-      .map((b) => `      \\resumeItem{${escapeLatex(b)}}`)
-      .join("\n");
+      const rawBullets = (proj.bullets && proj.bullets.length > 0)
+        ? proj.bullets
+        : [proj.description || "Architected and delivered production application."];
 
-    return `    \\resumeProjectHeading
+      const items = rawBullets
+        .slice(0, 3)
+        .map((b) => `      \\resumeItem{${escapeLatex(b)}}`)
+        .join("\n");
+
+      return `    \\resumeProjectHeading
       {${pTitle}}{}
       \\resumeItemListStart
 ${items}
       \\resumeItemListEnd`;
-  }).join("\n\n");
+    }).join("\n\n");
+
+    projectsSection = `
+%-----------PROJECTS-----------
+\\section{Projects}
+  \\resumeSubHeadingListStart
+${projectBlocks}
+  \\resumeSubHeadingListEnd
+`;
+  }
 
   // Education entries
-  const educationBlocks = (resume.education || [
-    {
-      institution: "University of Technology",
-      degree: "Bachelor of Science in Computer Science",
-      startDate: "2018",
-      endDate: "2022",
-      fieldOfStudy: "Computer Science",
-    },
-  ]).map((edu) => {
+  const rawEducation = (resume.education && resume.education.length > 0)
+    ? resume.education
+    : [
+        {
+          institution: "University of Technology",
+          degree: "Bachelor of Science in Computer Science",
+          startDate: "2018",
+          endDate: "2022",
+          fieldOfStudy: "Computer Science",
+        },
+      ];
+
+  const educationBlocks = rawEducation.map((edu) => {
     const school = escapeLatex(edu.institution || "University");
     const degree = escapeLatex(edu.degree || "B.S. in Computer Science");
     const dur = escapeLatex((edu as any).duration || (edu.startDate && edu.endDate ? `${edu.startDate} -- ${edu.endDate}` : edu.startDate || "2018 -- 2022"));
@@ -169,6 +215,14 @@ ${items}
       {${degree}}{${dur}}`;
   }).join("\n\n");
 
+  const educationSection = `
+%-----------EDUCATION-----------
+\\section{Education}
+  \\resumeSubHeadingListStart
+${educationBlocks}
+  \\resumeSubHeadingListEnd
+`;
+
   // Assemble full Jake's Resume LaTeX source code
   return `%-------------------------
 % Resume in Latex - ATS Optimized
@@ -178,6 +232,8 @@ ${items}
 
 \\documentclass[letterpaper,11pt]{article}
 
+\\usepackage[utf8]{inputenc}
+\\usepackage[T1]{fontenc}
 \\usepackage{latexsym}
 \\usepackage[empty]{fullpage}
 \\usepackage{titlesec}
@@ -255,25 +311,9 @@ ${items}
     \\textbf{\\Huge \\scshape ${name}} \\\\ \\vspace{1pt}
     \\small ${contactLine}
 \\end{center}
-
-%-----------EDUCATION-----------
-\\section{Education}
-  \\resumeSubHeadingListStart
-${educationBlocks}
-  \\resumeSubHeadingListEnd
-
-%-----------EXPERIENCE-----------
-\\section{Experience}
-  \\resumeSubHeadingListStart
-${experienceBlocks}
-  \\resumeSubHeadingListEnd
-
-%-----------PROJECTS-----------
-\\section{Projects}
-  \\resumeSubHeadingListStart
-${projectBlocks}
-  \\resumeSubHeadingListEnd
-
+${educationSection}
+${experienceSection}
+${projectsSection}
 %-----------TECHNICAL SKILLS-----------
 \\section{Technical Skills}
  \\begin{itemize}[leftmargin=0.15in, label={}]
