@@ -34,13 +34,86 @@ interface LatexStudioViewProps {
   onNavigate?: (screen: string) => void;
 }
 
+const DEFAULT_STUDIO_RESUME: ResumeExtraction = {
+  id: "studio-default-resume",
+  fileName: "ats_resume.pdf",
+  fileType: "pdf",
+  fileSizeBytes: 105000,
+  rawText: "Alex Rivera Full Stack Engineer",
+  profile: {
+    name: "Alex Rivera",
+    email: "alex.rivera@example.com",
+    location: "San Francisco, CA",
+    githubUrl: "https://github.com/alexrivera",
+    linkedinUrl: "https://linkedin.com/in/alexrivera",
+    summary: "Senior Full Stack Engineer specializing in TypeScript, React, and distributed systems.",
+    yearsOfExperienceEstimate: 5,
+  },
+  skillsClaimed: ["TypeScript", "JavaScript", "Python", "React", "Node.js", "Docker", "PostgreSQL", "REST APIs", "AWS"],
+  experience: [
+    {
+      company: "Linear Technologies",
+      role: "Senior Full Stack Engineer",
+      startDate: "2022",
+      endDate: "Present",
+      current: true,
+      location: "San Francisco, CA",
+      bullets: [
+        "Architected scalable microservices supporting 2M+ active monthly users with 99.99% uptime.",
+        "Engineered real-time collaboration pipeline reducing end-to-end latency by 45%.",
+        "Mentored 6 junior and mid-level engineers in TypeScript and clean code best practices.",
+      ],
+      technologies: ["TypeScript", "React", "Node.js", "Docker"],
+    },
+    {
+      company: "Apex Cloud Labs",
+      role: "Software Engineer",
+      startDate: "2020",
+      endDate: "2022",
+      current: false,
+      location: "San Jose, CA",
+      bullets: [
+        "Developed responsive dashboard interfaces in React and Tailwind CSS.",
+        "Implemented high-throughput PostgreSQL query indexing, improving response times by 35%.",
+      ],
+      technologies: ["React", "PostgreSQL", "Node.js"],
+    },
+  ],
+  projects: [
+    {
+      name: "PulseEngine",
+      role: "Creator & Lead Architect",
+      description: "Distributed analytics monitoring engine with sub-second event ingestion.",
+      technologies: ["TypeScript", "Node.js", "PostgreSQL", "Docker"],
+      githubUrl: "https://github.com/alexrivera/pulseengine",
+      bullets: [
+        "Built distributed event streaming pipeline processing 10,000 operations per second.",
+        "Engineered automated health-check alerting with zero false positives.",
+      ],
+    },
+  ],
+  education: [
+    {
+      institution: "University of California, Berkeley",
+      degree: "B.S. in Computer Science",
+      startDate: "2016",
+      endDate: "2020",
+      fieldOfStudy: "Computer Science",
+    },
+  ],
+  certifications: [],
+  achievements: [],
+  parsedAt: new Date().toISOString(),
+};
+
 export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
   resume,
   tailoredResume,
   initialTexSource,
   onNavigate,
 }) => {
-  const defaultTex = initialTexSource || (resume ? generateLatexFromResume(resume, { tailored: tailoredResume }) : "");
+  const effectiveResume = resume || DEFAULT_STUDIO_RESUME;
+  const defaultTex = initialTexSource || generateLatexFromResume(effectiveResume, { tailored: tailoredResume });
   const [texCode, setTexCode] = useState<string>(defaultTex);
   const [templateId, setTemplateId] = useState<LatexTemplateId>("jakes-resume");
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
@@ -56,11 +129,12 @@ export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
 
   // Sync initial TeX if resume changes
   useEffect(() => {
-    if (resume && !texCode) {
+    if (resume) {
       const generated = generateLatexFromResume(resume, { tailored: tailoredResume, templateId });
       setTexCode(generated);
+      setPdfBlobUrl(null);
     }
-  }, [resume, tailoredResume]);
+  }, [resume, tailoredResume, templateId]);
 
   // Clean up blob URL on unmount or update
   useEffect(() => {
@@ -71,12 +145,12 @@ export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
     };
   }, [pdfBlobUrl]);
 
-  // Initial auto-compile on mount if TeX code exists
+  // Auto-compile whenever valid TeX code is present and no PDF preview is rendered
   useEffect(() => {
-    if (texCode && !pdfBase64 && !isCompiling) {
+    if (texCode.trim() && !pdfBlobUrl && !isCompiling) {
       handleCompile();
     }
-  }, []);
+  }, [texCode]);
 
   const handleCompile = async () => {
     if (!texCode.trim()) return;
@@ -127,17 +201,53 @@ export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
     }
     const fresh = generateLatexFromResume(resume, { tailored: tailoredResume, templateId });
     setTexCode(fresh);
+    setPdfBlobUrl(null);
     setErrorLog(null);
   };
 
-  const handleDownloadPdf = () => {
-    if (!pdfBlobUrl) return;
-    const a = document.createElement("a");
-    a.href = pdfBlobUrl;
-    a.download = `${(resume?.profile.name || "Resume").replace(/\s+/g, "_")}_ATS.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const handleDownloadPdf = async () => {
+    let currentBlobUrl = pdfBlobUrl;
+
+    // If PDF is not yet compiled, compile on-demand before downloading
+    if (!currentBlobUrl && texCode.trim()) {
+      setIsCompiling(true);
+      setErrorLog(null);
+      try {
+        const result = await compileLatex(texCode, "pdflatex");
+        setPdfBase64(result.pdfBase64);
+        setEngineUsed(result.engineUsed);
+        setCompileDuration(result.compileDurationMs);
+
+        const byteCharacters = atob(result.pdfBase64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: "application/pdf" });
+        currentBlobUrl = typeof URL !== "undefined" && typeof URL.createObjectURL === "function"
+          ? URL.createObjectURL(blob)
+          : `data:application/pdf;base64,${result.pdfBase64}`;
+        setPdfBlobUrl(currentBlobUrl);
+      } catch (err: any) {
+        let rawLog = err.log || err.message || "Compilation failed. Check LaTeX syntax.";
+        setErrorLog(rawLog);
+        setIsCompiling(false);
+        return;
+      } finally {
+        setIsCompiling(false);
+      }
+    }
+
+    if (currentBlobUrl) {
+      const a = document.createElement("a");
+      a.href = currentBlobUrl;
+      const downloadName = (effectiveResume.profile.name || "Resume").replace(/\s+/g, "_");
+      a.download = `${downloadName}_ATS.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
   const handleDownloadTex = () => {
@@ -235,13 +345,22 @@ export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
 
             <button
               onClick={handleDownloadPdf}
-              disabled={!pdfBlobUrl}
+              disabled={isCompiling || !texCode.trim()}
               className="px-3 py-1.5 border border-blue-200 bg-blue-50/50 hover:bg-blue-100 text-blue-800 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
               title="Download compiled ATS PDF"
               data-testid="download-pdf-btn"
             >
-              <Download size={14} />
-              <span>Download PDF</span>
+              {isCompiling && !pdfBlobUrl ? (
+                <>
+                  <RefreshCw size={14} className="animate-spin text-blue-600" />
+                  <span>Preparing PDF...</span>
+                </>
+              ) : (
+                <>
+                  <Download size={14} />
+                  <span>Download PDF</span>
+                </>
+              )}
             </button>
 
             <button
