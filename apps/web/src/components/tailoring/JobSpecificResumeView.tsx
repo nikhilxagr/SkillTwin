@@ -34,7 +34,9 @@ import type {
   TailoredProjectItem,
   TailoredBulletItem,
   OptimizationHighlightTag,
+  generateLatexFromResume,
 } from "@skilltwin/contracts";
+import { compileLatex } from "../../api/client.js";
 import type { ActiveScreen } from "../../types/navigation.js";
 
 interface JobSpecificResumeViewProps {
@@ -281,6 +283,39 @@ export const JobSpecificResumeView: React.FC<JobSpecificResumeViewProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    if (!masterResume) {
+      onNavigate("latex_studio");
+      return;
+    }
+    setIsExportingPdf(true);
+    try {
+      const tex = generateLatexFromResume(masterResume, { tailored: tailoredResume });
+      const res = await compileLatex(tex, "pdflatex");
+      const byteCharacters = atob(res.pdfBase64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${candidateName.replace(/\s+/g, "_")}_Tailored_ATS.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      onNavigate("latex_studio");
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   const handleDownloadMarkdown = () => {
     const text = buildTailoredResumeMarkdown();
     const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
@@ -395,12 +430,22 @@ export const JobSpecificResumeView: React.FC<JobSpecificResumeViewProps> = ({
           </Button>
 
           <Button
-            variant="primary"
+            variant="outline"
             size="sm"
             icon={<FileCode size={13} />}
             onClick={() => onNavigate("latex_studio")}
           >
-            LaTeX Studio (ATS PDF)
+            LaTeX Studio
+          </Button>
+
+          <Button
+            variant="primary"
+            size="sm"
+            icon={<Download size={13} />}
+            onClick={handleDownloadPdf}
+            disabled={isExportingPdf}
+          >
+            {isExportingPdf ? "Generating PDF..." : "Download ATS PDF"}
           </Button>
         </div>
       </div>
@@ -1441,6 +1486,15 @@ export const JobSpecificResumeView: React.FC<JobSpecificResumeViewProps> = ({
                   variant="primary"
                   size="sm"
                   icon={<Download size={12} />}
+                  onClick={handleDownloadPdf}
+                  disabled={isExportingPdf}
+                >
+                  {isExportingPdf ? "Generating PDF..." : "Download ATS PDF"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={<Download size={12} />}
                   onClick={handleDownloadMarkdown}
                 >
                   Download .md
@@ -1451,7 +1505,7 @@ export const JobSpecificResumeView: React.FC<JobSpecificResumeViewProps> = ({
                   icon={<FileCode size={12} />}
                   onClick={() => onNavigate("latex_studio")}
                 >
-                  Compile in LaTeX Studio
+                  Edit in LaTeX Studio
                 </Button>
               </div>
             </div>
