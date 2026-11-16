@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   FileCode,
   Play,
@@ -23,8 +23,11 @@ import type {
   ResumeExtraction,
   JobSpecificTailoredResume,
   LatexTemplateId,
+  LatexFontId,
+  LatexMargin,
+  PageBudgetEstimate,
 } from "@skilltwin/contracts";
-import { generateLatexFromResume } from "@skilltwin/contracts";
+import { generateLatexFromResume, calculateResumePageBudget } from "@skilltwin/contracts";
 import { compileLatex } from "../../api/client.js";
 
 interface LatexStudioViewProps {
@@ -116,6 +119,8 @@ export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
   const defaultTex = initialTexSource || generateLatexFromResume(effectiveResume, { tailored: tailoredResume });
   const [texCode, setTexCode] = useState<string>(defaultTex);
   const [templateId, setTemplateId] = useState<LatexTemplateId>("jakes-resume");
+  const [font, setFont] = useState<LatexFontId>("computer-modern");
+  const [margin, setMargin] = useState<LatexMargin>("normal");
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [isCompiling, setIsCompiling] = useState(false);
@@ -127,14 +132,78 @@ export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
   const [editorFontSize, setEditorFontSize] = useState<number>(13);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Calculate real-time 1-page budget & line density
+  const pageBudget: PageBudgetEstimate = useMemo(() => {
+    return calculateResumePageBudget(effectiveResume, {
+      templateId,
+      margin,
+      tailored: tailoredResume,
+    });
+  }, [effectiveResume, templateId, margin, tailoredResume]);
+
   // Sync initial TeX if resume changes
   useEffect(() => {
     if (resume) {
-      const generated = generateLatexFromResume(resume, { tailored: tailoredResume, templateId });
+      const generated = generateLatexFromResume(resume, {
+        templateId,
+        font,
+        margin,
+        tailored: tailoredResume,
+      });
       setTexCode(generated);
       setPdfBlobUrl(null);
     }
-  }, [resume, tailoredResume, templateId]);
+  }, [resume, tailoredResume]);
+
+  const handleTemplateChange = (newTemplateId: LatexTemplateId) => {
+    setTemplateId(newTemplateId);
+    const newFont: LatexFontId = newTemplateId === "minimal-ats" ? "helvetica" : font;
+    setFont(newFont);
+    const fresh = generateLatexFromResume(effectiveResume, {
+      templateId: newTemplateId,
+      font: newFont,
+      margin,
+      tailored: tailoredResume,
+    });
+    setTexCode(fresh);
+    setPdfBlobUrl(null);
+  };
+
+  const handleFontChange = (newFont: LatexFontId) => {
+    setFont(newFont);
+    const fresh = generateLatexFromResume(effectiveResume, {
+      templateId,
+      font: newFont,
+      margin,
+      tailored: tailoredResume,
+    });
+    setTexCode(fresh);
+    setPdfBlobUrl(null);
+  };
+
+  const handleMarginChange = (newMargin: LatexMargin) => {
+    setMargin(newMargin);
+    const fresh = generateLatexFromResume(effectiveResume, {
+      templateId,
+      font,
+      margin: newMargin,
+      tailored: tailoredResume,
+    });
+    setTexCode(fresh);
+    setPdfBlobUrl(null);
+  };
+
+  const handleAutoFitOnePage = () => {
+    setMargin("compact");
+    const fresh = generateLatexFromResume(effectiveResume, {
+      templateId,
+      font,
+      margin: "compact",
+      tailored: tailoredResume,
+    });
+    setTexCode(fresh);
+    setPdfBlobUrl(null);
+  };
 
   // Clean up blob URL on unmount or update
   useEffect(() => {
@@ -199,7 +268,12 @@ export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
       if (onNavigate) onNavigate("resume_upload");
       return;
     }
-    const fresh = generateLatexFromResume(resume, { tailored: tailoredResume, templateId });
+    const fresh = generateLatexFromResume(resume, {
+      templateId,
+      font,
+      margin,
+      tailored: tailoredResume,
+    });
     setTexCode(fresh);
     setPdfBlobUrl(null);
     setErrorLog(null);
@@ -402,6 +476,125 @@ export const LatexStudioView: React.FC<LatexStudioViewProps> = ({
             <Info size={14} className="text-blue-500 shrink-0" />
             <span>Overleaf & TeX Live compatible</span>
           </div>
+        </div>
+      </div>
+
+      {/* Template Selection, Typography & Smart 1-Page Budgeting Bar */}
+      <div className="bg-white border border-border-subtle rounded-xl p-4 shadow-sm space-y-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          {/* Template Selector Tabs */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-bold text-content-primary mr-1 flex items-center gap-1.5">
+              <Sliders size={14} className="text-brand-blue" />
+              <span>ATS Template:</span>
+            </span>
+
+            <button
+              onClick={() => handleTemplateChange("jakes-resume")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                templateId === "jakes-resume"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-slate-100 hover:bg-slate-200 text-content-secondary"
+              }`}
+              data-testid="template-jakes-btn"
+            >
+              <span>📄 Jake's Resume (Standard)</span>
+            </button>
+
+            <button
+              onClick={() => handleTemplateChange("minimal-ats")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                templateId === "minimal-ats"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-slate-100 hover:bg-slate-200 text-content-secondary"
+              }`}
+              data-testid="template-minimal-btn"
+            >
+              <span>📑 Minimalist Swiss (Clean)</span>
+            </button>
+
+            <button
+              onClick={() => handleTemplateChange("executive-standard")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                templateId === "executive-standard"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-slate-100 hover:bg-slate-200 text-content-secondary"
+              }`}
+              data-testid="template-executive-btn"
+            >
+              <span>💼 Executive Standard (Leadership)</span>
+            </button>
+          </div>
+
+          {/* Typography & Margins Controls */}
+          <div className="flex items-center gap-3 text-xs flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <span className="text-content-tertiary">Font:</span>
+              <select
+                value={font}
+                onChange={(e) => handleFontChange(e.target.value as LatexFontId)}
+                className="px-2 py-1 bg-slate-50 border border-border-subtle rounded-md text-xs font-medium text-content-primary focus:outline-none focus:ring-1 focus:ring-blue-500"
+                data-testid="font-select"
+              >
+                <option value="computer-modern">Computer Modern</option>
+                <option value="helvetica">Helvetica (Sans)</option>
+                <option value="times">Times Roman (Serif)</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-content-tertiary">Margin:</span>
+              <select
+                value={margin}
+                onChange={(e) => handleMarginChange(e.target.value as LatexMargin)}
+                className="px-2 py-1 bg-slate-50 border border-border-subtle rounded-md text-xs font-medium text-content-primary focus:outline-none focus:ring-1 focus:ring-blue-500"
+                data-testid="margin-select"
+              >
+                <option value="compact">Compact (High Density)</option>
+                <option value="normal">Normal (0.5in ATS)</option>
+                <option value="spacious">Spacious (Executive)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Smart 1-Page Budgeting Indicator */}
+        <div className="pt-2.5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-content-tertiary font-medium">Page Budget:</span>
+            {pageBudget.status === "optimal-one-page" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-[11px]" data-testid="budget-status-optimal">
+                <CheckCircle2 size={12} />
+                <span>Optimal 1-Page Fit ({pageBudget.estimatedLines} lines)</span>
+              </span>
+            )}
+            {pageBudget.status === "risk-overflow" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold text-[11px]" data-testid="budget-status-risk">
+                <AlertTriangle size={12} />
+                <span>Risk of 2-Page Overflow ({pageBudget.estimatedLines} lines)</span>
+              </span>
+            )}
+            {pageBudget.status === "two-pages-plus" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-semibold text-[11px]" data-testid="budget-status-twopage">
+                <FileText size={12} />
+                <span>Senior 2-Page Format ({pageBudget.estimatedPages} pages)</span>
+              </span>
+            )}
+
+            <span className="text-content-tertiary text-[11px] hidden sm:inline">
+              • {pageBudget.recommendation}
+            </span>
+          </div>
+
+          {pageBudget.status === "risk-overflow" && margin !== "compact" && (
+            <button
+              onClick={handleAutoFitOnePage}
+              className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded font-semibold text-[11px] transition-colors flex items-center gap-1 self-start sm:self-auto"
+              data-testid="autofit-btn"
+            >
+              <span>Auto-Fit to 1 Page</span>
+            </button>
+          )}
         </div>
       </div>
 

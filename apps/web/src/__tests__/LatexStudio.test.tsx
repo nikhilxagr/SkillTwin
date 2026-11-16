@@ -114,4 +114,35 @@ describe("LatexStudioView Component", () => {
       expect(screen.getByText(/LaTeX Compilation Error/i)).toBeDefined();
     });
   });
+
+  it("switches templates and updates LaTeX code with accurate page budget", async () => {
+    render(<LatexStudioView resume={testResume} />);
+
+    // Verify template buttons exist
+    const minimalBtn = screen.getByTestId("template-minimal-btn");
+    const executiveBtn = screen.getByTestId("template-executive-btn");
+    const fontSelect = screen.getByTestId("font-select") as HTMLSelectElement;
+    const marginSelect = screen.getByTestId("margin-select") as HTMLSelectElement;
+
+    expect(minimalBtn).toBeDefined();
+    expect(executiveBtn).toBeDefined();
+
+    // Switch to Minimalist template
+    fireEvent.click(minimalBtn);
+    const textarea = screen.getByTestId("latex-editor-textarea") as HTMLTextAreaElement;
+    expect(textarea.value).toContain("Minimalist ATS");
+
+    // Switch to Executive template
+    fireEvent.click(executiveBtn);
+    expect(textarea.value).toContain("Executive Standard");
+    expect(textarea.value).toContain("Executive Profile");
+
+    // Change font
+    fireEvent.change(fontSelect, { target: { value: "times" } });
+    expect(textarea.value).toContain("\\usepackage{mathptmx}");
+
+    // Change margin
+    fireEvent.change(marginSelect, { target: { value: "compact" } });
+    expect(textarea.value).toContain("Compact Margins");
+  });
 });

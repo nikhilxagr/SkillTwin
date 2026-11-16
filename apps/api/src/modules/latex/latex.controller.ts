@@ -2,7 +2,10 @@ import { Router, Request, Response } from "express";
 import {
   latexCompileRequestSchema,
   generateLatexFromResume,
+  calculateResumePageBudget,
   type LatexTemplateId,
+  type LatexFontId,
+  type LatexMargin,
   type ResumeExtraction,
   type JobSpecificTailoredResume,
 } from "@skilltwin/contracts";
@@ -75,7 +78,7 @@ latexRouter.post("/compile", async (req: Request, res: Response) => {
 
 /**
  * POST /api/v1/latex/generate
- * Generates ATS-friendly Jake's Resume LaTeX source code from profile.
+ * Generates ATS-friendly LaTeX source code with multi-template & font support.
  */
 latexRouter.post("/generate", async (req: Request, res: Response) => {
   const resume = req.body?.resume as ResumeExtraction | undefined;
@@ -90,10 +93,20 @@ latexRouter.post("/generate", async (req: Request, res: Response) => {
 
   const tailored = req.body?.tailored as JobSpecificTailoredResume | undefined;
   const templateId = (req.body?.templateId as LatexTemplateId) || "jakes-resume";
+  const font = (req.body?.font as LatexFontId) || (templateId === "minimal-ats" ? "helvetica" : "computer-modern");
+  const margin = (req.body?.margin as LatexMargin) || "normal";
 
   try {
     const texSource = generateLatexFromResume(resume, {
       templateId,
+      font,
+      margin,
+      tailored: tailored || null,
+    });
+
+    const pageBudget = calculateResumePageBudget(resume, {
+      templateId,
+      margin,
       tailored: tailored || null,
     });
 
@@ -102,12 +115,16 @@ latexRouter.post("/generate", async (req: Request, res: Response) => {
       data: {
         texSource,
         templateId,
+        font,
+        margin,
+        pageBudget,
         atsFriendly: true,
         features: [
           "Single-column layout (100% ATS parser compliant)",
           "glyphtounicode enabled for clean text extraction",
           "Standard section headings (Education, Experience, Projects, Skills)",
           "No tables or multi-column floats that break ATS parsers",
+          `Template: ${templateId} with ${font} font and ${margin} margins`,
         ],
       },
     });
@@ -118,4 +135,35 @@ latexRouter.post("/generate", async (req: Request, res: Response) => {
       message: err.message || "Failed to generate LaTeX document from resume data.",
     });
   }
+});
+
+/**
+ * POST /api/v1/latex/budget
+ * Analyzes resume content density and returns 1-page fit prediction.
+ */
+latexRouter.post("/budget", async (req: Request, res: Response) => {
+  const resume = req.body?.resume as ResumeExtraction | undefined;
+  if (!resume || !resume.profile) {
+    res.status(400).json({
+      status: "error",
+      code: "MISSING_RESUME_DATA",
+      message: "A valid ResumeExtraction object is required to analyze page budget.",
+    });
+    return;
+  }
+
+  const tailored = req.body?.tailored as JobSpecificTailoredResume | undefined;
+  const templateId = (req.body?.templateId as LatexTemplateId) || "jakes-resume";
+  const margin = (req.body?.margin as LatexMargin) || "normal";
+
+  const budget = calculateResumePageBudget(resume, {
+    templateId,
+    margin,
+    tailored: tailored || null,
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: budget,
+  });
 });

@@ -80,6 +80,52 @@ describe("LaTeX Resume Studio API", () => {
     expect(res.body.data.texSource).toContain("Alex Rivera");
     expect(res.body.data.texSource).toContain("\\section{Technical Skills}");
     expect(res.body.data.atsFriendly).toBe(true);
+    expect(res.body.data.pageBudget).toBeDefined();
+    expect(res.body.data.pageBudget.status).toBe("optimal-one-page");
+  });
+
+  it("POST /api/v1/latex/generate generates minimal-ats and executive-standard", async () => {
+    const resMin = await request(app)
+      .post("/api/v1/latex/generate")
+      .send({
+        resume: testResume,
+        templateId: "minimal-ats",
+        font: "helvetica",
+        margin: "compact",
+      });
+
+    expect(resMin.status).toBe(200);
+    expect(resMin.body.data.templateId).toBe("minimal-ats");
+    expect(resMin.body.data.texSource).toContain("Minimalist ATS");
+
+    const resExec = await request(app)
+      .post("/api/v1/latex/generate")
+      .send({
+        resume: testResume,
+        templateId: "executive-standard",
+        font: "times",
+        margin: "spacious",
+      });
+
+    expect(resExec.status).toBe(200);
+    expect(resExec.body.data.templateId).toBe("executive-standard");
+    expect(resExec.body.data.texSource).toContain("Executive Standard");
+  });
+
+  it("POST /api/v1/latex/budget calculates 1-page fit prediction", async () => {
+    const res = await request(app)
+      .post("/api/v1/latex/budget")
+      .send({
+        resume: testResume,
+        templateId: "jakes-resume",
+        margin: "normal",
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe("success");
+    expect(res.body.data.estimatedPages).toBe(1);
+    expect(res.body.data.status).toBe("optimal-one-page");
+    expect(res.body.data.totalPoints).toBeGreaterThan(100);
   });
 
   it("POST /api/v1/latex/compile compiles LaTeX source code into PDF", async () => {

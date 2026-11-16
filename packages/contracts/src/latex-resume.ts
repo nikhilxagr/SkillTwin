@@ -3,10 +3,10 @@ import type { ResumeExtraction } from "./resume.js";
 import type { JobSpecificTailoredResume } from "./tailoring.js";
 
 /**
- * LaTeX Resume Compilation & Generation Contracts
+ * LaTeX Resume Compilation & Multi-Template Generation Contracts
  *
  * Designed for 100% free compilation, Overleaf-style editing,
- * and 100% ATS-friendly single-column parsing.
+ * and 100% ATS-friendly single-column machine-readable parsing.
  */
 
 export const latexTemplateIdSchema = z.enum([
@@ -15,6 +15,20 @@ export const latexTemplateIdSchema = z.enum([
   "executive-standard",
 ]);
 export type LatexTemplateId = z.infer<typeof latexTemplateIdSchema>;
+
+export const latexFontSchema = z.enum([
+  "computer-modern",
+  "helvetica",
+  "times",
+]);
+export type LatexFontId = z.infer<typeof latexFontSchema>;
+
+export const latexMarginSchema = z.enum([
+  "compact",
+  "normal",
+  "spacious",
+]);
+export type LatexMargin = z.infer<typeof latexMarginSchema>;
 
 export const latexCompileRequestSchema = z.object({
   texSource: z.string().min(10, "LaTeX source must be at least 10 characters"),
@@ -35,9 +49,134 @@ export type LatexCompileResponse = z.infer<typeof latexCompileResponseSchema>;
 
 export const latexGenerateRequestSchema = z.object({
   templateId: latexTemplateIdSchema.default("jakes-resume"),
+  font: latexFontSchema.default("computer-modern"),
+  margin: latexMarginSchema.default("normal"),
   documentTitle: z.string().optional(),
 });
 export type LatexGenerateRequest = z.infer<typeof latexGenerateRequestSchema>;
+
+export interface PageBudgetEstimate {
+  estimatedLines: number;
+  estimatedPages: number;
+  totalPoints: number;
+  status: "optimal-one-page" | "risk-overflow" | "two-pages-plus";
+  message: string;
+  recommendation: string;
+  bulletCount: number;
+  experienceCount: number;
+  projectCount: number;
+}
+
+/**
+ * Computes content density and predicts whether the resume fits on 1 page or risks a 2nd page spill.
+ */
+export function calculateResumePageBudget(
+  resume: ResumeExtraction,
+  options?: {
+    templateId?: LatexTemplateId;
+    margin?: LatexMargin;
+    tailored?: JobSpecificTailoredResume | null;
+  }
+): PageBudgetEstimate {
+  const margin = options?.margin || "normal";
+  const templateId = options?.templateId || "jakes-resume";
+
+  // Usable vertical points per US Letter page (792pt)
+  const pageCapacity = margin === "compact" ? 742 : margin === "spacious" ? 698 : 720;
+
+  let points = 0;
+  let lines = 0;
+
+  // Header (name, contact info)
+  points += 55;
+  lines += 3;
+
+  // Executive summary if template or resume has one
+  if (templateId === "executive-standard" || resume.profile?.summary) {
+    points += 45;
+    lines += 3;
+  }
+
+  // Education section
+  const eduCount = (resume.education || []).length || 1;
+  points += 25;
+  points += eduCount * 28;
+  lines += 1 + eduCount * 2;
+
+  // Experience section
+  const exps = resume.experience || [];
+  let bulletCount = 0;
+  if (exps.length > 0) {
+    points += 25;
+    lines += 1;
+    exps.forEach((exp, idx) => {
+      points += 26;
+      lines += 1;
+      let bullets = exp.bullets || [];
+      if (options?.tailored?.tailoredBullets && idx === 0) {
+        bullets = options.tailored.tailoredBullets.map((b) => b.tailoredBullet);
+      }
+      const bSlice = bullets.slice(0, 4);
+      bulletCount += bSlice.length;
+      for (const b of bSlice) {
+        const bLines = Math.ceil(b.length / 85) || 1;
+        lines += bLines;
+        points += bLines * 14 + 2;
+      }
+    });
+  }
+
+  // Projects section
+  const projs = resume.projects || [];
+  if (projs.length > 0) {
+    points += 25;
+    lines += 1;
+    projs.forEach((proj) => {
+      points += 24;
+      lines += 1;
+      const bSlice = (proj.bullets || [proj.description || "Delivered full-stack system."]).slice(0, 3);
+      bulletCount += bSlice.length;
+      for (const b of bSlice) {
+        const bLines = Math.ceil(b.length / 85) || 1;
+        lines += bLines;
+        points += bLines * 14 + 2;
+      }
+    });
+  }
+
+  // Technical Skills section
+  points += 55;
+  lines += 4;
+
+  const estimatedPages = points <= pageCapacity ? 1 : Math.ceil(points / pageCapacity);
+  const spillThreshold = pageCapacity * 0.94; // within 6% of page break
+
+  let status: PageBudgetEstimate["status"] = "optimal-one-page";
+  let message = "Clean single-page ATS layout.";
+  let recommendation = "Content density is optimal for recruiters and automated ATS screeners.";
+
+  if (points > pageCapacity * 1.05) {
+    status = "two-pages-plus";
+    message = `Spans across ${estimatedPages} full pages.`;
+    recommendation = "Standard multi-page format for senior / lead engineers with extensive experience.";
+  } else if (points > spillThreshold) {
+    status = "risk-overflow";
+    message = "Content is near page boundary (~3-5 lines risk overflowing to page 2).";
+    recommendation = "Switch to 'Compact' margin or trim 1-2 bullet points to guarantee a clean 1-page fit.";
+  }
+
+  return {
+    estimatedLines: lines,
+    estimatedPages,
+    totalPoints: Math.round(points),
+    status,
+    message,
+    recommendation,
+    bulletCount,
+    experienceCount: exps.length,
+    projectCount: projs.length,
+  };
+}
 
 /**
  * Escapes reserved LaTeX characters to avoid compilation syntax errors
@@ -63,17 +202,63 @@ export function escapeLatex(text: string): string {
     .replace(/>/g, "\\textgreater{}");
 }
 
+function getFontPreamble(font: LatexFontId = "computer-modern"): string {
+  switch (font) {
+    case "helvetica":
+      return `\\usepackage[scaled=0.92]{helvet}\n\\renewcommand{\\familydefault}{\\sfdefault}`;
+    case "times":
+      return `\\usepackage{mathptmx}`;
+    case "computer-modern":
+    default:
+      return `% Computer Modern Default`;
+  }
+}
+
+function getMarginAdjustments(margin: LatexMargin = "normal"): string {
+  switch (margin) {
+    case "compact":
+      return `% Compact Margins for maximum 1-page content density
+\\addtolength{\\oddsidemargin}{-0.65in}
+\\addtolength{\\evensidemargin}{-0.65in}
+\\addtolength{\\textwidth}{1.3in}
+\\addtolength{\\topmargin}{-.65in}
+\\addtolength{\\textheight}{1.3in}`;
+    case "spacious":
+      return `% Spacious Margins for executive clarity
+\\addtolength{\\oddsidemargin}{-0.35in}
+\\addtolength{\\evensidemargin}{-0.35in}
+\\addtolength{\\textwidth}{0.7in}
+\\addtolength{\\topmargin}{-.35in}
+\\addtolength{\\textheight}{0.7in}`;
+    case "normal":
+    default:
+      return `% Standard ATS Margins (0.5in)
+\\addtolength{\\oddsidemargin}{-0.5in}
+\\addtolength{\\evensidemargin}{-0.5in}
+\\addtolength{\\textwidth}{1in}
+\\addtolength{\\topmargin}{-.5in}
+\\addtolength{\\textheight}{1.0in}`;
+  }
+}
+
 /**
  * Generates an ATS-friendly, single-column LaTeX resume document
- * based on the industry-standard "Jake's Resume" template.
+ * supporting multiple industry templates (Jake's Resume, Minimalist ATS, Executive Standard).
  */
 export function generateLatexFromResume(
   resume: ResumeExtraction,
   options?: {
     templateId?: LatexTemplateId;
+    font?: LatexFontId;
+    margin?: LatexMargin;
     tailored?: JobSpecificTailoredResume | null;
   }
 ): string {
+  const templateId = options?.templateId || "jakes-resume";
+  const defaultFont: LatexFontId = templateId === "minimal-ats" ? "helvetica" : "computer-modern";
+  const font = options?.font || defaultFont;
+  const margin = options?.margin || "normal";
+
   const profile = resume.profile || ({} as any);
   const name = escapeLatex(profile.name || "Software Engineer");
   const email = profile.email || "";
@@ -223,17 +408,63 @@ ${educationBlocks}
   \\resumeSubHeadingListEnd
 `;
 
-  // Assemble full Jake's Resume LaTeX source code
+  // Template-specific header, summary, and section styling
+  let headerBlock = "";
+  let summarySection = "";
+  let sectionFormat = "";
+  let templateComment = "";
+
+  if (templateId === "minimal-ats") {
+    templateComment = "% Template: Minimalist ATS (Swiss Typography, Sans-Serif, High Readability)";
+    headerBlock = `%----------MINIMALIST HEADING----------
+\\begin{flushleft}
+    {\\Huge \\textbf{${name}}} \\\\ \\vspace{2pt}
+    \\small ${contactLine}
+\\end{flushleft}`;
+    sectionFormat = `\\titleformat{\\section}{
+  \\vspace{-3pt}\\bfseries\\raggedright\\small\\uppercase
+}{}{0em}{}[\\color{black!30}\\titlerule \\vspace{-4pt}]`;
+  } else if (templateId === "executive-standard") {
+    templateComment = "% Template: Executive Standard (Leadership Focus, Scope & Core Competencies)";
+    headerBlock = `%----------EXECUTIVE HEADING----------
+\\begin{center}
+    {\\Huge \\textbf{\\scshape ${name}}} \\\\ \\vspace{2pt}
+    \\small ${contactLine}
+\\end{center}`;
+    summarySection = `
+%-----------EXECUTIVE SUMMARY-----------
+\\section{Executive Profile \\& Core Competencies}
+\\small{${escapeLatex(profile.summary || "Senior Technical Leader with demonstrated success architecting resilient cloud systems, driving cross-functional engineering deliverables, and aligning technological investments with critical business objectives.")}}
+\\vspace{4pt}
+`;
+    sectionFormat = `\\titleformat{\\section}{
+  \\vspace{-4pt}\\scshape\\bfseries\\raggedright\\large
+}{}{0em}{}[\\color{black}\\titlerule \\vspace{-5pt}]`;
+  } else {
+    // Default: Jake's Resume
+    templateComment = "% Template: Jake's Resume (Single-Column, Machine-Readable Unicode)";
+    headerBlock = `%----------HEADING----------
+\\begin{center}
+    \\textbf{\\Huge \\scshape ${name}} \\\\ \\vspace{1pt}
+    \\small ${contactLine}
+\\end{center}`;
+    sectionFormat = `\\titleformat{\\section}{
+  \\vspace{-4pt}\\scshape\\raggedright\\large
+}{}{0em}{}[\\color{black}\\titlerule \\vspace{-5pt}]`;
+  }
+
+  // Assemble full LaTeX source code
   return `%-------------------------
 % Resume in Latex - ATS Optimized
 % Generated by SkillTwin Career Intelligence Studio
-% Template: Jake's Resume (Single-Column, Machine-Readable Unicode)
+${templateComment}
 %------------------------
 
 \\documentclass[letterpaper,11pt]{article}
 
 \\usepackage[utf8]{inputenc}
 \\usepackage[T1]{fontenc}
+${getFontPreamble(font)}
 \\usepackage{latexsym}
 \\usepackage[empty]{fullpage}
 \\usepackage{titlesec}
@@ -253,12 +484,7 @@ ${educationBlocks}
 \\renewcommand{\\headrulewidth}{0pt}
 \\renewcommand{\\footrulewidth}{0pt}
 
-% Margins configuration for ATS scanning
-\\addtolength{\\oddsidemargin}{-0.5in}
-\\addtolength{\\evensidemargin}{-0.5in}
-\\addtolength{\\textwidth}{1in}
-\\addtolength{\\topmargin}{-.5in}
-\\addtolength{\\textheight}{1.0in}
+${getMarginAdjustments(margin)}
 
 \\urlstyle{same}
 
@@ -267,9 +493,7 @@ ${educationBlocks}
 \\setlength{\\tabcolsep}{0in}
 
 % Section formatting
-\\titleformat{\\section}{
-  \\vspace{-4pt}\\scshape\\raggedright\\large
-}{}{0em}{}[\\color{black}\\titlerule \\vspace{-5pt}]
+${sectionFormat}
 
 % Ensure that generated pdf is machine readable and ATS parsable
 \\pdfgentounicode=1
@@ -306,11 +530,8 @@ ${educationBlocks}
 
 \\begin{document}
 
-%----------HEADING----------
-\\begin{center}
-    \\textbf{\\Huge \\scshape ${name}} \\\\ \\vspace{1pt}
-    \\small ${contactLine}
-\\end{center}
+${headerBlock}
+${summarySection}
 ${educationSection}
 ${experienceSection}
 ${projectsSection}

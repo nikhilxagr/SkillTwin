@@ -4,6 +4,7 @@ import {
   generateLatexFromResume,
   latexCompileRequestSchema,
   latexCompileResponseSchema,
+  calculateResumePageBudget,
 } from "../latex-resume.js";
 import type { ResumeExtraction } from "../resume.js";
 
@@ -143,5 +144,39 @@ describe("LaTeX Resume Generator & Contracts", () => {
     });
     expect(validRes.status).toBe("success");
     expect(validRes.engineUsed).toBe("latexonline");
+  });
+
+  it("generates minimal-ats and executive-standard templates with typography options", () => {
+    const minimalTex = generateLatexFromResume(mockResume, {
+      templateId: "minimal-ats",
+      font: "helvetica",
+      margin: "compact",
+    });
+    expect(minimalTex).toContain("Minimalist ATS");
+    expect(minimalTex).toContain("\\usepackage[scaled=0.92]{helvet}");
+    expect(minimalTex).toContain("Compact Margins");
+    expect(minimalTex).toContain("\\begin{flushleft}");
+
+    const executiveTex = generateLatexFromResume(mockResume, {
+      templateId: "executive-standard",
+      font: "times",
+      margin: "spacious",
+    });
+    expect(executiveTex).toContain("Executive Standard");
+    expect(executiveTex).toContain("\\usepackage{mathptmx}");
+    expect(executiveTex).toContain("Spacious Margins");
+    expect(executiveTex).toContain("\\section{Executive Profile \\& Core Competencies}");
+  });
+
+  it("calculates accurate resume page budget and density recommendations", () => {
+    const budget = calculateResumePageBudget(mockResume, {
+      templateId: "jakes-resume",
+      margin: "normal",
+    });
+    expect(budget.status).toBe("optimal-one-page");
+    expect(budget.estimatedPages).toBe(1);
+    expect(budget.bulletCount).toBeGreaterThan(0);
+    expect(budget.totalPoints).toBeGreaterThan(100);
+    expect(budget.recommendation).toBeDefined();
   });
 });
