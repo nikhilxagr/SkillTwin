@@ -70,6 +70,25 @@ export class LatexService {
     cleaned = cleaned.replace(/\\resumeItemListStart\s*\\resumeItemListEnd/g, "");
     cleaned = cleaned.replace(/\\begin\{itemize\}(\[[^\]]*\])?\s*\\end\{itemize\}/g, "");
 
+    // Fix math-mode thick space delimiters \;|\; or stray \; in text mode (fixes "Missing $ inserted")
+    cleaned = cleaned.replace(/\\;\|\\;/g, " $|$ ");
+    cleaned = cleaned.replace(/\\;\|\s*/g, " $|$ ");
+    cleaned = cleaned.replace(/\s*\|\\;/g, " $|$ ");
+    cleaned = cleaned.replace(/\\;/g, " ");
+
+    // Fix "There's no line here to end" caused by \\[...pt] after section headers, font switches, or standalone empty lines
+    cleaned = cleaned.replace(/^\s*\\\\(\[\d+pt\])?\s*$/gm, "");
+    cleaned = cleaned.replace(/(\\section\{[^\}]*\})\s*\\\\(\[\d+pt\])?/g, "$1");
+    cleaned = cleaned.replace(/(\\begin\{[^\}]*\})\s*\\\\(\[\d+pt\])?/g, "$1");
+    cleaned = cleaned.replace(/(\\small|\\large|\\Huge|\\normalsize)\s*\\\\(\[\d+pt\])?/g, "$1");
+    cleaned = cleaned.replace(/(\\end\{itemize\})\s*\\\\(\[(\d+)pt\])?/g, (_m, endTag, _bracket, pt) => `${endTag}\\vspace{${pt || 4}pt}`);
+
+    // Fix standalone font declarations before list environments causing empty paragraph / @noitemerr
+    cleaned = cleaned.replace(/\\small\s*\n\s*\\begin\{itemize\}/g, "\\begin{itemize}");
+
+    // Fix double closing braces in links e.g. \href{...}{...}}
+    cleaned = cleaned.replace(/(\\href\{[^\}]+\}\{[^\}]+)\}\}/g, "$1}");
+
     // Ensure utf8 inputenc and fontenc are loaded if documentclass exists
     if (cleaned.includes("\\documentclass") && !cleaned.includes("{inputenc}")) {
       cleaned = cleaned.replace(

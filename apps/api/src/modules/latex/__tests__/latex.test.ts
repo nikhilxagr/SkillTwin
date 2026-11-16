@@ -165,4 +165,26 @@ Binary PDF Stream Test
     expect(res.headers["content-type"]).toContain("application/pdf");
     expect(res.body).toBeDefined();
   }, 25000);
+
+  it("POST /api/v1/latex/compile auto-repairs common TeX syntax issues like \\;|\\;, rogue linebreaks, and extra braces", async () => {
+    const brokenTex = `\\documentclass{article}
+\\usepackage[hidelinks]{hyperref}
+\\begin{document}
+\\section{Certifications}
+\\\\[2pt]
+\\small
+Cisco Ethical Hacking Fundamentals \\;|\\; Cisco Ethical Hacking Advanced
+\\href{https://example.com}{example.com}}
+\\end{document}`;
+
+    const res = await request(app)
+      .post("/api/v1/latex/compile")
+      .send({
+        texSource: brokenTex,
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe("success");
+    expect(res.body.data.pdfBase64).toBeDefined();
+  }, 25000);
 });
