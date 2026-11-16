@@ -139,6 +139,7 @@ describe("SkillTwin Clean Production Shell & UI Views", () => {
   it("renders ProfileView with user account information and target role editing", () => {
     const mockUser: SafeUser = {
       id: "u-123",
+      username: "nikhilagr",
       email: "nikhil@skilltwin.dev",
       name: "Nikhil Agrahari",
       emailVerified: true,

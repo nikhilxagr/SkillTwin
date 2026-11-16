@@ -34,6 +34,7 @@ describe("PHASE 14: Social Authentication & Connected Accounts Frontend", () => 
   it("renders Connected Accounts in ProfileView with provider status", () => {
     const userWithGoogle: SafeUser = {
       id: "usr-social-1",
+      username: "alexdev",
       email: "alex@example.com",
       name: "Alex Developer",
       emailVerified: true,
@@ -84,6 +85,7 @@ describe("PHASE 14: Social Authentication & Connected Accounts Frontend", () => 
   it("enables Disconnect button when user has a password or multiple providers", () => {
     const userWithMultiple: SafeUser = {
       id: "usr-social-2",
+      username: "multiuser",
       email: "multi@example.com",
       name: "Multi Provider User",
       emailVerified: true,

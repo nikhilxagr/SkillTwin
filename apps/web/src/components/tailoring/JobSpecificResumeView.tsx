@@ -34,8 +34,8 @@ import type {
   TailoredProjectItem,
   TailoredBulletItem,
   OptimizationHighlightTag,
-  generateLatexFromResume,
 } from "@skilltwin/contracts";
+import { generateLatexFromResume } from "@skilltwin/contracts";
 import { compileLatex } from "../../api/client.js";
 import type { ActiveScreen } from "../../types/navigation.js";
 
